@@ -12,32 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("../utils/Type");
-var ariaUtilsString = require("../utils/String");
-var ariaUtilsArray = require("../utils/Array");
+// var Aria = require("../Aria");
+// var ariaUtilsType = require("../utils/Type");
+// var ariaUtilsString = require("../utils/String");
+// var ariaUtilsArray = require("../utils/Array");
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////
 // IMPORTANT: no modifier should assume `this === aria.templates.Modifiers` holds.
 // Use fully qualified path. Beware especially when refering to statics in this.$logWarn etc.
 // //////////////////////////////////////////////////////////////////////////////////////////
-(function () {
+// (function () {
     /**
      * Map of available modifiers
      * @type {Object}
      */
-    var regExSpecials, __modifiers = {
-        "eat" : {
-            /**
-             * <span style="font-weight: bold">MODIFIER</span> <br/> Returns "" for any entry.
-             * @name aria.templates.Modifiers.prototype.eat
-             * @return {String}
-             */
-            fn : function () {
-                return "";
-            }
-        },
+    let regExSpecials;
+    const __modifiers = {
+        // "eat" : {
+        //     /**
+        //      * <span style="font-weight: bold">MODIFIER</span> <br/> Returns "" for any entry.
+        //      * @name aria.templates.Modifiers.prototype.eat
+        //      * @return {String}
+        //      */
+        //     fn : function () {
+        //         return "";
+        //     }
+        // },
         "escapeforhtml" : {
             /**
              * Initialization function called when the template is parsed
@@ -71,7 +72,7 @@ var ariaUtilsArray = require("../utils/Array");
                 }
 
                 var infos = {};
-                var output = ariaUtilsString.escapeForHTML(input + '', arg, infos);
+                var output = escapeForHTML(input + '', arg, infos);
 
                 if (!infos.escaped) {
                     return input;

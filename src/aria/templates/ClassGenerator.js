@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 var Aria = require("../Aria");
-var ariaTemplatesClassWriter = require("./ClassWriter");
+var ariaTemplatesClassWriter = require("./class-writer");
 require("./TreeBeans");
 require("./CfgBeans");
 var ariaTemplatesStatements = require("./Statements");

@@ -1,3 +1,12 @@
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+
 node_modules
 .DS_Store
 .project
@@ -16,3 +25,4 @@ node_modules
 /src/aria/noderError/
 /src/aria/core/useragent/ua-parser.js
 /src/aria/utils/FrameATLoaderHTML.html
+/dist
