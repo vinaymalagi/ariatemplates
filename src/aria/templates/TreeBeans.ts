@@ -16,6 +16,27 @@
 // var ariaCoreJsonTypes = require("../core/JsonTypes");
 
 import {z} from 'zod';
+import { ClassWriter } from './ClassWriter.js';
+import { ClassGenerator } from './ClassGenerator.js';
+
+export type STATEMENT_TYPES_ENUM = 'Template' | 'Library' | 'CSSTemplate' | 'CSSLibrary' | 'TextTemplate'| '#TEXT#' | '#CDATA#' | '#EXPRESSION#' |
+                                  'separator' | 'id' | 'on' | 'if' | 'elseif' | 'else' | 'createView' | 'for' | 'foreach' | 'repeater' | 'macro' |
+                                  'memo' | 'call' | 'section' | 'var' | 'set' | 'checkDefault' | '@';
+
+
+export interface StatementHandler {
+  /** Wheter statement should be within a macro */
+  inMacro: boolean;
+
+  /** Whether statement must be in a container */
+  container?: boolean
+
+  /** Regular expression to process parameters */
+  paramRegExp: RegExp;
+
+  process: (out: ClassWriter, statement: Statement, params: string[], classGenerator: ClassGenerator) => void;
+
+}
 
 const baseStatementSchema = z.object({
   name: z.string().
@@ -61,6 +82,3 @@ export const rootStatementSchema = baseStatementSchema.extend({
   parent: z.null().describe('Parent element: is null or optional for the root statement.'),
   source: z.string().describe('Processed template source. It differs from the original template passed to parseTemplate, as there is some preprocessing (to remove comments, ...). Positions in the template tree relative to this string, and not the original one.')
 });
-
-        //     }
-// });

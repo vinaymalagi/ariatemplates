@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO:ModernAria: Rremove the esline disable
 import { indexOfNotEscaped, stringify } from "../utils/String.js";
-import { ClassWriter } from "./class-writer.js";
-import { Statement } from "./tree-beans.js";
+import { ClassGenerator } from "./ClassGenerator.js";
+import { ClassWriter } from "./ClassWriter.js";
+import { Statement } from "./TreeBeans.js";
 
 /*
  * Copyright 2012 Amadeus s.a.s.
@@ -81,15 +82,15 @@ const FRAMEWORK_PREFIX= "aria:";
         const ELSE_WITHOUT_IF = "line %1: Template error: 'else' or 'elseif' is used outside an 'if' structure.";
         const ELSEIF_AFTER_ELSE = "line %1: Template error: 'elseif' is used after 'else' in the same 'if' structure.";
         const ELSE_ALREADY_USED = "line %1: Template error: an 'else' statement has already been used in this 'if' structure.";
-        const INVALID_WIDGET_SYNTAX = "line %1: Template error: invalid syntax for the widget statement; expected syntax: @lib:widget";
-        const UNDECLARED_WIDGET_LIBRARY = "line %2: Template error: found widget library '%1', which is undeclared in the wlibs parameter of the 'Template' statement.";
-        const INVALID_MODIFIER_SYNTAX = "line %2: Template error: invalid modifier syntax '%1'.";
-        const UNKNOWN_WIDGET = "line %2: Template error: unknown widget '%1'.";
+        // const INVALID_WIDGET_SYNTAX = "line %1: Template error: invalid syntax for the widget statement; expected syntax: @lib:widget";
+        // const UNDECLARED_WIDGET_LIBRARY = "line %2: Template error: found widget library '%1', which is undeclared in the wlibs parameter of the 'Template' statement.";
+        // const INVALID_MODIFIER_SYNTAX = "line %2: Template error: invalid modifier syntax '%1'.";
+        // const UNKNOWN_WIDGET = "line %2: Template error: unknown widget '%1'.";
         const MACRO_ALREADY_DEFINED = "line %3: Template error: macro '%1' is already defined line %2.";
         const SEPARATOR_NOT_FIRST_IN_FOREACH = "line %1: Template error: the separator statement can only be used as the first statement inside a {foreach ...} ... {/foreach} loop.";
-        const INCOMPATIBLE_CREATEVIEW = "line %2: Template error: two createView statements with the same view base name must have the same depth (previous definition line %1).";
-        const INCORRECT_VARIABLE_NAME = "line %2: Template error: incorrect variable name '%1'.";
-        // const INVALID_FOREACH_INKEYWORD = "line %2: Template error: invalid foreach syntax, expected one of 'in', 'inView', 'inFilteredView', 'inSortedView', 'inPagedView' but found: '%1'.";
+        // const INCOMPATIBLE_CREATEVIEW = "line %2: Template error: two createView statements with the same view base name must have the same depth (previous definition line %1).";
+        // const INCORRECT_VARIABLE_NAME = "line %2: Template error: incorrect variable name '%1'.";
+        const INVALID_FOREACH_INKEYWORD = "line %2: Template error: invalid foreach syntax, expected one of 'in', 'inView', 'inFilteredView', 'inSortedView', 'inPagedView' but found: '%1'.";
         // const INVALID_WIDGET_LIBRARY = "line %3: Template error: %1 (%2) is not a valid widget library. A widget library must extend aria.widgetLibs.WidgetLib.";
         // const INVALID_EVENT_TYPE = "The event type: '%1' is an invalid event type.";
         // const SECTIONS_AS_CONTAINERS = "Sections as container statements ({section {...}}...{/section}) have been allowed through the application environment. Nevertheless, it is strongly advisable to use them as self-closing statements ({section {...}/}).";
@@ -172,7 +173,7 @@ const FRAMEWORK_PREFIX= "aria:";
                     let escapeModifierName = classGenerator.escapeModifier; // Gets the actual name of the modifier
                     // in this context
 
-                    if (escapeModifierName != null) {
+                    if (escapeModifierName !== null) {
                         // TODO:ModernAria:Type definition of out.templateParam in expressions
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         let escapeByDefault: boolean | null = (out.templateParam as any).$escapeHtmlByDefault;
@@ -274,7 +275,7 @@ const FRAMEWORK_PREFIX= "aria:";
                 paramRegexp : /^\s*(\S[\s\S]*)\s*$/,
                 process : function (out: ClassWriter, statement: Statement, param: string[]) {
                     const userId = param[0];
-                    out.writeln('this.__$writeId(', userId, ",", statement.lineNumber, ');');
+                    out.writeln('this.__$writeId(', userId, ",", `${statement.lineNumber}`, ');');
                     statement.properties = {
                         id: userId
                     };
@@ -305,14 +306,15 @@ const FRAMEWORK_PREFIX= "aria:";
             "if" : {
                 inMacro : true,
                 container : true,
-                process : function (out, statement) {
+                process : function (out: ClassWriter, statement: Statement) {
                     const param = statement.paramBlock;
                     out.writeln("if (", param, ") {");
                     out.increaseIndent();
-                    out.processContent(statement.content);
+                    statement.content && out.processContent(statement.content);
 
                     // clean statement in case of reprocessing of the tree
-                    delete statement[FRAMEWORK_PREFIX + "elsepresent"];
+                    // TODO:ModernAria:Improve Type definition of "if" statement
+                    delete (statement as any)[FRAMEWORK_PREFIX + "elsepresent"];
 
                     out.decreaseIndent();
                     out.writeln("}");
@@ -429,7 +431,7 @@ const FRAMEWORK_PREFIX= "aria:";
                 // or : foreach varname inPagedView myview
                 // or : foreach varname inView myview
                 paramRegexp : /^([_\w]+)\s+(\w+)\s+([\s\S]+)$/,
-                process : function (out, statement, param) {
+                process : function (out: ClassWriter, statement: Statement, param: string[]) {
                     const variterset = out.newVarName();
                     const varitervalue = param[1];
                     // TODO:ModernAria: Implement isJsReservedWord and implement variable assignment
@@ -440,7 +442,7 @@ const FRAMEWORK_PREFIX= "aria:";
                     if (inKeyWord != "in" && inKeyWord != "inArray" && inKeyWord != "inView"
                             && inKeyWord != "inSortedView" && inKeyWord != "inFilteredView"
                             && inKeyWord != "inPagedView") {
-                        return out.logError(statement, statementsSingleton.INVALID_FOREACH_INKEYWORD, [inKeyWord]);
+                        return out.logError(statement, INVALID_FOREACH_INKEYWORD, [inKeyWord]);
                     }
                     const iteratesView = (inKeyWord != "in" && inKeyWord != "inArray");
                     if (inKeyWord == "inView") {
@@ -461,19 +463,21 @@ const FRAMEWORK_PREFIX= "aria:";
 
                     out.writeln("if(", iteratedObject, "==undefined){");
                     out.increaseIndent();
-                    out.writeln("this.$logError(this.ITERABLE_UNDEFINED,[", out.stringify(statement.name), ",__filename, ", statement.lineNumber, "]);");
+                    out.writeln("this.$logError(this.ITERABLE_UNDEFINED,[", stringify(statement.name), ",__filename, ", `${statement.lineNumber}`, "]);");
                     out.decreaseIndent();
                     out.writeln("}");
 
                     const variterct = varitervalue + "_ct";
-                    statement[FRAMEWORK_PREFIX + 'foreachCounter'] = variterct; // for the separator statement
+                    (statement as any)[FRAMEWORK_PREFIX + 'foreachCounter'] = variterct; // for the separator statement
                     out.writeln("var ", variterct, "=0;");
                     let varLastIndex;
                     if (iteratesView) {
                         varLastIndex = out.newVarName();
+                        // TODO:ModernAria: Support undefined for out.writeln var args
+                        let varCurrentPageIndex = '';
                         out.writeln(variterset, ".refresh();");
                         if (inKeyWord == "inPagedView") {
-                            var varCurrentPageIndex = out.newVarName();
+                            varCurrentPageIndex = out.newVarName();
                             out.writeln("var ", varCurrentPageIndex, "=", variterset, ".currentPageIndex;");
                             out.writeln("var ", varLastIndex, "=", variterset, ".pages[", varCurrentPageIndex, "].lastItemIndex;");
                             out.writeln("for (var ", variterindex, "=", variterset, ".pages[", varCurrentPageIndex, "].firstItemIndex;", variterindex, "<=", varLastIndex, ";", variterindex, "++) {");
@@ -504,7 +508,8 @@ const FRAMEWORK_PREFIX= "aria:";
                         out.writeln("var ", varitervalue, "=", variterset, "[", variterindex, "];");
                     }
                     out.writeln(variterct, "++;");
-                    out.processContent(statement.content);
+                    // TODO:ModernAria: Create specific versions of statement for foreach
+                    statement.content && out.processContent(statement.content);
                     if (inKeyWord != "inSortedView" && inKeyWord != "inArray") {
                         out.decreaseIndent();
                         out.writeln("}");
@@ -513,18 +518,18 @@ const FRAMEWORK_PREFIX= "aria:";
                     out.writeln("}");
                 }
             },
-            "repeater" : {
-                inMacro : true,
-                container : false,
-                process : function (out: ClassWriter, statement: Statement) {
-                    let param = statement.paramBlock;
-                    if (out.debug) {
-                        param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_REPEATER_PARAMETER");
-                    }
-                    out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
-                    out.writeln("this.__$statementRepeater(", statement.lineNumber, ",(", param, "));");
-                }
-            },
+            // "repeater" : {
+            //     inMacro : true,
+            //     container : false,
+            //     process : function (out: ClassWriter, statement: Statement) {
+            //         let param = statement.paramBlock;
+            //         if (out.debug) {
+            //             param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_REPEATER_PARAMETER");
+            //         }
+            //         out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
+            //         out.writeln("this.__$statementRepeater(", statement.lineNumber, ",(", param, "));");
+            //     }
+            // },
             "macro" : {
                 inMacro : false,
                 container : true,
@@ -659,9 +664,9 @@ const FRAMEWORK_PREFIX= "aria:";
                 inMacro : undefined, /* may be in or out of a macro */
                 container : false,
                 paramRegexp : /^([_\w]+)\s*=([\s\S]*)$/,
-                process : function (out, statement, param) {
+                process : function (out: ClassWriter, statement: Statement, param: string[]) {
 
-                    let varname = param[1];
+                    const varname = param[1];
                     let value = param[2];
                     // TODO:ModernAria: Implement isJsReservedWord and check if error handling is needed
                     // if (Aria.isJsReservedWord(varname)) {
@@ -696,7 +701,7 @@ const FRAMEWORK_PREFIX= "aria:";
             "set" : {
                 inMacro : true,
                 container : false,
-                paramRegexp : /^([_\w]+(?:\.[_\w]+)*)\s*([\+\-]?\=)([\s\S]*)$/,
+                paramRegexp : /^([_\w]+(?:\.[_\w]+)*)\s*([+-]?=)([\s\S]*)$/,
                 process : function (out: ClassWriter, statement: Statement, param: string[]) {
                     const varname = param[1];
                     const op = param[2];
@@ -722,7 +727,7 @@ const FRAMEWORK_PREFIX= "aria:";
             "checkDefault" : {
                 inMacro : true,
                 container : false,
-                paramRegexp : /^([_\w]+)\s*\=([\s\S]*)$/,
+                paramRegexp : /^([_\w]+)\s*=([\s\S]*)$/,
                 process : function (out: ClassWriter, statement: Statement, param: string[]) {
                     const varname = param[1];
                     let value = param[2];

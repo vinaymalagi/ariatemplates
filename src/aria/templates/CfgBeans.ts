@@ -36,11 +36,22 @@ export const ClassGeneratorCfgSchema = z.object({
   dontLoadWidgetLibs: z.boolean().describe("If true, widget libraries referenced in the template will not be loaded during the class generation process, which is convenient if they are not available at that time. However, as a result, there will probably be missing dependencies in the generated class."),
   allDependencies: z.boolean().describe("If true, all dependencies should be included in the generated class, otherwise only classes which are not currently loaded are added as dependencies of the generated class."),
   debug: z.boolean().describe("If true, extra code is added in the generated class to help debugging."),
-  errorContext: z.any().describe("Context object passed with the errors to help debugging."),
-  skipLogError: z.boolean().describe("If true, passes the errors to the callback instead of logging them with $logError.")
+  errorContext: z.record(z.string(), z.unknown()).nullable().describe("Context object passed with the errors to help debugging."),
+  skipLogError: z.boolean().describe("If true, passes the errors to the callback instead of logging them with $logError."),
+  throwErrors: z.boolean().describe("If true, errors will be thrown instead of being logged."),
 });
 
 export type ClassGeneratorCfg = z.infer<typeof ClassGeneratorCfgSchema>;
+
+export const ClassGeneratorCfgDefault: ClassGeneratorCfg = {
+  parseOnly: false,
+  dontLoadWidgetLibs: false,
+  allDependencies: false,
+  debug: false,
+  errorContext: null,
+  skipLogError: false,
+  throwErrors: false,
+};
 //         "BaseTemplateCfg" : {
 //             $type : "json:Object",
 //             $description : "Base configuration for all types of templates.",

@@ -16,6 +16,7 @@
 // var ariaUtilsString = require("../utils/String");
 
 import { indexOfNotEscaped, isEscaped, nextWhiteSpace } from "../utils/String.js";
+import { ClassGeneratorCfg } from "./CfgBeans.js";
 import { Statement, RootStatement } from "./tree-beans.js";
 
 type ParserError = Error & { errors: {msgId: string, msgArgs: unknown[] | null, errorContext: unknown}[] };
@@ -85,7 +86,7 @@ export abstract class Parser {
    *
    * TODO:ModernAria: Resolve unknown
    */
-  public abstract parseTemplate(template: string, context: unknown, statements: string[], throwErrors: boolean): RootStatement | null;
+  public abstract parseTemplate(template: string, context: ClassGeneratorCfg, statements: string[], throwErrors: boolean): RootStatement | null;
 
   /**
    * Transform the given template and set this.template and this.__lineNumbers for the given template
