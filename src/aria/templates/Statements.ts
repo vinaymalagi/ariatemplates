@@ -4,6 +4,7 @@ import { indexOfNotEscaped, stringify } from "../utils/String.js";
 import { ClassGenerator } from "./ClassGenerator.js";
 import { ClassWriter } from "./ClassWriter.js";
 import { Statement } from "./TreeBeans.js";
+import { FRAMEWORK_PREFIX } from "../Aria.js";
 
 /*
  * Copyright 2012 Amadeus s.a.s.
@@ -65,9 +66,6 @@ let globalMacroVariables: string[] = [];
  */
 let currentMacroName = "";
 
-// TODO:MODERN_ARIA:Implement and use Aria.FRAMEWORK_PREFIX root aria.js file
-const FRAMEWORK_PREFIX= "aria:";
-
 
 /**
  * Template statements. Note that root statements are special ones and are not included here.
@@ -119,7 +117,6 @@ const FRAMEWORK_PREFIX= "aria:";
             "TextTemplate" : rootStatement,
             "#TEXT#" : {
                 container : false,
-                // TODO:MODERN_ARIA:Type definition of out instead of any
                 process : function (out: ClassWriter, statement: Statement) {
                     if (out.isOutputReady()) {
                         const param = stringify(statement.paramBlock);

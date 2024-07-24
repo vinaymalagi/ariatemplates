@@ -1,17 +1,17 @@
-// /*
-//  * Copyright 2012 Amadeus s.a.s.
-//  * Licensed under the Apache License, Version 2.0 (the "License");
-//  * you may not use this file except in compliance with the License.
-//  * You may obtain a copy of the License at
-//  *
-//  *    http://www.apache.org/licenses/LICENSE-2.0
-//  *
-//  * Unless required by applicable law or agreed to in writing, software
-//  * distributed under the License is distributed on an "AS IS" BASIS,
-//  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  * See the License for the specific language governing permissions and
-//  * limitations under the License.
-//  */
+/*
+ * Copyright 2012 Amadeus s.a.s.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 // var Aria = require("../Aria");
 // var ariaUtilsType = require("./Type");
 // var ariaUtilsArray = require("./Array");
@@ -24,23 +24,22 @@
 //     $classpath : "aria.utils.String",
 //     $singleton : true,
 //     $prototype : {
-//         /**
-//          * Substitute %n parameters in a string
-//          * @param {String} string The source string to substitute %n occurrences in
-//          * @param {Array|String} ...params All the remaining parameters, that can form from one simple string to deeply nested arrays of strings, will be resolved to a single list of strings. These strings will be used for the substitutions. Index 0 will replace %1, index 1, %2 and so on.
-//          * @return {String} The final string, with %n occurrences replaced with their equivalent
-//          */
-//         substitute : function (string) {
-//             var params = Array.prototype.slice.call(arguments, 1);
-//             params = ariaUtilsArray.flattenDeep(params);
+/**
+ * Substitute %n parameters in a string
+ * @param {String} string The source string to substitute %n occurrences in
+ * @param {Array|String} ...params All the remaining parameters, that can form from one simple string to deeply nested arrays of strings, will be resolved to a single list of strings. These strings will be used for the substitutions. Index 0 will replace %1, index 1, %2 and so on.
+ * @return {String} The final string, with %n occurrences replaced with their equivalent
+ */
+export function substitute(string: string, ...params: string[]) {
 
-//             string = string.replace(/%[0-9]+/g, function (token) {
-//                 var replacement = params[parseInt(token.substring(1), 10) - 1];
-//                 return typeof replacement !== "undefined" ? replacement : token;
-//             });
+    // TODO: Check if Aria.utils.Arrray -> flattenDeep is needed
+    params = params.flat(Infinity);
 
-//             return string;
-//         },
+    return string.replace(/%[0-9]+/g, function (token) {
+        const replacement = params[parseInt(token.substring(1), 10) - 1];
+        return replacement !== undefined ? replacement : token;
+    });
+}
 
 //         /**
 //          * Trim a String (remove trailing and leading white spaces)

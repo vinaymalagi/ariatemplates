@@ -13,10 +13,7 @@ export interface ClassDefinitionConfig {
 
 export function ClassDefinition(classDefinitionConfig: ClassDefinitionConfig) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function <T extends {new (...args: any[]): any}>(
-    target: T,
-    context: ClassDecoratorContext
-  ) {
+  return function <T extends {new (...args: any[]): any}>(target: T, context: ClassDecoratorContext) {
     if (context.metadata) {
       context.metadata["classDefinitionConfig"] = classDefinitionConfig;
     }
@@ -32,3 +29,13 @@ export function ClassDefinition(classDefinitionConfig: ClassDefinitionConfig) {
     };
   };
 }
+
+// export interface ClassEventDefinition {
+//   name: string;
+// }
+
+// export function AriaEvent(eventCfg: ClassEventDefinition) {
+//   return function(targetProp: any, context: ClassFieldDecoratorContext | ClassSetterDecoratorContext) {
+
+//   }
+// }

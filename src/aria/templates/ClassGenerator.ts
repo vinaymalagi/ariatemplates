@@ -63,7 +63,7 @@ export abstract class ClassGenerator {
    * @type aria.templates.Parser
    * @protected
    */
-  protected _parser: Parser;
+  protected abstract _parser: Parser;
 
   /**
    * Super class to be used for templates with no parent.

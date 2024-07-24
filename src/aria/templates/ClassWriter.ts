@@ -15,9 +15,10 @@
 // var Aria = require("../Aria");
 // var ariaUtilsString = require("../utils/String");
 import { Observable, Subject } from "rxjs";
-import { RootStatement, Statement } from "./tree-beans.js";
+import { RootStatement, Statement } from "./TreeBeans.js";
 import { Callback } from "../core/CfgBeans.js";
 import { stringify } from "../utils/String.js";
+import { FRAMEWORK_PREFIX } from "../Aria.js";
 
 export interface DependencySpec {
   library: string;
@@ -553,15 +554,15 @@ export class ClassWriter {
     return container;
   }
 
-  //         /**
-  //          * Add a statement to store line number (use to track runtime exceptions)
-  //          * @param {Number} lineNumber
-  //          */
-  //         trackLine : function (lineNumber) {
-  //             if (this._curblock) {
-  //                 this.writeln("this['" + Aria.FRAMEWORK_PREFIX + "currentLineNumber'] = " + lineNumber + ";");
-  //             }
-  //         },
+  /**
+   * Add a statement to store line number (use to track runtime exceptions)
+   * @param {Number} lineNumber
+   */
+  trackLine(lineNumber: number) {
+      if (this._curblock) {
+          this.writeln("this['" + FRAMEWORK_PREFIX + "currentLineNumber'] = " + lineNumber + ";");
+      }
+  }
 
   //         /**
   //          * Set the parseOnly flag to true and disables functions which are only useful for class generation.
