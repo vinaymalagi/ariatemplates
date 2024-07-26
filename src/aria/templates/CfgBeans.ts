@@ -52,115 +52,56 @@ export const ClassGeneratorCfgDefault: ClassGeneratorCfg = {
   skipLogError: false,
   throwErrors: false,
 };
-//         "BaseTemplateCfg" : {
-//             $type : "json:Object",
-//             $description : "Base configuration for all types of templates.",
-//             $properties : {
-//                 "$escapeHtmlByDefault" : {
-//                     $type : "json:Boolean",
-//                     $description : "Whether to enable or disable auto-escaping for this template. This overrides, for this specific template, the global setting defined in the environment."
-//                 },
-//                 "$classpath" : {
-//                     $type : "json:PackageName",
-//                     $description : "Classpath of the generated class.",
-//                     $mandatory : true
-//                 },
-//                 "$dependencies" : {
-//                     $type : "json:Array",
-//                     $description : "Additional dependencies",
-//                     $default : [],
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Any class that the template is dependent of"
-//                     }
-//                 },
-//                 "$hasScript" : {
-//                     $type : "json:Boolean",
-//                     $description : "Specifies whether a script is associated with the template. If this property is true, the script is a class declared with Aria.tplScriptDefinition whose classpath is the same as the one of the template, with the suffix Script added to the end.",
-//                     $default : false
-//                 },
-//                 "$extends" : {
-//                     $type : "json:PackageName",
-//                     $description : "Classpath of the parent template, if any."
-//                 },
-//                 "$texts" : {
-//                     $type : "json:Map",
-//                     $description : "Text templates used inside the Template",
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Classpath of the text template.",
-//                         $mandatory : true
-//                     }
-//                 }
-//             }
-//         },
-//         "TemplateCfg" : {
-//             $type : "BaseTemplateCfg",
-//             $description : "Configuration of a template.",
-//             $mandatory : true,
-//             $properties : {
-//                 "$width" : {
-//                     $type : "ContainerSizeCfg",
-//                     $description : "Constraints (min, max) for the width of the template.",
-//                     $default : null
-//                 },
-//                 "$height" : {
-//                     $type : "ContainerSizeCfg",
-//                     $description : "Constraints (min, max) for the height of the template.",
-//                     $default : null
-//                 },
-//                 "$wlibs" : {
-//                     $type : "json:Map",
-//                     $description : "Map of widget libraries used in the template. The key in the map is the prefix used inside the template to refer to that widget library. The value is the classpath of the library. The aria library is defined by default and refers to aria.widgets.AriaLib.",
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Classpath of the widget library.",
-//                         $sample : "aria.widgets.AriaLib",
-//                         $mandatory : true
-//                     },
-//                     $default : {}
-//                 },
-//                 "$res" : {
-//                     $type : "json:Map",
-//                     $description : "Resource class to be accessible through the res variable in the template.",
-//                     $contentType : {
-//                         $type : "json:MultiTypes", // can be a string (classpath of a simple resource) or an object
-//                         // (for resource providers)
-//                         $description : "Any resource class that the template is dependent of.",
-//                         $sample : "aria.widgets.WidgetsRes"
-//                     }
-//                 },
-//                 "$templates" : {
-//                     $type : "json:Array",
-//                     $description : "Template dependencies",
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Any template that should be loaded before the template is loaded."
-//                     }
-//                 },
-//                 "$css" : {
-//                     $type : "json:Array",
-//                     $description : "CSS dependencies",
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Any CSS template that should be loaded along with the template."
-//                     }
-//                 },
-//                 "$macrolibs" : {
-//                     $type : "json:Map",
-//                     $description : "Static macro libraries",
-//                     $contentType : {
-//                         $type : "json:PackageName",
-//                         $description : "Classpath of the macro library.",
-//                         $mandatory : true
-//                     }
-//                 }
-//                 /*
-//                  * , // TODO: complete the following properties ($mandatory, $description...): "dataController" :{
-//                  * $type: "json:String", $description: "" }, "dataType":{ $type: "json:String", $description: "" }
-//                  */
-//             }
-//         },
+
+
+export const DependencySpecSchema = z.object({
+  libraryPath: z.string().describe("Path from where to import, path can be relative"),
+  importedItem: z.string().describe("value or type to be imported")
+});
+
+export type DependencySpec = z.infer<typeof DependencySpecSchema>;
+
+export const ContainerSizeCfgSchema = z.object({
+  min: z.number().nullable().default(null).describe("Minimum size of the object, expressed in pixels; or null if there is no minimum size."),
+  max: z.number().nullable().default(null).describe("Maximum size of the object, expressed in pixels; or null if there is no maximum size."),
+  value: z.number().nullable().default(null).describe("Size of the object, if its size should be fixed, or null if there is no fixed size. When defined, it replaces both min and max."),
+  scrollbar: z.boolean().default(false).describe("If true, reserve space for the scrollbar (if constraints are on the width, space is reserved for a vertical scrollbar; if constraints are on the height, space is reserved for a horizontal scrollbar).")
+});
+
+export type ContainerSizeCfg = z.infer<typeof ContainerSizeCfgSchema>;
+
+export const BaseTemplateCfgSchema = z.object({
+  $escapeHtmlByDefault: z.boolean().optional().describe("Whether to enable or disable auto-escaping for this template. This overrides, for this specific template, the global setting defined in the environment."),
+  $classname: z.string().describe("Name of the generated class."),
+  $dependencies: DependencySpecSchema.array(),
+  $hasScript: z.boolean().describe("Specifies whether a script is associated with the template. If this property is true, the script is a class declared with Aria.tplScriptDefinition with class name same as the TPLscript with suffix \"Script\""),
+  $tplScript: z.union([DependencySpecSchema, z.string()]).describe("The Class name of the TplScript, must also be added in the dependencies spec"),
+  $extends: z.union([DependencySpecSchema, z.string()]).describe("The class name of the "),
+  // TODO:ModernAria: contrain type to text templates.
+  $texts: z.record(z.string(), z.any()).describe("Text templates used inside the Template")
+});
+
+export type BaseTemplateCfg = z.infer<typeof BaseTemplateCfgSchema>;
+
+
+export const TemplateCfgSchema = BaseTemplateCfgSchema.extend({
+  $width: ContainerSizeCfgSchema.nullable().default(null).describe("Constraints (min, max) for the width of the template."),
+  $height: ClassGeneratorCfgSchema.nullable().default(null).describe("Constraints (min, max) for the height of the template."),
+  // TODO:ModernAria: constrain type to widget lib classes.
+  $wlibs: z.record(z.string(), z.any()).default({}).describe("Map of widget libraries used in the template. The key in the map is the prefix used inside the template to refer to that widget library. The value is the classpath of the library. The aria library is defined by default and refers to aria.widgets.AriaLib."),
+  // TODO:ModernAria: constrain type to resource classes.
+  $res: z.record(z.string(), z.any()).optional().describe("Resource class to be accessible through the res variable in the template."),
+  // TODO:ModernAria: constrain type to resource classes.
+  $templates: z.array(z.any()).optional().describe("Template dependencies, any template classes that should be loaded before this template"),
+  // TODO:ModernAria: constrain type to resource classes.
+  $css: z.array(z.any()).optional().describe("CSS dependencies. Any CSS template that should be loaded along with the template."),
+  // TODO:ModernAria: constrain type to macro lib classes.
+  $macroLibs: z.record(z.string(), z.any()).describe("Static macro libraries")
+
+})
+export type TemplateCfg = z.infer<typeof TemplateCfgSchema>;
+
+
 //         "LibraryCfg" : {
 //             $type : "BaseTemplateCfg",
 //             $description : "Configuration of a library.",
@@ -273,29 +214,6 @@ export const ClassGeneratorCfgDefault: ClassGeneratorCfg = {
 //             }
 //         },
 
-//         "ContainerSizeCfg" : {
-//             $type : "json:Object",
-//             $description : "Constraints for the size (height or width) of a container object (the browser window or a template).",
-//             $properties : {
-//                 "min" : {
-//                     $type : "json:Integer",
-//                     $description : "Minimum size of the object, expressed in pixels; or null if there is no minimum size."
-//                 },
-//                 "max" : {
-//                     $type : "json:Integer",
-//                     $description : "Maximum size of the object, expressed in pixels; or null if there is no maximum size."
-//                 },
-//                 "value" : {
-//                     $type : "json:Integer",
-//                     $description : "Size of the object, if its size should be fixed, or null if there is no fixed size. When defined, it replaces both min and max."
-//                 },
-//                 "scrollbar" : {
-//                     $type : "json:Boolean",
-//                     $description : "If true, reserve space for the scrollbar (if constraints are on the width, space is reserved for a vertical scrollbar; if constraints are on the height, space is reserved for a horizontal scrollbar)."
-//                 }
-//             },
-//             $default : {}
-//         },
 //         "RootDimCfg" : {
 //             $type : "json:Object",
 //             $description : "Specify the constraints on the dimensions of the browser's window, which are used to compute the size of the templates.",

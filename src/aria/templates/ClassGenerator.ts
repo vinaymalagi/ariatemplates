@@ -36,14 +36,15 @@ function normalizeOptions (optionsOrAllDeps: Partial<ClassGeneratorCfg> | boolea
   if(typeof optionsOrAllDeps === 'boolean') {
     return {
       ...ClassGeneratorCfgDefault,
-      allDependencies: optionsOrAllDeps
-    }
-  } else {
-    const options = (typeof optionsOrAllDeps == "object") ? optionsOrAllDeps : {
       allDependencies: optionsOrAllDeps,
       errorContext: context,
-      debug: debug,
-      skipLogError: skipLogError
+      debug,
+      skipLogError
+    }
+  } else {
+    const options = {
+      ...ClassGeneratorCfgDefault,
+      ...(typeof optionsOrAllDeps === 'object' ? optionsOrAllDeps : {})
     };
     //TODO:ModernAria:Config Beans
     ClassGeneratorCfgSchema.parse(options);
@@ -85,6 +86,13 @@ export abstract class ClassGenerator {
    * @protected
    */
   protected _rootStatement = null;
+
+  /**
+   * Template parameter bean.
+   * @type String
+   * @protected
+   */
+  protected _templateParamBean = null;
 
   /**
    * Escape modifier name.

@@ -15,7 +15,7 @@
 // var Aria = require("../Aria");
 // var ariaTemplatesParser = require("./Parser");
 import { Parser } from "./Parser.js";
-import { RootStatement } from "./tree-beans.js";
+import { RootStatement } from "./TreeBeans.js";
 
 /**
  * Parser class for templates files. It converts a file written with the template syntax into a tree matching bean

@@ -401,7 +401,7 @@ public $logError(msg, msgArgs, err) {
  * @return {MultiTypes} the value returned by the callback, or undefined if the callback could not be
  * called.
  */
-$callback: function (cb, res, errorId) {
+$callback(cb, res, errorId) {
   try {
     if (!cb) {
       return; // callback is sometimes not used
@@ -437,14 +437,14 @@ $callback: function (cb, res, errorId) {
   } catch (ex) {
     this.$logError(errorId || this.CALLBACK_ERROR, [this.$classpath, (scope) ? scope.$classpath : ""], ex);
   }
-},
+}
 
 /**
  * Gets a proper signature callback from description given in argument
  * @param {Object|String} cn callback signature
  * @return {Object} callback object with fn and scope
  */
-$normCallback: function (cb) {
+$normCallback(cb) {
   var scope = cb.scope, callback;
   scope = scope ? scope : this;
   if (!cb.fn) {
@@ -463,7 +463,7 @@ $normCallback: function (cb) {
     resIndex: cb.resIndex,
     apply: cb.apply
   };
-},
+}
 
 /**
  * Display all internal values in a message box (debug and test purpose - usefull on low-end browsers)

@@ -17,7 +17,7 @@
 
 import { indexOfNotEscaped, isEscaped, nextWhiteSpace } from "../utils/String.js";
 import { ClassGeneratorCfg } from "./CfgBeans.js";
-import { Statement, RootStatement } from "./tree-beans.js";
+import { Statement, RootStatement } from "./TreeBeans.js";
 
 type ParserError = Error & { errors: {msgId: string, msgArgs: unknown[] | null, errorContext: unknown}[] };
 /**
