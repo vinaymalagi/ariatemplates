@@ -14,6 +14,10 @@
  */
 // var Aria = require("../Aria");
 
+import { Subject } from "rxjs";
+import { FRAMEWORK_LOGGER } from "../Aria.js";
+import { Callback } from "./CfgBeans.js";
+
 // (function () {
 
 // var disposeTag = Aria.FRAMEWORK_PREFIX + 'isDisposed';
@@ -255,6 +259,10 @@
  * @dependencies ["aria.utils.String", "aria.core.Interfaces", "aria.utils.Type"]
  */
 export abstract class JsObject {
+
+  private readonly $classpath = 'aria.core.JsObject';
+  public static readonly $classpath = 'aria.core.JsObject';
+
   protected isDisposed: boolean = false;
 
   public static UNDECLARED_EVENT: string = "undeclared event name: %1";
@@ -262,6 +270,9 @@ export abstract class JsObject {
   public static INTERFACE_NOT_SUPPORTED: string = "The '%1' interface is not supported on this object (of type '%2').";
   public static ASSERT_FAILURE: string = "Assert #%1 failed in %2";
   public static CALLBACK_ERROR: string = "An error occurred while processing a callback function: \ncalling class: %1\ncalled class: %2";
+
+  // List of Event emitters
+  protected _eventEmitters: Record<string, Subject<unknown>> = {}
 
   constructor() { }
 
@@ -303,6 +314,9 @@ export abstract class JsObject {
   public $dispose() {
     this.$destructor(); // call $destructor
     // TODO - cleanup object
+    Object.entries(this._eventEmitters).forEach(([, value]) => {
+      value.complete();
+    })
     // if (this._listeners) {
     //   this._listeners = null;
     //   delete this._listeners;
@@ -344,8 +358,7 @@ export abstract class JsObject {
    * @param {Object} obj An optional object to be inspected in the logged message
    */
   public $logDebug(msg: string, msgArgs?: string[], obj?: object) {
-    // replaced by the true logging function when aria.core.Log is loaded
-    return "";
+    FRAMEWORK_LOGGER?.debug(this.$classpath, msg, msgArgs, obj);
   }
 
   /**
@@ -355,8 +368,7 @@ export abstract class JsObject {
    * @param {Object} obj An optional object to be inspected in the logged message
    */
   public $logInfo(msg: string, msgArgs?: string[], obj?: object) {
-    // replaced by the true logging function when aria.core.Log is loaded
-    return "";
+    FRAMEWORK_LOGGER?.info(this.$classpath, msg, msgArgs, obj);
   }
 
   /**
@@ -365,9 +377,8 @@ export abstract class JsObject {
    * @param {Array} msgArgs An array of arguments to be used for string replacement in the message text
    * @param {Object} obj An optional object to be inspected in the logged message
    */
-  public $logWarn(msg: string, msgArgs?: string, obj?: object) {
-    // replaced by the true logging function when aria.core.Log is loaded
-    return "";
+  public $logWarn(msg: string, msgArgs?: string[], obj?: object) {
+    FRAMEWORK_LOGGER?.warn(this.$classpath, msg, msgArgs, obj);
   }
 
 /**
@@ -377,20 +388,21 @@ export abstract class JsObject {
  * @param {Object} err The actual JS error object that was created or an object to be inspected in the
  * logged message
  */
-public $logError(msg, msgArgs, err) {
+public $logError(msg: string, msgArgs?: string[], err?: object) {
   // replaced by the true logging function when
   // aria.core.Log is loaded
   // If it's not replaced because the log is never
   // downloaded, at least there will be errors in the
   // console.
-  if (Aria.$global.console) {
-    if (typeof msgArgs === "string")
-      msgArgs = [msgArgs];
-    Aria.$global.console.error(msg.replace(/%[0-9]+/g, function (token) {
-      return msgArgs[parseInt(token.substring(1), 10) - 1];
-    }), err);
-  }
-  return "";
+  // if (Aria.$global.console) {
+  //   if (typeof msgArgs === "string")
+  //     msgArgs = [msgArgs];
+  //   Aria.$global.console.error(msg.replace(/%[0-9]+/g, function (token) {
+  //     return msgArgs[parseInt(token.substring(1), 10) - 1];
+  //   }), err);
+  // }
+  // return "";
+  FRAMEWORK_LOGGER?.error(this.$classpath, msg, msgArgs, err);
 }
 
 /**
@@ -401,19 +413,26 @@ public $logError(msg, msgArgs, err) {
  * @return {MultiTypes} the value returned by the callback, or undefined if the callback could not be
  * called.
  */
-$callback(cb, res, errorId) {
-  try {
+// TODO:ModernAria: Figure out why the cb.$Callback logic is needed??
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+$callback(cb: Callback, res: any, errorId: string) {
     if (!cb) {
       return; // callback is sometimes not used
     }
-
-    if (cb.$Callback) {
-      return cb.call(res);
+    // TODO:ModernAria: Figure out why the cb.$Callback logic is needed??
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((cb as any).$Callback) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log((cb as any).$Callback)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (cb as any).call(res);
     }
 
     // perf optimisation : duplicated code on purpose
-    var scope = cb.scope, callback;
+    let scope = cb.scope;
     scope = scope ? scope : this;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let callback: any;
     if (!cb.fn) {
       callback = cb;
     } else {
@@ -424,18 +443,18 @@ $callback(cb, res, errorId) {
       callback = scope[callback];
     }
 
-    var args = (cb.apply === true && cb.args && Object.prototype.toString.apply(cb.args) === "[object Array]")
+    const args = (cb.apply === true && cb.args && Object.prototype.toString.apply(cb.args) === "[object Array]")
       ? cb.args.slice()
       : [cb.args];
-    var resIndex = (cb.resIndex === undefined) ? 0 : cb.resIndex;
+    const resIndex = (cb.resIndex === undefined) ? 0 : cb.resIndex;
 
     if (resIndex > -1) {
       args.splice(resIndex, 0, res);
     }
-
+  try {
     return Function.prototype.apply.call(callback, scope, args);
   } catch (ex) {
-    this.$logError(errorId || this.CALLBACK_ERROR, [this.$classpath, (scope) ? scope.$classpath : ""], ex);
+    this.$logError(errorId || JsObject.CALLBACK_ERROR, [this.$classpath, (scope) ? scope.$classpath : ""], ex as object);
   }
 }
 
@@ -444,8 +463,9 @@ $callback(cb, res, errorId) {
  * @param {Object|String} cn callback signature
  * @return {Object} callback object with fn and scope
  */
-$normCallback(cb) {
-  var scope = cb.scope, callback;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+$normCallback(cb: any): Callback {
+  let scope = cb.scope, callback;
   scope = scope ? scope : this;
   if (!cb.fn) {
     callback = cb;
@@ -462,423 +482,427 @@ $normCallback(cb) {
     args: cb.args,
     resIndex: cb.resIndex,
     apply: cb.apply
-  };
+  } as Callback;
 }
 
-/**
- * Display all internal values in a message box (debug and test purpose - usefull on low-end browsers)
- */
-$alert: function () {
-  var msg = [], tp;
-  msg.push('## ' + this.$classpath + ' ## ');
-  for (var k in this) {
-    if (this.hasOwnProperty(k)) {
-      tp = typeof (this[k]);
-      if (tp == 'object' || tp == 'function')
-        msg.push(k += ':[' + tp + ']');
-      else if (tp == 'string')
-        msg.push(k += ':"' + this[k] + '"');
-      else
-        msg.push(k += ':' + this[k]);
-    }
-  }
-  Aria.$window.alert(msg.join('\n'));
-  msg = null;
-},
+// /**
+//  * Display all internal values in a message box (debug and test purpose - usefull on low-end browsers)
+//  */
+// $alert() {
+//   var msg = [], tp;
+//   msg.push('## ' + this.$classpath + ' ## ');
+//   for (var k in this) {
+//     if (this.hasOwnProperty(k)) {
+//       tp = typeof (this[k]);
+//       if (tp == 'object' || tp == 'function')
+//         msg.push(k += ':[' + tp + ']');
+//       else if (tp == 'string')
+//         msg.push(k += ':"' + this[k] + '"');
+//       else
+//         msg.push(k += ':' + this[k]);
+//     }
+//   }
+//   Aria.$window.alert(msg.join('\n'));
+//   msg = null;
+// }
 
 /**
  * toString override to ease debugging
  */
-toString: function () {
+public toString() {
   return "[" + this.$classpath + "]";
-},
-
-/**
- * Returns a wrapper containing only the methods of the given interface.
- * @param {String|Function} itf Classpath of the interface or reference to the interface constructor.
- */
-$interface: function (itf) {
-  return require("./Interfaces").getInterface(this, itf);
-},
-
-/**
- * Add an interceptor callback on an interface specified by its classpath.
- * @param {String} itf [mandatory] interface which will be intercepted
- * @param {Object|aria.core.CfgBeans:Callback} interceptor either a callback or an object/class which will
- * receive notifications
- */
-$addInterceptor: function (itf, interceptor) {
-  // get the interface constructor:
-  var itfCstr = this.$interfaces[itf];
-  if (!itfCstr) {
-    this.$logError(this.INTERFACE_NOT_SUPPORTED, [itf, this.$classpath]);
-    return;
-  }
-  var allInterceptors = this.__$interceptors;
-  if (allInterceptors == null) {
-    allInterceptors = {};
-    this.__$interceptors = allInterceptors;
-  }
-  var interceptMethods = ((require("../utils/Type")).isCallback(interceptor))
-    ? __interceptCallback
-    : __interceptObject;
-
-  var itfs = itfCstr.prototype.$interfaces;
-  for (var i in itfs) {
-    if (itfs.hasOwnProperty(i)) {
-      var interceptedMethods = interceptMethods(itfs[i].interfaceDefinition.$interface, interceptor, allInterceptors[i]);
-      allInterceptors[i] = interceptedMethods;
-    }
-  }
-},
-
-/**
- * Remove interceptor callbacks or interceptor objects on an interface.
- * @param {String} itf [mandatory] interface which is intercepted
- * @param {Object} scope [optional] scope of the callbacks/objects to remove
- * @param {Function} fn [optional] function in the callbacks to remove
- */
-$removeInterceptors: function (itf, scope, fn) {
-  var itfCstr = this.$interfaces[itf];
-  var allInterceptors = this.__$interceptors;
-  if (!itfCstr || !allInterceptors) {
-    return;
-  }
-  var itfs = itfCstr.prototype.$interfaces;
-  // also remove the interceptor on all base interfaces of the interface
-  for (var i in itfs) {
-    if (itfs.hasOwnProperty(i)) {
-      __removeInterceptorCallback(allInterceptors, i, scope, fn);
-    }
-  }
-},
-
-/**
- * Call a method from this class, taking into account any registered interceptor.
- * @param {String} interfaceName Classpath of the interface in which the method is declared (directly). The
- * actual interface from which this method is called maybe an interface which extends this one.
- * @param {String} methodName Method name.
- * @param {Array} args Array of parameters to send to the method.
- * @param {Number} asyncCbParam [optional] if the method is asynchronous, must contain the index in args of
- * the callback parameter. Should be null if the method is not asynchronous.
- */
-$call: function (interfaceName, methodName, args, asyncCbParam) {
-  var interceptors;
-  if (this.__$interceptors == null || this.__$interceptors[interfaceName] == null
-    || (interceptors = this.__$interceptors[interfaceName][methodName]) == null) {
-    // no interceptor for that interface: call the method directly:
-    return this[methodName].apply(this, args);
-  }
-  return __callWrapper.call(this, args, {
-    interceptors: interceptors,
-    nbInterceptors: interceptors.length,
-    method: methodName,
-    asyncCbParam: asyncCbParam
-  }, 0);
-},
-
-/**
- * Adds a listener to the current object
- * @param {Object} lstCfg list of events that are listen to. For each event a config object with the
- * following arguments should be provided:<br/>
- *
- * <pre>
- * fn: {Function} [mandatory] callback function
- * scope: {Object} [mandatory] object on wich the callback will be called
- * args: {Object} [optional] argument object that will be passed to the callback as 2nd argument (1st argument is the event object)
- *      Note: as a shortcut, the function only can be provided (in this case, the scope property has to be used - as in the example below for the 'error' event
- *      Note: if a scope property is defined in the map, it will be used as default for all events. A '*' event name can also be used to listen to all events.
- * </pre>
- *
- * @example
- * Sample call:
- * <pre>
- * <code>
- * o.$addListeners({
- *     'start' : {
- *         fn : this.onStart
- *     },
- *     'end' : {
- *         fn : this.onEnd,
- *         args : {
- *             description : &quot;Sample Callback Argument&quot;
- *         }
- *     },
- *     'error' : this.onError,
- *     scope : this
- * })
- * </code>
- * </pre>
- */
-$addListeners: function (lstCfg, itfWrap) {
-
-  var defaultScope = (lstCfg.scope) ? lstCfg.scope : null;
-  var src = itfWrap ? itfWrap : this;
-  var lsn;
-  for (var evt in lstCfg) {
-    if (!lstCfg.hasOwnProperty(evt)) {
-      continue;
-    }
-    lsn = lstCfg[evt];
-    if (evt == 'scope') {
-      continue;
-    }
-    // The comparison with null below is important, as
-    // an empty string is a valid event description.
-    if (evt != '*' && src.$events[evt] == null) {
-      // invalid event
-      this.$logError(this.UNDECLARED_EVENT, evt, src.$classpath);
-      continue;
-    }
-    if (lsn.$Callback) {
-      lsn = {
-        fn: function (evt, cb) {
-          cb.call(evt);
-        },
-        scope: this,
-        args: lsn
-      };
-    } else if (!lsn.fn) {
-      // shortcut as in 'error' sample
-      if (!defaultScope) {
-        this.$logError(this.MISSING_SCOPE, evt);
-        continue;
-      }
-      lsn = {
-        fn: lsn,
-        scope: defaultScope,
-        once: lstCfg[evt].listenOnce
-        // we keep track of listeners which are meant to be called just once
-      };
-    } else {
-      // make a copy of lsn before changing it
-      lsn = {
-        fn: lsn.fn,
-        scope: lsn.scope,
-        args: lsn.args,
-        once: lstCfg[evt].listenOnce,
-        apply: lsn.apply,
-        resIndex: lsn.resIndex
-        // we keep track of listeners which are meant to be called just once
-      };
-      // lsn is an object as in 'start' or 'end' samples set default scope
-      if (!lsn.scope) {
-        lsn.scope = defaultScope;
-      }
-      if (!lsn.scope) {
-        this.$logError(this.MISSING_SCOPE, evt);
-        continue;
-      }
-    }
-
-    // add listener to _listeners
-    if (this._listeners == null) {
-      this._listeners = {};
-      this._listeners[evt] = [];
-    } else {
-      if (this._listeners[evt] == null) {
-        this._listeners[evt] = [];
-      }
-    }
-    // keep the interface under which the listener was registered:
-    lsn.src = src;
-    this._listeners[evt].push(lsn);
-  }
-  defaultScope = lsn = evt = null;
-},
-
-/**
- * Remove a listener from the listener list
- * @param {Object} lstCfg list of events to disconnect - same as for addListener(), except that scope is
- * mandatory Note: if fn is not provided, all listeners associated to the scope will be removed
- * @param {Object} itfWrap
- */
-$removeListeners: function (lstCfg, itfWrap) {
-  if (this._listeners == null) {
-    return;
-  }
-  var defaultScope = (lstCfg.scope) ? lstCfg.scope : null;
-  var lsn;
-  for (var evt in lstCfg) {
-    if (!lstCfg.hasOwnProperty(evt)) {
-      continue;
-    }
-    if (evt == 'scope') {
-      continue;
-    }
-    if (this._listeners[evt]) {
-      var lsnRm = lstCfg[evt];
-      if (typeof (lsnRm) == 'function') {
-        if (defaultScope == null) {
-          this.$logError(this.MISSING_SCOPE, evt);
-          continue;
-        }
-        __removeCallback(this._listeners, evt, defaultScope, lsnRm, itfWrap);
-      } else {
-        if (lsnRm.scope == null) {
-          lsnRm.scope = defaultScope;
-        }
-        if (lsnRm.scope == null) {
-          this.$logError(this.MISSING_SCOPE, evt);
-          continue;
-        }
-        __removeCallback(this._listeners, evt, lsnRm.scope, lsnRm.fn, itfWrap, lsnRm.firstOnly);
-      }
-
-    }
-  }
-  defaultScope = lsn = lsnRm = null;
-},
-
-/**
- * Remove all listeners associated to a given scope - if no scope is provided all listeneres will be removed
- * @param {Object} scope the scope of the listeners to remove
- * @param {Object} itfWrap
- */
-$unregisterListeners: function (scope, itfWrap) {
-  if (this._listeners == null) {
-    return;
-  }
-  // We must check itfWrap == null, so that it is not possible to unregister all the events of an object
-  // from its interface, if they have not been registered through that interface
-  if (scope == null && itfWrap == null) {
-    // remove all events
-    for (var evt in this._listeners) {
-      if (!this._listeners.hasOwnProperty(evt)) {
-        continue;
-      }
-      this._listeners[evt] = null; // remove array
-      delete this._listeners[evt];
-    }
-  } else {
-    // note that here, scope can be null (if itfWrap != null) we need to filter all events in this case
-    for (var evt in this._listeners) {
-      if (!this._listeners.hasOwnProperty(evt)) {
-        continue;
-      }
-      __removeCallback(this._listeners, evt, scope, null, itfWrap);
-    }
-  }
-  evt = null;
-},
-
-/**
- * Adds a listener to an event, and removes it right after the event has been raised. Please refer to
- * $addListeners() for parameters description
- * @param {Object} lstCfg
- * @param {Object} itfWrap
- */
-$onOnce: function (lstCfg, itfWrap) {
-  for (var evt in lstCfg) {
-    if (lstCfg.hasOwnProperty(evt)) {
-      lstCfg[evt].listenOnce = true;
-    }
-  }
-  this.$addListeners(lstCfg, itfWrap);
-},
-
-/**
- * Internal method used by sub-classes to raise an event to the object listeners. The event object that will
- * be passed to the listener function will have the following structure:
- *
- * <pre>
- * {
- *      name: evtName,
- *      src: observableObject[someArg1:'xx', ...]
- * }
- * </pre>
- *
- * NOTE: All properties except name and src are specific to the event.
- * @param {String|Object} evtDesc The event description.
- * <p>
- * If provided as a String - evtDesc is the name of the event as specified by the object in
- * <code>$events</code>
- * </p>
- * <p>
- * If provided as a Map - evtDesc is expected to have a name property (for the event name) - all other
- * properties will be considered as event arguments
- * </p>
- * Sample calls:
- *
- * <pre>
- * this.$raiseEvent('load');
- * this.$raiseEvent({
- *     name : 'load',
- *     someProperty : 123
- * });
- * </pre>
- */
-$raiseEvent: function (evtDesc) {
-  if (this._listeners == null) {
-    return;
-  }
-  var nm = '', hasArgs = false;
-  if (typeof (evtDesc) == 'string') {
-    nm = evtDesc;
-  } else {
-    nm = evtDesc.name;
-    hasArgs = true;
-  }
-  // The comparison with null below is important, as an empty string is a valid event description.
-  if (nm == null || this.$events[nm] == null) {
-    this.$logError(this.UNDECLARED_EVENT, [nm, this.$classpath]);
-  } else {
-    // loop on evtName + '*'
-    var evtNames = [nm, '*'], evt = null;
-    var listeners = this._listeners;
-    for (var idx = 0; idx < 2; idx++) {
-      // warning this can be disposed during this call as some events (like 'complete') may be caught
-      // for this purpose also make a copy because a callback could modify this list
-      var lsnList = listeners[evtNames[idx]];
-      if (lsnList) {
-        if (!evt) {
-          // create the event object if we have an event description object, we use it directly to
-          // be able to pass back parameters to the function which called $raiseEvent
-          evt = (hasArgs ? evtDesc : {});
-          evt.name = nm;
-          // the src property of the event is now set differently for each listener, because when
-          // interfaces have events, we do not want the event object to be used to access the
-          // whole object instead of only the interface
-        }
-        // also make a copy because a callback could modify this list
-        lsnList = lsnList.slice(0);
-
-        var sz = lsnList.length, lsn, src;
-        for (var i = 0; sz > i; i++) {
-          // call listener
-          lsn = lsnList[i];
-          src = lsn.src;
-          // Check lsn.removed because it is possible that the listener is removed while
-          // $raiseEvent is running.
-          // In this case, lsnList still contains the listener, but __removeListeners sets lsn.src
-          // to null
-          // Also check that the event is in src.$events in case idx == 1 because when registering
-          // a listener on '*' from an interface wrapper, the listener must only be called for
-          // events of the interface (not for all the events of the object).
-          // The comparison with null below is important, as an empty string is a valid event
-          // description.
-          if (!lsn.removed && (idx === 0 || src.$events[nm] != null)) {
-            // update the source of the event (useful if registering an event from an interface)
-            evt.src = src;
-
-            if (lsn.once) {
-              delete lsn.once;
-              var rmvCfg = {};
-              rmvCfg[evt.name] = lsn;
-
-              // we must remove the listener before calling it (otherwise there can be
-              // infinite loops in the framework...)
-              this.$removeListeners(rmvCfg);
-            }
-            this.$callback(lsn, evt);
-          }
-        }
-        // set src to null so that storing the evt object does not grant access to the whole object
-        evt.src = null;
-      }
-    }
-    listeners = lsnList = sz = null;
-  }
 }
+
+// /**
+//  * Returns a wrapper containing only the methods of the given interface.
+//  * @param {String|Function} itf Classpath of the interface or reference to the interface constructor.
+//  */
+// $interface: function (itf) {
+//   return require("./Interfaces").getInterface(this, itf);
+// },
+
+// /**
+//  * Add an interceptor callback on an interface specified by its classpath.
+//  * @param {String} itf [mandatory] interface which will be intercepted
+//  * @param {Object|aria.core.CfgBeans:Callback} interceptor either a callback or an object/class which will
+//  * receive notifications
+//  */
+// $addInterceptor: function (itf, interceptor) {
+//   // get the interface constructor:
+//   var itfCstr = this.$interfaces[itf];
+//   if (!itfCstr) {
+//     this.$logError(this.INTERFACE_NOT_SUPPORTED, [itf, this.$classpath]);
+//     return;
+//   }
+//   var allInterceptors = this.__$interceptors;
+//   if (allInterceptors == null) {
+//     allInterceptors = {};
+//     this.__$interceptors = allInterceptors;
+//   }
+//   var interceptMethods = ((require("../utils/Type")).isCallback(interceptor))
+//     ? __interceptCallback
+//     : __interceptObject;
+
+//   var itfs = itfCstr.prototype.$interfaces;
+//   for (var i in itfs) {
+//     if (itfs.hasOwnProperty(i)) {
+//       var interceptedMethods = interceptMethods(itfs[i].interfaceDefinition.$interface, interceptor, allInterceptors[i]);
+//       allInterceptors[i] = interceptedMethods;
+//     }
+//   }
+// },
+
+// /**
+//  * Remove interceptor callbacks or interceptor objects on an interface.
+//  * @param {String} itf [mandatory] interface which is intercepted
+//  * @param {Object} scope [optional] scope of the callbacks/objects to remove
+//  * @param {Function} fn [optional] function in the callbacks to remove
+//  */
+// $removeInterceptors: function (itf, scope, fn) {
+//   var itfCstr = this.$interfaces[itf];
+//   var allInterceptors = this.__$interceptors;
+//   if (!itfCstr || !allInterceptors) {
+//     return;
+//   }
+//   var itfs = itfCstr.prototype.$interfaces;
+//   // also remove the interceptor on all base interfaces of the interface
+//   for (var i in itfs) {
+//     if (itfs.hasOwnProperty(i)) {
+//       __removeInterceptorCallback(allInterceptors, i, scope, fn);
+//     }
+//   }
+// },
+
+// /**
+//  * Call a method from this class, taking into account any registered interceptor.
+//  * @param {String} interfaceName Classpath of the interface in which the method is declared (directly). The
+//  * actual interface from which this method is called maybe an interface which extends this one.
+//  * @param {String} methodName Method name.
+//  * @param {Array} args Array of parameters to send to the method.
+//  * @param {Number} asyncCbParam [optional] if the method is asynchronous, must contain the index in args of
+//  * the callback parameter. Should be null if the method is not asynchronous.
+//  */
+// $call: function (interfaceName, methodName, args, asyncCbParam) {
+//   var interceptors;
+//   if (this.__$interceptors == null || this.__$interceptors[interfaceName] == null
+//     || (interceptors = this.__$interceptors[interfaceName][methodName]) == null) {
+//     // no interceptor for that interface: call the method directly:
+//     return this[methodName].apply(this, args);
+//   }
+//   return __callWrapper.call(this, args, {
+//     interceptors: interceptors,
+//     nbInterceptors: interceptors.length,
+//     method: methodName,
+//     asyncCbParam: asyncCbParam
+//   }, 0);
+// },
+
+// /**
+//  * Adds a listener to the current object
+//  * @param {Object} lstCfg list of events that are listen to. For each event a config object with the
+//  * following arguments should be provided:<br/>
+//  *
+//  * <pre>
+//  * fn: {Function} [mandatory] callback function
+//  * scope: {Object} [mandatory] object on wich the callback will be called
+//  * args: {Object} [optional] argument object that will be passed to the callback as 2nd argument (1st argument is the event object)
+//  *      Note: as a shortcut, the function only can be provided (in this case, the scope property has to be used - as in the example below for the 'error' event
+//  *      Note: if a scope property is defined in the map, it will be used as default for all events. A '*' event name can also be used to listen to all events.
+//  * </pre>
+//  *
+//  * @example
+//  * Sample call:
+//  * <pre>
+//  * <code>
+//  * o.$addListeners({
+//  *     'start' : {
+//  *         fn : this.onStart
+//  *     },
+//  *     'end' : {
+//  *         fn : this.onEnd,
+//  *         args : {
+//  *             description : &quot;Sample Callback Argument&quot;
+//  *         }
+//  *     },
+//  *     'error' : this.onError,
+//  *     scope : this
+//  * })
+//  * </code>
+//  * </pre>
+//  */
+// $addListeners: function (lstCfg, itfWrap) {
+
+//   var defaultScope = (lstCfg.scope) ? lstCfg.scope : null;
+//   var src = itfWrap ? itfWrap : this;
+//   var lsn;
+//   for (var evt in lstCfg) {
+//     if (!lstCfg.hasOwnProperty(evt)) {
+//       continue;
+//     }
+//     lsn = lstCfg[evt];
+//     if (evt == 'scope') {
+//       continue;
+//     }
+//     // The comparison with null below is important, as
+//     // an empty string is a valid event description.
+//     if (evt !=   && src.$events[evt] == null) {
+//       // invalid event
+//       this.$logError(this.UNDECLARED_EVENT, evt, src.$classpath);
+//       continue;
+//     }
+//     if (lsn.$Callback) {
+//       lsn = {
+//         fn: function (evt, cb) {
+//           cb.call(evt);
+//         },
+//         scope: this,
+//         args: lsn
+//       };
+//     } else if (!lsn.fn) {
+//       // shortcut as in 'error' sample
+//       if (!defaultScope) {
+//         this.$logError(this.MISSING_SCOPE, evt);
+//         continue;
+//       }
+//       lsn = {
+//         fn: lsn,
+//         scope: defaultScope,
+//         once: lstCfg[evt].listenOnce
+//         // we keep track of listeners which are meant to be called just once
+//       };
+//     } else {
+//       // make a copy of lsn before changing it
+//       lsn = {
+//         fn: lsn.fn,
+//         scope: lsn.scope,
+//         args: lsn.args,
+//         once: lstCfg[evt].listenOnce,
+//         apply: lsn.apply,
+//         resIndex: lsn.resIndex
+//         // we keep track of listeners which are meant to be called just once
+//       };
+//       // lsn is an object as in 'start' or 'end' samples set default scope
+//       if (!lsn.scope) {
+//         lsn.scope = defaultScope;
+//       }
+//       if (!lsn.scope) {
+//         this.$logError(this.MISSING_SCOPE, evt);
+//         continue;
+//       }
+//     }
+
+//     // add listener to _listeners
+//     if (this._listeners == null) {
+//       this._listeners = {};
+//       this._listeners[evt] = [];
+//     } else {
+//       if (this._listeners[evt] == null) {
+//         this._listeners[evt] = [];
+//       }
+//     }
+//     // keep the interface under which the listener was registered:
+//     lsn.src = src;
+//     this._listeners[evt].push(lsn);
+//   }
+//   defaultScope = lsn = evt = null;
+// },
+
+// /**
+//  * Remove a listener from the listener list
+//  * @param {Object} lstCfg list of events to disconnect - same as for addListener(), except that scope is
+//  * mandatory Note: if fn is not provided, all listeners associated to the scope will be removed
+//  * @param {Object} itfWrap
+//  */
+// $removeListeners: function (lstCfg, itfWrap) {
+//   if (this._listeners == null) {
+//     return;
+//   }
+//   var defaultScope = (lstCfg.scope) ? lstCfg.scope : null;
+//   var lsn;
+//   for (var evt in lstCfg) {
+//     if (!lstCfg.hasOwnProperty(evt)) {
+//       continue;
+//     }
+//     if (evt == 'scope') {
+//       continue;
+//     }
+//     if (this._listeners[evt]) {
+//       var lsnRm = lstCfg[evt];
+//       if (typeof (lsnRm) == 'function') {
+//         if (defaultScope == null) {
+//           this.$logError(this.MISSING_SCOPE, evt);
+//           continue;
+//         }
+//         __removeCallback(this._listeners, evt, defaultScope, lsnRm, itfWrap);
+//       } else {
+//         if (lsnRm.scope == null) {
+//           lsnRm.scope = defaultScope;
+//         }
+//         if (lsnRm.scope == null) {
+//           this.$logError(this.MISSING_SCOPE, evt);
+//           continue;
+//         }
+//         __removeCallback(this._listeners, evt, lsnRm.scope, lsnRm.fn, itfWrap, lsnRm.firstOnly);
+//       }
+
+//     }
+//   }
+//   defaultScope = lsn = lsnRm = null;
+// },
+
+// /**
+//  * Remove all listeners associated to a given scope - if no scope is provided all listeneres will be removed
+//  * @param {Object} scope the scope of the listeners to remove
+//  * @param {Object} itfWrap
+//  */
+// $unregisterListeners: function (scope, itfWrap) {
+//   if (this._listeners == null) {
+//     return;
+//   }
+//   // We must check itfWrap == null, so that it is not possible to unregister all the events of an object
+//   // from its interface, if they have not been registered through that interface
+//   if (scope == null && itfWrap == null) {
+//     // remove all events
+//     for (var evt in this._listeners) {
+//       if (!this._listeners.hasOwnProperty(evt)) {
+//         continue;
+//       }
+//       this._listeners[evt] = null; // remove array
+//       delete this._listeners[evt];
+//     }
+//   } else {
+//     // note that here, scope can be null (if itfWrap != null) we need to filter all events in this case
+//     for (var evt in this._listeners) {
+//       if (!this._listeners.hasOwnProperty(evt)) {
+//         continue;
+//       }
+//       __removeCallback(this._listeners, evt, scope, null, itfWrap);
+//     }
+//   }
+//   evt = null;
+// },
+
+// /**
+//  * Adds a listener to an event, and removes it right after the event has been raised. Please refer to
+//  * $addListeners() for parameters description
+//  * @param {Object} lstCfg
+//  * @param {Object} itfWrap
+//  */
+// $onOnce: function (lstCfg, itfWrap) {
+//   for (var evt in lstCfg) {
+//     if (lstCfg.hasOwnProperty(evt)) {
+//       lstCfg[evt].listenOnce = true;
+//     }
+//   }
+//   this.$addListeners(lstCfg, itfWrap);
+// },
+
+// /**
+//  * Internal method used by sub-classes to raise an event to the object listeners. The event object that will
+//  * be passed to the listener function will have the following structure:
+//  *
+//  * <pre>
+//  * {
+//  *      name: evtName,
+//  *      src: observableObject[someArg1:'xx', ...]
+//  * }
+//  * </pre>
+//  *
+//  * NOTE: All properties except name and src are specific to the event.
+//  * @param {String|Object} evtDesc The event description.
+//  * <p>
+//  * If provided as a String - evtDesc is the name of the event as specified by the object in
+//  * <code>$events</code>
+//  * </p>
+//  * <p>
+//  * If provided as a Map - evtDesc is expected to have a name property (for the event name) - all other
+//  * properties will be considered as event arguments
+//  * </p>
+//  * Sample calls:
+//  *
+//  * <pre>
+//  * this.$raiseEvent('load');
+//  * this.$raiseEvent({
+//  *     name : 'load',
+//  *     someProperty : 123
+//  * });
+//  * </pre>
+//  */
+// $raiseEvent: function (evtDesc) {
+//   if (this._listeners == null) {
+//     return;
+//   }
+//   var nm = '', hasArgs = false;
+//   if (typeof (evtDesc) == 'string') {
+//     nm = evtDesc;
+//   } else {
+//     nm = evtDesc.name;
+//     hasArgs = true;
+//   }
+//   // The comparison with null below is important, as an empty string is a valid event description.
+//   if (nm == null || this.$events[nm] == null) {
+//     this.$logError(this.UNDECLARED_EVENT, [nm, this.$classpath]);
+//   } else {
+//     // loop on evtName + '*'
+//     var evtNames = [nm, '*'], evt = null;
+//     var listeners = this._listeners;
+//     for (var idx = 0; idx < 2; idx++) {
+//       // warning this can be disposed during this call as some events (like 'complete') may be caught
+//       // for this purpose also make a copy because a callback could modify this list
+//       var lsnList = listeners[evtNames[idx]];
+//       if (lsnList) {
+//         if (!evt) {
+//           // create the event object if we have an event description object, we use it directly to
+//           // be able to pass back parameters to the function which called $raiseEvent
+//           evt = (hasArgs ? evtDesc : {});
+//           evt.name = nm;
+//           // the src property of the event is now set differently for each listener, because when
+//           // interfaces have events, we do not want the event object to be used to access the
+//           // whole object instead of only the interface
+//         }
+//         // also make a copy because a callback could modify this list
+//         lsnList = lsnList.slice(0);
+
+//         var sz = lsnList.length, lsn, src;
+//         for (var i = 0; sz > i; i++) {
+//           // call listener
+//           lsn = lsnList[i];
+//           src = lsn.src;
+//           // Check lsn.removed because it is possible that the listener is removed while
+//           // $raiseEvent is running.
+//           // In this case, lsnList still contains the listener, but __removeListeners sets lsn.src
+//           // to null
+//           // Also check that the event is in src.$events in case idx == 1 because when registering
+//           // a listener on '*' from an interface wrapper, the listener must only be called for
+//           // events of the interface (not for all the events of the object).
+//           // The comparison with null below is important, as an empty string is a valid event
+//           // description.
+//           if (!lsn.removed && (idx === 0 || src.$events[nm] != null)) {
+//             // update the source of the event (useful if registering an event from an interface)
+//             evt.src = src;
+
+//             if (lsn.once) {
+//               delete lsn.once;
+//               var rmvCfg = {};
+//               rmvCfg[evt.name] = lsn;
+
+//               // we must remove the listener before calling it (otherwise there can be
+//               // infinite loops in the framework...)
+//               this.$removeListeners(rmvCfg);
+//             }
+//             this.$callback(lsn, evt);
+//           }
+//         }
+//         // set src to null so that storing the evt object does not grant access to the whole object
+//         evt.src = null;
+//       }
+//     }
+//     listeners = lsnList = sz = null;
+//   }
+//
+
+  protected _registerEventEmitter(name: string, emitter: Subject<unknown>) {
+    this._eventEmitters[name] = emitter;
+  }
 }
 

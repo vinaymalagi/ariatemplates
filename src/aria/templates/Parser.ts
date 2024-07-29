@@ -105,7 +105,7 @@ export abstract class Parser {
     template = template.replace(/\/\/.*\{(\/)?CDATA\}.*$/gm, "");
 
     const cdataSplit = template.split("{CDATA}");
-    let parts = [],
+    let parts: string[] = [],
       cdataParts;
     parts.push(cdataSplit[0]);
     for (let index = 1, l = cdataSplit.length; index < l; index++) {

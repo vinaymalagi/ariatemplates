@@ -100,6 +100,19 @@ export abstract class ClassGenerator {
   public escapeModifier: string | null = null;
 
   /**
+   * Load the list of statements that are allowed for this class generator. The list is specified by the
+   * descendant class aria.templates.TplClassGenerator and aria.templates.CSSClassGenerator
+   * @param {Array} statements List of statements name
+   * @protected
+   */
+  _loadStatements (statements: ) {
+      for (var i = 0, len = statements.length; i < len; i += 1) {
+          var statement = statements[i];
+          this.STATEMENTS[statement] = this.ALLSTATEMENTS[statement];
+      }
+  }
+
+  /**
    * Parse the given template, and send the generated class definition to the callback function. The first
    * parameter given to the callback function is: { classDef: {String} if null, errors occured during parsing or
    * class generation; otherwise contains the generated class }
@@ -112,12 +125,15 @@ export abstract class ClassGenerator {
     try {
       const tree = this._parser.parseTemplate(template, options, [], options.throwErrors);
       if(tree) {
-        this._buildClass(tree, options, callback);
+        return this._buildClass(tree, options, callback);
       } else {
         //TODO:ModernAria:Handle callback preferably as return value or execption
-        // callback.fn.call(callback.scope, {classDef: null});
+        return {classDef: null, errors: true};
       }
     } catch (e) {
+      // TODO:ModernAria: Handle any type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return {classDef: null, errors: (e as any).errors};
     }
   }
 
@@ -234,18 +250,7 @@ export abstract class ClassGenerator {
 //             this.__buildClass(tree, options, callback);
 //         },
 
-//         /**
-//          * Load the list of statements that are allowed for this class generator. The list is specified by the
-//          * descendant class aria.templates.TplClassGenerator and aria.templates.CSSClassGenerator
-//          * @param {Array} statements List of statements name
-//          * @protected
-//          */
-//         _loadStatements : function (statements) {
-//             for (var i = 0, len = statements.length; i < len; i += 1) {
-//                 var statement = statements[i];
-//                 this.STATEMENTS[statement] = this.ALLSTATEMENTS[statement];
-//             }
-//         },
+//
 
 //         /**
 //          * Get the list of statements loaded for this ClassGenerator

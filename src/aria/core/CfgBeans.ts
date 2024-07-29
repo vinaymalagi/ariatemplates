@@ -29,6 +29,29 @@ import { z } from "zod";
 //         "json" : ariaCoreJsonTypes
 //     },
 //     $beans : {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Constructor = {new (...args: any[]): any}
+
+export const ClassDefinitionCfgSchema = z.object({
+  $classpath: z.string().min(1).describe('The fully qualified class path, used as a class identifier'),
+  // $extends: z.null().describe('Use extends as part of class definition'),
+  // TODO: ModernAria: Figure out if interfaces are needed for module controllers.
+  // $implements: z.null(). describe('Use typescript interfaces')
+  // $dependencies: z.null().describe('Use ES imports')
+  // TODO: ModernAria: Resolve the z.any for resource class, and figure out Resource Provider imlementation.
+  $resources: z.record(z.string(), z.any()).optional().describe('Resource property key and value is resource class'),
+  // TODO: ModernAria: Resolve the z.any for Template classes.
+  $templates: z.array(z.any()).optional().describe('Template dependencies. Any template dependencies that should be loaded along with the class.'),
+  // TODO: ModernAria: Resolve the z.any for CSS classes.
+  $css: z.array(z.any()).optional().describe('CSS dependencies. Any CSS template that should be loaded along with the class.'),
+  // TODO: ModernAria: Resolve the z.any for macro lib classes.
+  $macrolibs: z.array(z.any()).describe('Static macro libraries. Macro library classes to load as a dependency of the class.'),
+  $csslibs: z.array(z.any()).describe('Static CSS macro libs. CSS macro library classes to load as a dependency of the class.')
+  // $events, $destructor, $onload, $onunload, should be part of es6 class implementation
+  // TODO: ModernAria: Check if onload, unload and $texts are needed.
+});
+
+export type ClassDefinitionCfg = z.infer<typeof ClassDefinitionCfgSchema>;
 //         "ClassDefinitionCfg" : {
 //             $type : "json:Object",
 //             $description : "Parameter to pass to Aria.classDefinition method.",

@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-//TODO:ModernAria: Rremove the esline disable
 import { indexOfNotEscaped, stringify } from "../utils/String.js";
 import { ClassGenerator } from "./ClassGenerator.js";
 import { ClassWriter } from "./ClassWriter.js";
 import { Statement } from "./TreeBeans.js";
 import { FRAMEWORK_PREFIX } from "../Aria.js";
+import { DependencySpec } from "./CfgBeans.js";
 
 /*
  * Copyright 2012 Amadeus s.a.s.
@@ -80,16 +79,16 @@ let currentMacroName = "";
         const ELSE_WITHOUT_IF = "line %1: Template error: 'else' or 'elseif' is used outside an 'if' structure.";
         const ELSEIF_AFTER_ELSE = "line %1: Template error: 'elseif' is used after 'else' in the same 'if' structure.";
         const ELSE_ALREADY_USED = "line %1: Template error: an 'else' statement has already been used in this 'if' structure.";
-        // const INVALID_WIDGET_SYNTAX = "line %1: Template error: invalid syntax for the widget statement; expected syntax: @lib:widget";
-        // const UNDECLARED_WIDGET_LIBRARY = "line %2: Template error: found widget library '%1', which is undeclared in the wlibs parameter of the 'Template' statement.";
+        const INVALID_WIDGET_SYNTAX = "line %1: Template error: invalid syntax for the widget statement; expected syntax: @lib:widget";
+        const UNDECLARED_WIDGET_LIBRARY = "line %2: Template error: found widget library '%1', which is undeclared in the wlibs parameter of the 'Template' statement.";
         // const INVALID_MODIFIER_SYNTAX = "line %2: Template error: invalid modifier syntax '%1'.";
-        // const UNKNOWN_WIDGET = "line %2: Template error: unknown widget '%1'.";
+        const UNKNOWN_WIDGET = "line %2: Template error: unknown widget '%1'.";
         const MACRO_ALREADY_DEFINED = "line %3: Template error: macro '%1' is already defined line %2.";
         const SEPARATOR_NOT_FIRST_IN_FOREACH = "line %1: Template error: the separator statement can only be used as the first statement inside a {foreach ...} ... {/foreach} loop.";
         // const INCOMPATIBLE_CREATEVIEW = "line %2: Template error: two createView statements with the same view base name must have the same depth (previous definition line %1).";
         // const INCORRECT_VARIABLE_NAME = "line %2: Template error: incorrect variable name '%1'.";
         const INVALID_FOREACH_INKEYWORD = "line %2: Template error: invalid foreach syntax, expected one of 'in', 'inView', 'inFilteredView', 'inSortedView', 'inPagedView' but found: '%1'.";
-        // const INVALID_WIDGET_LIBRARY = "line %3: Template error: %1 (%2) is not a valid widget library. A widget library must extend aria.widgetLibs.WidgetLib.";
+        const INVALID_WIDGET_LIBRARY = "line %3: Template error: %1 (%2) is not a valid widget library. A widget library must extend aria.widgetLibs.WidgetLib.";
         // const INVALID_EVENT_TYPE = "The event type: '%1' is an invalid event type.";
         // const SECTIONS_AS_CONTAINERS = "Sections as container statements ({section {...}}...{/section}) have been allowed through the application environment. Nevertheless, it is strongly advisable to use them as self-closing statements ({section {...}/}).";
     // },
@@ -258,6 +257,8 @@ let currentMacroName = "";
                       out.logError(statement, SEPARATOR_NOT_FIRST_IN_FOREACH);
                       return;
                   }
+
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const variterct: string = (foreachStruct as any)[FRAMEWORK_PREFIX + 'foreachCounter'];
                   out.writeln("if (", variterct, ">1) {");
                   out.increaseIndent();
@@ -282,7 +283,7 @@ let currentMacroName = "";
             //     inMacro : true,
             //     container : false,
             //     paramRegexp : /^(\w+)\s+([\s\S]+)$/,
-            //     process : function (out, statement, param) {
+            //     process : function (out: ClassWriter, statement: Statement, param: string[]) {
             //         const eventName = param[1];
             //         const callback = param[2];
             //         const delegate = ariaUtilsDelegate;
@@ -311,6 +312,7 @@ let currentMacroName = "";
 
                     // clean statement in case of reprocessing of the tree
                     // TODO:ModernAria:Improve Type definition of "if" statement
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     delete (statement as any)[FRAMEWORK_PREFIX + "elsepresent"];
 
                     out.decreaseIndent();
@@ -465,6 +467,7 @@ let currentMacroName = "";
                     out.writeln("}");
 
                     const variterct = varitervalue + "_ct";
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (statement as any)[FRAMEWORK_PREFIX + 'foreachCounter'] = variterct; // for the separator statement
                     out.writeln("var ", variterct, "=0;");
                     let varLastIndex;
@@ -515,18 +518,18 @@ let currentMacroName = "";
                     out.writeln("}");
                 }
             },
-            // "repeater" : {
-            //     inMacro : true,
-            //     container : false,
-            //     process : function (out: ClassWriter, statement: Statement) {
-            //         let param = statement.paramBlock;
-            //         if (out.debug) {
-            //             param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_REPEATER_PARAMETER");
-            //         }
-            //         out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
-            //         out.writeln("this.__$statementRepeater(", statement.lineNumber, ",(", param, "));");
-            //     }
-            // },
+            "repeater" : {
+                inMacro : true,
+                container : false,
+                process : function (out: ClassWriter, statement: Statement) {
+                    let param = statement.paramBlock;
+                    if (out.debug) {
+                        param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_REPEATER_PARAMETER");
+                    }
+                    out.addDependency({importedItem: "Repeater", libraryPath: "ariatemplates/templates/Repeater.js"}); // dependency on the Repeater object
+                    out.writeln("this.__$statementRepeater(", `${statement.lineNumber}`, ",(", param, "));");
+                }
+            },
             "macro" : {
                 inMacro : false,
                 container : true,
@@ -547,15 +550,14 @@ let currentMacroName = "";
                     out.increaseIndent();
                     out.writeln("try {");
                     out.increaseIndent();
-                    out.writeln("with (this) {");
-                    out.increaseIndent();
+                    // out.writeln("with (this) {");
+                    // out.increaseIndent();
                     statement.content && out.processContent(statement.content);
-                    out.decreaseIndent();
-                    out.writeln("}");
+                    // out.decreaseIndent();
+                    // out.writeln("}");
                     out.decreaseIndent();
                     out.writeln("} catch (_ex) {");
                     out.increaseIndent();
-                    //TODO:ModernAria:Framework prefix constant should be in root Aria
                     out.writeln("this.$logError(this.EXCEPTION_IN_MACRO,[", stringify(macroname), ",__filename, this['"
                             + FRAMEWORK_PREFIX + "currentLineNumber']],_ex);");
                     out.decreaseIndent();
@@ -573,55 +575,56 @@ let currentMacroName = "";
                     };
                 }
             },
-            // "memo" : {
-            //     inMacro : true,
-            //     container : true,
-            //     // Syntax: macro macroname ( macroparam1, macroparam2 ... )
-            //     paramRegexp : /^[\S\s]*$/,
-            //     process : function (out, statement, param) {
-            //         out.processContent(statement.content);
-            //     }
-            // },
-            // "call" : {
-            //     inMacro : true,
-            //     container : false,
-            //     // Syntax: call macroname ( any params ... )
-            //     // PTR 04231438: Regular expression must accept spaces at the end.
-            //     paramRegexp : /^(\$?[_\w]+\.)?([_\w]+)\s*\(([\s\S]*)\)\s*$/,
-            //     process : function (out, statement, param) {
-            //         var macroContainer = param[1]; // macro container (with the dot at the end)
-            //         var macroname = param[2];
-            //         var macroparams = param[3];
-            //         var macroRef;
-            //         var macroCall;
-            //         if (macroContainer) {
-            //             macroRef = "this." + macroContainer + "macro_" + macroname;
-            //             if (macroContainer.charAt(0) == "$") {
-            //                 // call a macro from a parent template
-            //                 macroCall = macroRef + ".apply(this,[" + macroparams + "]);";
-            //             } else {
-            //                 macroCall = macroRef + "(" + macroparams + ");";
-            //             }
-            //         } else {
-            //             macroRef = "this.macro_" + macroname;
-            //             macroCall = macroRef + "(" + macroparams + ");";
-            //         }
-            //         if (out.debug) {
-            //             var macroDisplay = macroContainer ? macroContainer + macroname : macroname;
-            //             out.writeln("if (", macroRef, " == null) {");
-            //             out.increaseIndent();
-            //             out.writeln('this.$logError(this.MACRO_NOT_FOUND,[__filename,', statement.lineNumber, ',', out.stringify(macroDisplay), ']);');
-            //             out.decreaseIndent();
-            //             out.writeln("}");
-            //         }
-            //         out.writeln(macroCall);
-            //         statement.properties = {
-            //             container: macroContainer ? macroContainer.slice(0, -1) : undefined, // macro container (without the dot at the end)
-            //             name: macroname,
-            //             args: macroparams
-            //         };
-            //     }
-            // },
+            "memo" : {
+                inMacro : true,
+                container : true,
+                // Syntax: macro macroname ( macroparam1, macroparam2 ... )
+                paramRegexp : /^[\S\s]*$/,
+                // TODO: ModernAria: is "param" argument needed
+                process : function (out: ClassWriter, statement: Statement/*, param: string[]*/) {
+                  statement.content && out.processContent(statement.content);
+                }
+            },
+            "call" : {
+                inMacro : true,
+                container : false,
+                // Syntax: call macroname ( any params ... )
+                // PTR 04231438: Regular expression must accept spaces at the end.
+                paramRegexp : /^(\$?[_\w]+\.)?([_\w]+)\s*\(([\s\S]*)\)\s*$/,
+                process : function (out: ClassWriter, statement: Statement, param: string[]) {
+                    const macroContainer = param[1]; // macro container (with the dot at the end)
+                    const macroname = param[2];
+                    const macroparams = param[3];
+                    let macroRef;
+                    let macroCall;
+                    if (macroContainer) {
+                        macroRef = "this." + macroContainer + "macro_" + macroname;
+                        if (macroContainer.charAt(0) == "$") {
+                            // call a macro from a parent template
+                            macroCall = macroRef + ".apply(this,[" + macroparams + "]);";
+                        } else {
+                            macroCall = macroRef + "(" + macroparams + ");";
+                        }
+                    } else {
+                        macroRef = "this.macro_" + macroname;
+                        macroCall = macroRef + "(" + macroparams + ");";
+                    }
+                    if (out.debug) {
+                        const macroDisplay = macroContainer ? macroContainer + macroname : macroname;
+                        out.writeln("if (", macroRef, " == null) {");
+                        out.increaseIndent();
+                        out.writeln('this.$logError(this.MACRO_NOT_FOUND,[__filename,', `${statement.lineNumber}`, ',', stringify(macroDisplay), ']);');
+                        out.decreaseIndent();
+                        out.writeln("}");
+                    }
+                    out.writeln(macroCall);
+                    statement.properties = {
+                        container: macroContainer ? macroContainer.slice(0, -1) : undefined, // macro container (without the dot at the end)
+                        name: macroname,
+                        args: macroparams
+                    };
+                }
+            },
             "section" : {
                 inMacro : true,
                 container : false,
@@ -746,75 +749,82 @@ let currentMacroName = "";
                     };
                 }
             },
-            // "@" : {
-            //     inMacro : true,
-            //     container : null, /* may be a container or not depending on the control */
-            //     process : function (out: ClassWriter, statement: Statement) {
-            //         const parsename = /^@(\w+):(\w+)$/.exec(statement.name);
-            //         if (!parsename || parsename.length != 3) {
-            //             return out.logError(statement, INVALID_WIDGET_SYNTAX);
-            //         }
-            //         let libName = parsename[1];
-            //         let widgetName = parsename[2];
-            //         let libclasspath = out.templateParam.$wlibs[libName];
-            //         if (libclasspath === undefined) {
-            //             return out.logError(statement, UNDECLARED_WIDGET_LIBRARY, [libName]);
-            //         }
-            //         if (!out.dontLoadWidgetLibs) {
-            //             let wlib = out.wlibs[libName];
-            //             if (!wlib) {
-            //                 wlib = Aria.getClassRef(libclasspath);
-            //                 if (!ariaUtilsType.isInstanceOf(wlib, "aria.widgetLibs.WidgetLib")) {
-            //                     return out.logError(statement, statementsSingleton.INVALID_WIDGET_LIBRARY, [libName,
-            //                             libclasspath]);
-            //                 }
-            //                 out.wlibs[libName] = wlib;
-            //             }
-            //             var dep = wlib.getWidgetDependencies(widgetName, out.allDependencies);
-            //             if (!dep) {
-            //                 return out.logError(statement, statementsSingleton.UNKNOWN_WIDGET, [statement.name]);
-            //             }
-            //             out.addDependencies(dep);
-            //         }
-            //         var param = statement.paramBlock;
-            //         if (param.length === 0) {
-            //             param = "undefined";
-            //         } else {
-            //             // Look for use of standard binding transforms
-            //             // and automatically add those to dependencies
-            //             var transformDependencies = [];
-            //             var regEx = /[\'\"](aria\.widgets\.transform\.(.+))[\'\"]/g;
-            //             var myMatch = regEx.exec(param);
-            //             while (myMatch) {
-            //                 transformDependencies.push(myMatch[1]);
-            //                 myMatch = regEx.exec(param);
-            //             }
-            //             out.addDependencies(transformDependencies);
-            //         }
+            "@" : {
+                inMacro : true,
+                container : null, /* may be a container or not depending on the control */
+                process : function (out: ClassWriter, statement: Statement) {
+                    const parsename = /^@(\w+):(\w+)$/.exec(statement.name);
+                    if (!parsename || parsename.length != 3) {
+                        return out.logError(statement, INVALID_WIDGET_SYNTAX);
+                    }
+                    const libName = parsename[1];
+                    const widgetName = parsename[2];
+                    const libclasspath = out.templateParam.$wlibs[libName];
+                    if (libclasspath === undefined) {
+                        return out.logError(statement, UNDECLARED_WIDGET_LIBRARY, [libName]);
+                    }
+                    if (!out.dontLoadWidgetLibs) {
+                        const wlib = out.wlibs[libName];
+                        if (!wlib) {
+                            // TODO: ModernAria: Expect Wlib to be the class definition already. Test this
+                            // wlib = Aria.getClassRef(libclasspath);
+                            // if (!ariaUtilsType.isInstanceOf(wlib, "aria.widgetLibs.WidgetLib")) {
+                            return out.logError(statement, INVALID_WIDGET_LIBRARY, [libName,
+                                    libclasspath]);
+                            // }
+                            // out.wlibs[libName] = wlib;
+                        }
+                        const dep: DependencySpec[] | null = wlib.getWidgetDependencies(widgetName, out.allDependencies);
+                        if (!dep) {
+                            return out.logError(statement, UNKNOWN_WIDGET, [statement.name]);
+                        }
+                        dep && out.addDependencies(dep);
+                    }
+                    let param = statement.paramBlock;
+                    if (param.length === 0) {
+                        param = "undefined";
+                    } else {
+                        // Look for use of standard binding transforms
+                        // and automatically add those to dependencies
+                        // TODO:ModernAria: Are transforms needed??
 
-            //         if (out.debug && param != "undefined") {
-            //             param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_CONTROL_PARAMETERS");
-            //         }
+                        const transformDependencies = [];
 
-            //         if (statement.content) {
-            //             // container widget
-            //             out.writeln("if (this.__$beginContainerWidget(", out.stringify(libclasspath), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ")) {");
-            //             out.increaseIndent();
-            //             out.processContent(statement.content);
-            //             out.writeln("this.__$endContainerWidget();");
-            //             out.decreaseIndent();
-            //             out.writeln("}");
-            //         } else {
-            //             // simple widget
-            //             out.writeln("this.__$processWidgetMarkup(", out.stringify(libclasspath), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ");");
-            //         }
-            //         statement.properties = {
-            //             libName: libName,
-            //             libClasspath: libclasspath,
-            //             widgetName: widgetName
-            //         };
-            //     }
-            // }
+                        const regEx = /['"](aria\.widgets\.transform\.(.+))['"]/g;
+                        let myMatch = regEx.exec(param);
+                        while (myMatch) {
+                            transformDependencies.push(myMatch[1]);
+                            myMatch = regEx.exec(param);
+                        }
+                        return out.logError(statement, "line %3: ModernAria: Unaccounted functionality: Transform Widget: '%1'", [statement.name, param])
+                        // out.addDependencies(transformDependencies);
+                    }
+
+                    if (out.debug && param != "undefined") {
+                        param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_CONTROL_PARAMETERS");
+                    }
+
+                    if (statement.content) {
+                        // container widget
+                        // TODO:ModernAria: Expects string, but passing class reference. Need to check
+                        out.writeln("if (this.__$beginContainerWidget(", stringify(libclasspath), ",", stringify(widgetName), ",(", param, "),", `${statement.lineNumber}`, ")) {");
+                        out.increaseIndent();
+                        out.processContent(statement.content);
+                        out.writeln("this.__$endContainerWidget();");
+                        out.decreaseIndent();
+                        out.writeln("}");
+                    } else {
+                        // simple widget
+                        // TODO:ModernAria: Expects string, but passing class reference. Need to check
+                        out.writeln("this.__$processWidgetMarkup(", stringify(libclasspath), ",", stringify(widgetName), ",(", param, "),", `${statement.lineNumber}`, ");");
+                    }
+                    statement.properties = {
+                        libName: libName,
+                        libClasspath: libclasspath,
+                        widgetName: widgetName
+                    };
+                }
+            }
         };
 
 //         ariaCoreAppEnvironment.$on({

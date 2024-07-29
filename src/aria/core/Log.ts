@@ -61,6 +61,7 @@ import { Appender, LogLevel } from "./log/log.types.js";
  *
  * @singleton
  */
+// TODO:ModernAria: Figureout a way to not be able to create instances of Log even when using JS without TS
 export class Log {
 
   /**
@@ -69,12 +70,13 @@ export class Log {
    */
   private static _instance: Log;
 
-  /**
-   * The list of loggers already created so far, per className
-   * @type Array
-   * @private
-   */
-  private _loggers = [];
+  // /**
+  //  * The list of loggers already created so far, per className
+  //  * @type Array
+  //  * @private
+  //  */
+  // Benefit:ModernAria: Unused Private property
+  // private _loggers = [];
 
   /**
    * The logging configuration telling the logger which messages will make it to the console for each className
@@ -204,7 +206,7 @@ export class Log {
    */
   public setLoggingLevel(className: string, level: LogLevel) {
       if (!this.isValidLevel(level)) {
-          // this.error('aria.core.Log', "Invalid level passed to setLoggingLevel");
+          this.error('aria.core.Log', "Invalid level passed to setLoggingLevel");
       } else {
           // TODO: Add here a check for the validity of a className:
           // possible values are a.b.c, or a.b.*
@@ -343,7 +345,6 @@ export class Log {
    * @param {Object} errorContext Optional object passed in case of template parsing error only
    * @return {String} The message
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prepareLoggedMessage(msg: string, msgArgs?: string[], errorContext?: object) {
       if (msgArgs) {
           msg = substitute(msg, ...msgArgs);
@@ -436,3 +437,5 @@ export class Log {
       }
   }
 }
+
+export const log = Log.getInstance();

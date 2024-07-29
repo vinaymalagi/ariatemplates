@@ -1,6 +1,6 @@
 // export * from "./aria"
 
-import { TplParser } from "./aria/templates/tpl-parser.js";
+import { TplParser } from "./aria/templates/TplParser.js";
 
 const tpl = `
 {Template {

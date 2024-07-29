@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+import { ClassDefinitionCfg, Constructor } from "./core/CfgBeans.js";
+import { JsObject } from "./core/JsObject.js";
+import { Log, log } from "./core/Log.js";
+
 // if (!global.Aria) {
 //     global.Aria = {};
 // }
@@ -161,20 +165,20 @@ export const $window = /*globalThis.Aria.$window ||*/ $frameworkWindow;
 // Aria.TPLSCRIPT_INSTANTIATED_DIRECTLY = "Template scripts can not be instantiated directly";
 // Aria.OLD_DEPENDENCIES_SYNTAX = "Class %1 is using the old syntax for the following dependencies, without using the backward-compatible loader : %2";
 
-// Aria.$classpath = "Aria";
+const $classpath = "Aria";
 
 
-// TODO:MODERN_ARIA:Consider implementing a register Logger method
+// TODO:MODERN_ARIA:Consider implementing a register Logger method for bootstrapping
+export const FRAMEWORK_LOGGER: Log | undefined = log;
+
 /**
  * Log a debug message to the logger
  * @param {String} msg the message text
  * @param {Array} msgArgs An array of arguments to be used for string replacement in the message text
  * @param {Object} obj An optional object to be inspected in the logged message
  */
-export function $logDebug() {
-  // TODO:MODERN_ARIA: Get logger instance and call debug method form /aria/core/log.ts (to be implemented)
-  // replaced by the true logging function when aria.core.Log is loaded
-  //
+export function $logDebug(msg: string, msgArgs?: string[], obj?: object) {
+  FRAMEWORK_LOGGER?.debug($classpath, msg, msgArgs, obj);
 };
 
 /**
@@ -183,9 +187,8 @@ export function $logDebug() {
  * @param {Array} msgArgs An array of arguments to be used for string replacement in the message text
  * @param {Object} obj An optional object to be inspected in the logged message
  */
-export function $logInfo() {
-  // TODO:MODERN_ARIA: Get logger instance and call info method form /aria/core/log.ts (to be implemented)
-  // replaced by the true logging function when aria.core.Log is loaded
+export function $logInfo(msg: string, msgArgs?: string[], obj?: object) {
+  FRAMEWORK_LOGGER?.info($classpath, msg, msgArgs, obj);
 };
 
 /**
@@ -194,9 +197,8 @@ export function $logInfo() {
  * @param {Array} msgArgs An array of arguments to be used for string replacement in the message text
  * @param {Object} obj An optional object to be inspected in the logged message
  */
-export function $logWarn() {
-  // TODO:MODERN_ARIA: Get logger instance and call warn method form /aria/core/log.ts (to be implemented)
-  // replaced by the true logging function when aria.core.Log is loaded
+export function $logWarn(msg: string, msgArgs?: string[], obj?: object) {
+  FRAMEWORK_LOGGER?.warn($classpath, msg, msgArgs, obj);
 };
 
 /**
@@ -206,9 +208,8 @@ export function $logWarn() {
  * @param {Object} err The actual JS error object that was created or an object to be inspected in the logged
  * message
  */
-export function $logError() {
-  // TODO:MODERN_ARIA: Get logger instance and call error method form /aria/core/log.ts (to be implemented)
-  // replaced by the true logging function when aria.core.Log is loaded
+export function $logError(msg: string, msgArgs?: string[], obj?: object) {
+  FRAMEWORK_LOGGER?.error($classpath, msg, msgArgs, obj);
 };
 
 // /**
@@ -974,6 +975,34 @@ export const FRAMEWORK_RESOURCES = /*globalThis.Aria.FRAMEWORK_RESOURCES ||*/ "a
 //     }
 //   }
 // };
+
+const $classDefinitionCfgs = new WeakMap<Constructor, ClassDefinitionCfg>();
+
+const $classpathToDefinitions: Record<string, Constructor> = {};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+export function classDefinition<T extends Constructor>(defCfg: ClassDefinitionCfg, classDef: T): T {
+  if(!Object.prototype.isPrototypeOf.call(JsObject.prototype, classDef.prototype)) {
+    throw new Error('Class Defintion does not have JsObject as ancestor in inheritance chain')
+  }
+
+  const classpath = defCfg.$classpath;
+
+
+  Object.defineProperty(classDef.prototype, '$classpath', {
+    value: classpath,
+    enumerable: false,
+    writable: false
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (classDef as any).$classpath = classpath;
+  $classDefinitionCfgs.set(classDef, defCfg);
+  $classpathToDefinitions[defCfg.$classpath] = classDef;
+
+  // TODO: ModernAria: Handle CSS, macrolibs and resources
+
+  return classDef;
+}
 
 // /**
 //  * Base methods used to declare classes
