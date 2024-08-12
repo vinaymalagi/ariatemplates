@@ -12,9 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreCache = require("./Cache");
-var ariaCoreDownloadMgr = require("./DownloadMgr");
+
+import { classDefinition } from './class-definition.js';
+import { getClassRef } from './class-registry.js';
+import { getLogicalPath } from './framework-bootstrap.js';
 
 /**
  * Manage the class dependency load thanks to ClassLoaders. Classes can be of different types (currently six: "JS",
@@ -23,85 +24,85 @@ var ariaCoreDownloadMgr = require("./DownloadMgr");
  * telling that a class is being downloaded.
  * @dependencies ["aria.core.Cache", "aria.core.DownloadMgr"]
  */
-module.exports = Aria.classDefinition({
+export const ClassMgr = classDefinition({
     $classpath : "aria.core.ClassMgr",
     $singleton : true,
-    $events : {
-        /**
-         * Deprecated, no longer raised.
-         */
-        "classComplete" : "This event is deprecated, it is no longer raised."
-    },
-    $statics : {
-        NODER_MIGRATION : "With the migration to noder-js, aria.core.ClassMgr.%1 is no longer supported.",
-        DEPRECATED_METHOD : "aria.core.ClassMgr.%1 is deprecated. Please use %2 instead."
-    },
+    // $events : {
+    //     /**
+    //      * Deprecated, no longer raised.
+    //      */
+    //     "classComplete" : "This event is deprecated, it is no longer raised."
+    // },
+    // $statics : {
+    //     NODER_MIGRATION : "With the migration to noder-js, aria.core.ClassMgr.%1 is no longer supported.",
+    //     DEPRECATED_METHOD : "aria.core.ClassMgr.%1 is deprecated. Please use %2 instead."
+    // },
     $prototype : {
-        /**
-         * Convert a classpath into the corresponding logical path (without file extension). It simply replaces '.' by
-         * '/' in the classpath. It does not add the extension at the end of the classpath.
-         * @param {String} classpath Classpath to convert.
-         */
-        getBaseLogicalPath : function (classpath, classType) {
-            this.$logWarn(this.DEPRECATED_METHOD, ["getBaseLogicalPath", "Aria.getLogicalPath"]);
-            return Aria.getLogicalPath(classpath);
-        },
+        // /**
+        //  * Convert a classpath into the corresponding logical path (without file extension). It simply replaces '.' by
+        //  * '/' in the classpath. It does not add the extension at the end of the classpath.
+        //  * @param {String} classpath Classpath to convert.
+        //  */
+        // getBaseLogicalPath : function (classpath, classType) {
+        //     this.$logWarn(this.DEPRECATED_METHOD, ["getBaseLogicalPath", "Aria.getLogicalPath"]);
+        //     return getLogicalPath(classpath);
+        // },
 
-        /**
-         * With the migration to noder-js, notifyClassLoad is no longer supported.
-         */
-        notifyClassLoad : function (classpath) {
-            this.$logError(this.NODER_MIGRATION, ["notifyClassLoad"]);
-        },
+        // /**
+        //  * With the migration to noder-js, notifyClassLoad is no longer supported.
+        //  */
+        // notifyClassLoad : function (classpath) {
+        //     this.$logError(this.NODER_MIGRATION, ["notifyClassLoad"]);
+        // },
 
-        /**
-         * With the migration to noder-js, notifyClassLoadError is no longer supported.
-         */
-        notifyClassLoadError : function () {
-            this.$logError(this.NODER_MIGRATION, ["notifyClassLoadError"]);
-        },
+        // /**
+        //  * With the migration to noder-js, notifyClassLoadError is no longer supported.
+        //  */
+        // notifyClassLoadError : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["notifyClassLoadError"]);
+        // },
 
-        /**
-         * With the migration to noder-js, filterMissingDependencies is no longer supported.
-         */
-        filterMissingDependencies : function () {
-            this.$logError(this.NODER_MIGRATION, ["filterMissingDependencies"]);
-        },
+        // /**
+        //  * With the migration to noder-js, filterMissingDependencies is no longer supported.
+        //  */
+        // filterMissingDependencies : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["filterMissingDependencies"]);
+        // },
 
-        /**
-         * With the migration to noder-js, loadClassDependencies is no longer supported.
-         */
-        loadClassDependencies : function () {
-            this.$logError(this.NODER_MIGRATION, ["loadClassDependencies"]);
-        },
+        // /**
+        //  * With the migration to noder-js, loadClassDependencies is no longer supported.
+        //  */
+        // loadClassDependencies : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["loadClassDependencies"]);
+        // },
 
-        /**
-         * With the migration to noder-js, getClassLoader is no longer supported.
-         */
-        getClassLoader : function (classpath, typeName, original) {
-            this.$logError(this.NODER_MIGRATION, ["getClassLoader"]);
-        },
+        // /**
+        //  * With the migration to noder-js, getClassLoader is no longer supported.
+        //  */
+        // getClassLoader : function (classpath, typeName, original) {
+        //     this.$logError(this.NODER_MIGRATION, ["getClassLoader"]);
+        // },
 
-        /**
-         * With the migration to noder-js, $on is no longer supported.
-         */
-        $on : function () {
-            this.$logError(this.NODER_MIGRATION, ["$on"]);
-        },
+        // /**
+        //  * With the migration to noder-js, $on is no longer supported.
+        //  */
+        // $on : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["$on"]);
+        // },
 
-        /**
-         * With the migration to noder-js, $once is no longer supported.
-         */
-        $once : function () {
-            this.$logError(this.NODER_MIGRATION, ["$once"]);
-        },
+        // /**
+        //  * With the migration to noder-js, $once is no longer supported.
+        //  */
+        // $once : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["$once"]);
+        // },
 
-        /**
-         * With the migration to noder-js, $addListeners is no longer supported.
-         */
-        $addListeners : function () {
-            this.$logError(this.NODER_MIGRATION, ["$addListeners"]);
-        },
+        // /**
+        //  * With the migration to noder-js, $addListeners is no longer supported.
+        //  */
+        // $addListeners : function () {
+        //     this.$logError(this.NODER_MIGRATION, ["$addListeners"]);
+        // },
 
         /**
          * Unload a class (cache/files/urls associated)
@@ -109,37 +110,41 @@ module.exports = Aria.classDefinition({
          * @param {Boolean} timestampNextTime if true, the next time the class is loaded, browser and server cache will
          * be bypassed by adding a timestamp to the url
          */
+        // MUST_DO: ModernAria: timestampNextTime is useless as its mostly used for the download Manager, which is not used to download modules anymore.
+        // MUST_DO: ModernAria: Also unload in this context would be to remove the CSS from DOM and downloaded localization data. The actual classes cannot be unloaded anymore with ES-Modules.
         unloadClass : function (classpath, timestampNextTime) {
-            var classRef = Aria.getClassRef(classpath);
+            var classRef = getClassRef(classpath);
             // no class ref for beans
             if (classRef) {
                 var classDef = classRef.classDefinition;
                 if (classDef && classDef.$css) {
-                    aria.templates.CSSMgr.unregisterDependencies(classpath, classDef.$css, true, timestampNextTime);
+                    getClassRef('aria.templates.CSSMgr')?.unregisterDependencies(classpath, classDef.$css, true, timestampNextTime);
                 }
             }
 
-            var resMgr = aria.core.ResMgr;
+            var resMgr = getClassRef('aria.core.ResMgr');
             if (resMgr) {
+                // MUST_DO: ModernAria: Resources: With es modules Resource loading for language specific localization will change completely. So re-evaluate
                 // if the classpath refers to a resource, make sure it is fully unloaded
-                resMgr.unloadResource(Aria.getLogicalPath(classpath), true, timestampNextTime);
+                resMgr.unloadResource(getLogicalPath(classpath), true, timestampNextTime);
             }
 
             // clean the class
-            Aria.dispose(classpath);
-            Aria.cleanGetClassRefCache(classpath);
-            var logicalPath = ariaCoreCache.getFilename(classpath);
-            if (logicalPath) {
-                ariaCoreDownloadMgr.clearFile(logicalPath, timestampNextTime);
-                delete require.cache[require.resolve(logicalPath)];
-            }
+            // MUST_DO: ModernAria: check Aria.dispose for any non-class definition unload related code
+            // Aria.dispose(classpath);
+            // Aria.cleanGetClassRefCache(classpath);
+            // var logicalPath = ariaCoreCache.getFilename(classpath);
+            // if (logicalPath) {
+            //     ariaCoreDownloadMgr.clearFile(logicalPath, timestampNextTime);
+            //     delete require.cache[require.resolve(logicalPath)];
+            // }
         },
 
-        /**
-         * With the migration to noder-js, unloadClassesByType is no longer supported.
-         */
-        unloadClassesByType : function (classType, dispose) {
-            this.$logWarn(this.NODER_MIGRATION, ["unloadClassesByType"]);
-        }
+        // /**
+        //  * With the migration to noder-js, unloadClassesByType is no longer supported.
+        //  */
+        // unloadClassesByType : function (classType, dispose) {
+        //     this.$logWarn(this.NODER_MIGRATION, ["unloadClassesByType"]);
+        // }
     }
 });

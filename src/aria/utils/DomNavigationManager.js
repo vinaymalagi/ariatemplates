@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 
+/* eslint-disable no-invalid-this, no-redeclare */
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Imports
 ////////////////////////////////////////////////////////////////////////////////
 
-var Aria = require('../Aria');
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { JsObject as ariaCoreJsObject } from '../core/class-definition.js';
 
-var ariaCoreJsObject = require('../core/JsObject');
+import * as ariaUtilsType from './Type.js';
+import * as ariaUtilsArray from './Array.js';
+import * as ariaUtilsObject from './Object.js';
+import * as ariaUtilsFunction from './Function.js';
 
-var ariaUtilsType = require('./Type');
-var ariaUtilsArray = require('./Array');
-var ariaUtilsObject = require('./Object');
-var ariaUtilsFunction = require('./Function');
+import { UtilsEvent as ariaUtilsEvent } from './Event.js';
+import { UtilsDom as ariaUtilsDom } from './Dom.js';
 
-var ariaUtilsEvent = require('./Event');
-var ariaUtilsDom = require('./Dom');
+import { NavigationManager as ariaTemplatesNavigationManager } from '../templates/NavigationManager.js';
 
-var ariaTemplatesNavigationManager = require('../templates/NavigationManager');
-
-var document = Aria.$window.document;
+var document = FRAMEWORK_GLOBALS.$window.document;
 
 var DOM_NAVIGATION_MANAGER_CLASSPATH = 'aria.utils.DomNavigationManager';
 
@@ -50,7 +50,7 @@ var DOM_NAVIGATION_MANAGER_CLASSPATH = 'aria.utils.DomNavigationManager';
  *
  * @return {Function} The enhanced constructor
  */
-function createConstructor(init) {
+export function createConstructor(init) {
     // -------------------------------------------------------------- processing
 
     function publicConstructor() {
@@ -66,7 +66,6 @@ function createConstructor(init) {
 
     return publicConstructor;
 }
-exports.createConstructor = createConstructor;
 
 /**
  * Turns all or part of the "arguments" of a function into an array. An optional start index can be specified, for the common use case of "splat args".
@@ -76,14 +75,13 @@ exports.createConstructor = createConstructor;
  *
  * @return {Array} The copy of the arguments
  */
-function sliceArguments(args, startIndex) {
+export function sliceArguments(args, startIndex) {
     if (startIndex == null) {
         startIndex = 0;
     }
 
     return Array.prototype.slice.call(args, startIndex);
 }
-exports.sliceArguments = sliceArguments;
 
 
 
@@ -102,7 +100,7 @@ exports.sliceArguments = sliceArguments;
  *
  * @return {Array} The collected items as an array
  */
-function collect(iterator) {
+export function collect(iterator) {
     var result = [];
 
     for (;;) {
@@ -115,7 +113,6 @@ function collect(iterator) {
 
     return result;
 }
-exports.collect = collect;
 
 /**
  * Collects items from a given callback until one of them is void (null or undefined).
@@ -124,7 +121,7 @@ exports.collect = collect;
  *
  * @return {Array} The collected items as an array
  */
-function collectUntilVoid(callback) {
+export function collectUntilVoid(callback) {
     return collect({
         next: function() {
             var value = callback.apply(this, arguments);
@@ -132,7 +129,6 @@ function collectUntilVoid(callback) {
         }
     });
 }
-exports.collectUntilVoid = collectUntilVoid;
 
 
 
@@ -163,7 +159,7 @@ exports.collectUntilVoid = collectUntilVoid;
  *
  * @return {Object} The different views of the siblings ("siblings" for all of them in natural order) — see description for more information
  */
-function getSiblings(element) {
+export function getSiblings(element) {
     // -------------------------------------------------------------- processing
 
     // previous ------------------------------------------------------------------
@@ -197,7 +193,6 @@ function getSiblings(element) {
         next: next
     };
 }
-exports.getSiblings = getSiblings;
 
 /**
  * Traverses siblings of the given element, and then does the same for its parent, until the limit (root) is reached. The limit is either the document's body or a custom one according to a given predicate.
@@ -217,7 +212,7 @@ exports.getSiblings = getSiblings;
  *
  * @return {Array} The collection of results for the traversal at each depth
  */
-function traverseSiblingsUntilRootOfBranch(element, callback, predicate) {
+export function traverseSiblingsUntilRootOfBranch(element, callback, predicate) {
     // ---------------------------------------------- input arguments processing
 
     if (predicate == null) {
@@ -246,7 +241,6 @@ function traverseSiblingsUntilRootOfBranch(element, callback, predicate) {
 
     return results;
 }
-exports.traverseSiblingsUntilRootOfBranch = traverseSiblingsUntilRootOfBranch;
 
 /**
  * Creates a DOM element that is not visible.
@@ -260,7 +254,7 @@ exports.traverseSiblingsUntilRootOfBranch = traverseSiblingsUntilRootOfBranch;
  *
  * @return {HTMLElement} The created element.
  */
-function createHiddenElement() {
+export function createHiddenElement() {
     // -------------------------------------------------------------- properties
 
     var element = document.createElement('div');
@@ -275,7 +269,6 @@ function createHiddenElement() {
 
     return element;
 }
-exports.createHiddenElement = createHiddenElement;
 
 /**
  * Inserts a DOM element before another one: the reference.
@@ -289,10 +282,9 @@ exports.createHiddenElement = createHiddenElement;
  *
  * @return {HTMLElement} the given element
  */
-function insertBefore(element, reference) {
+export function insertBefore(element, reference) {
     ariaUtilsDom.insertAdjacentElement(reference, 'beforeBegin', element);
 }
-exports.insertBefore = insertBefore;
 
 /**
  * Inserts a DOM element after another one: the reference.
@@ -306,10 +298,10 @@ exports.insertBefore = insertBefore;
  *
  * @return {HTMLElement} the given element
  */
-function insertAfter(element, reference) {
+export function insertAfter(element, reference) {
     ariaUtilsDom.insertAdjacentElement(reference, 'afterEnd', element);
 }
-exports.insertAfter = insertAfter;
+
 
 /**
  * Inserts a DOM element as the first child of the given parent.
@@ -319,10 +311,9 @@ exports.insertAfter = insertAfter;
  *
  * @return {HTMLElement} the given element
  */
-function insertFirst(element, parent) {
+export function insertFirst(element, parent) {
     ariaUtilsDom.insertAdjacentElement(parent, 'afterBegin', element);
 }
-exports.insertFirst = insertFirst;
 
 /**
  * Inserts a DOM element as the last child of the given parent.
@@ -332,10 +323,9 @@ exports.insertFirst = insertFirst;
  *
  * @return {HTMLElement} the given element
  */
-function insertLast(element, parent) {
+export function insertLast(element, parent) {
     ariaUtilsDom.insertAdjacentElement(parent, 'beforeEnd', element);
 }
-exports.insertLast = insertLast;
 
 
 
@@ -352,7 +342,7 @@ exports.insertLast = insertLast;
  *
  * @return {HTMLElement} The created element.
  */
-function createInterceptorElement() {
+export function createInterceptorElement() {
     // -------------------------------------------------------------- processing
 
     var element = createHiddenElement();
@@ -365,7 +355,6 @@ function createInterceptorElement() {
 
     return element;
 }
-exports.createInterceptorElement = createInterceptorElement;
 
 
 
@@ -398,7 +387,7 @@ exports.createInterceptorElement = createInterceptorElement;
  *   <li>oncatch: callback called when a focus trap's element has been focused and navigation information retrieved</li>
  * </ul>
  */
-var NavigationInterceptor = createConstructor(function(spec) {
+export var NavigationInterceptor = createConstructor(function(spec) {
     // -------------------------------------------------------------- properties
 
     this.origin = spec.origin;
@@ -421,7 +410,6 @@ var NavigationInterceptor = createConstructor(function(spec) {
 
     this._oncatch = null;
 });
-exports.NavigationInterceptor = NavigationInterceptor;
 var prototype = NavigationInterceptor.prototype;
 
 prototype.$callback = ariaCoreJsObject.prototype.$callback;
@@ -627,6 +615,7 @@ var prototype = CompositeInterceptor.prototype;
  *
  * @return {Object} See NavigationInterceptor.getNavigationInformation
  */
+// eslint-disable-next-line no-unused-vars
 prototype.getNavigationInformation = function(focusedElement) {
     var interceptors = this.interceptors;
 
@@ -680,7 +669,7 @@ prototype.ensureElements = function () {
  *
  * @return {NavigationInterceptor} an instance of NavigationInterceptor
  */
-function ModalNavigationInterceptor(spec) {
+export function ModalNavigationInterceptor(spec) {
     // ---------------------------------------------- input arguments processing
 
     if (!ariaUtilsType.isObject(spec)) {
@@ -710,9 +699,9 @@ function ModalNavigationInterceptor(spec) {
 
     return NavigationInterceptor(finalSpec);
 }
-exports.ModalNavigationInterceptor = ModalNavigationInterceptor;
+
 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1735) */
-exports.DialogNavigationInterceptor = ModalNavigationInterceptor;
+export const DialogNavigationInterceptor = ModalNavigationInterceptor;
 /* BACKWARD-COMPATIBILITY-END (GitHub #1735) */
 
 /**
@@ -726,7 +715,7 @@ exports.DialogNavigationInterceptor = ModalNavigationInterceptor;
  *
  * @return {NavigationInterceptor} an instance of NavigationInterceptor
  */
-function SkippedElementNavigationInterceptor(spec) {
+export function SkippedElementNavigationInterceptor(spec) {
     // ---------------------------------------------- input arguments processing
 
     if (!ariaUtilsType.isObject(spec)) {
@@ -756,7 +745,6 @@ function SkippedElementNavigationInterceptor(spec) {
 
     return NavigationInterceptor(finalSpec);
 }
-exports.SkippedElementNavigationInterceptor = SkippedElementNavigationInterceptor;
 
 /**
  * Creates a NavigationInterceptor for the browser/viewport.
@@ -769,7 +757,7 @@ exports.SkippedElementNavigationInterceptor = SkippedElementNavigationIntercepto
  *
  * @return {NavigationInterceptor} an instance of NavigationInterceptor
  */
-function ViewportNavigationInterceptor(spec) {
+export function ViewportNavigationInterceptor(spec) {
     // ---------------------------------------------- input arguments processing
 
     if (spec == null) {
@@ -803,7 +791,6 @@ function ViewportNavigationInterceptor(spec) {
 
     return NavigationInterceptor(finalSpec);
 }
-exports.ViewportNavigationInterceptor = ViewportNavigationInterceptor;
 
 
 
@@ -827,7 +814,7 @@ exports.ViewportNavigationInterceptor = ViewportNavigationInterceptor;
  *
  * @return {NavigationInterceptor} an instance of NavigationInterceptor
  */
-function ModalNavigationHandler(element, loop) {
+export function ModalNavigationHandler(element, loop) {
     // ---------------------------------------------- input arguments processing
 
     if (loop == null) {
@@ -868,9 +855,8 @@ function ModalNavigationHandler(element, loop) {
         oncatch: oncatch
     });
 }
-exports.ModalNavigationHandler = ModalNavigationHandler;
 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1735) */
-exports.ElementNavigationInterceptor = ModalNavigationHandler;
+export const ElementNavigationInterceptor = ModalNavigationHandler;
 /* BACKWARD-COMPATIBILITY-END (GitHub #1735) */
 
 /**
@@ -884,7 +870,7 @@ exports.ElementNavigationInterceptor = ModalNavigationHandler;
  *
  * @return {NavigationInterceptor} an instance of NavigationInterceptor
  */
-function SkippedElementNavigationHandler(element) {
+export function SkippedElementNavigationHandler(element) {
     return SkippedElementNavigationInterceptor({
         getReferenceElement: function() {return element;},
         oncatch: function (arg) {
@@ -899,7 +885,6 @@ function SkippedElementNavigationHandler(element) {
         }
     });
 }
-exports.SkippedElementNavigationHandler = SkippedElementNavigationHandler;
 
 
 
@@ -914,10 +899,9 @@ exports.SkippedElementNavigationHandler = SkippedElementNavigationHandler;
  * It manages hidden elements by tracking the number of request made to hide them or show them back. An element will be hidden the first time one asks, and will be showed back only when no one wants it hidden anymore.
  * </p>
  */
-var HidingManager = createConstructor(function() {
+export var HidingManager = createConstructor(function() {
     this.attributeName = 'data-hide-requests-count';
 });
-exports.HidingManager = HidingManager;
 var prototype = HidingManager.prototype;
 
 /**
@@ -1025,5 +1009,4 @@ prototype.hide = function(element) {
 /**
  * Singleton of HidingManager.
  */
-var hidingManager = new HidingManager();
-exports.hidingManager = hidingManager;
+export var hidingManager = new HidingManager();

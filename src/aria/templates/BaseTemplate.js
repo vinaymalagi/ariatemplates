@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright 2012 Amadeus s.a.s.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesModifiers = require("./Modifiers");
-var ariaTemplatesIBaseTemplate = require("./IBaseTemplate");
-var ariaUtilsJson = require("../utils/Json");
+
+import { classDefinition } from '../core/class-definition.js';
+import { Json as UtilsJson } from '../utils/Json.js';
+import { IBaseTemplate } from './IBaseTemplate.js';
+import { Modifiers as ariaTemplatesModifiers } from './Modifiers.js';
+
+
 
 
 /**
@@ -24,7 +29,7 @@ var ariaUtilsJson = require("../utils/Json");
  * @class aria.templates.BaseTemplate
  * @extends aria.core.JsObject
  */
-module.exports = Aria.classDefinition({
+export const BaseTemplate = classDefinition({
     $classpath : 'aria.templates.BaseTemplate',
     $destructor : function () {
         /* this is important for $destructor not to be overridden by the one of ITemplate interface */
@@ -41,7 +46,7 @@ module.exports = Aria.classDefinition({
         MACRO_NOT_FOUND : "file %1, line %2: Template error: macro '%3' is not defined."
     },
     $prototype : {
-        $json : ariaUtilsJson,
+        $json : UtilsJson,
 
         /**
          * Prototype init method called at prototype creation time Allows to store class-level objects that are shared
@@ -49,11 +54,12 @@ module.exports = Aria.classDefinition({
          * @param {Object} p the prototype object being built
          * @param {Object} def the class definition
          */
+        // eslint-disable-next-line no-unused-vars
         $init : function (p, def) {
             // copy the prototype of IBaseTemplate:
-            var itf = ariaTemplatesIBaseTemplate.prototype;
+            var itf = IBaseTemplate.prototype;
             for (var k in itf) {
-                if (itf.hasOwnProperty(k) && !p.hasOwnProperty(k)) {
+                if (Object.prototype.hasOwnProperty.call(itf, k) && !Object.prototype.hasOwnProperty.call(p, k)) {
                     // copy methods which are not already on this object (this avoids copying $classpath and
                     // $destructor)
                     p[k] = itf[k];

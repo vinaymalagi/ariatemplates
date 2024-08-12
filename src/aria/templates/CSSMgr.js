@@ -12,19 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesCSSCtxtManager = require("./CSSCtxtManager");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsObject = require("../utils/Object");
-var ariaUtilsAriaWindow = require("../utils/AriaWindow");
-var ariaCoreClassMgr = require("../core/ClassMgr");
-var ariaUtilsDom = require("../utils/Dom");
+import { classDefinition } from '../core/class-definition.js';
+import { getClasspath, getClassRef } from '../core/class-registry.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { contains, remove } from '../utils/Array.js';
+import { CSSCtxtManager } from './CSSCtxtManager.js';
+import { AriaWindow as ariaUtilsAriaWindow} from '../utils/AriaWindow.js';
+import { UtilsDom } from '../utils/Dom.js';
+import { ClassMgr } from '../core/ClassMgr.js';
 
 /**
  * CSS Manager manages the insertion of CSS Template output in the page. It is responsible for prefixing the CSS
  * selectors according to the containing Template, adding the style tags in the page.
+ *
+ * @singleton
  */
-module.exports = Aria.classDefinition({
+export const CSSMgr = classDefinition({
     $classpath : "aria.templates.CSSMgr",
     $singleton : true,
     $statics : {
@@ -268,11 +271,11 @@ module.exports = Aria.classDefinition({
             } else {
 
                 // Look at in the parents for the css inheritance.
-                var tpl = Aria.getClassRef(classpath);
+                var tpl = getClassRef(classpath);
                 var css = {};
                 if (dependencies) {
-                    for (var i = 0, ii = dependencies.length; i < ii; i++) {
-                        css[Aria.getClasspath(dependencies[i])] = true;
+                    for (let i = 0, ii = dependencies.length; i < ii; i++) {
+                        css[getClasspath(dependencies[i])] = true;
                     }
                 }
 
@@ -280,14 +283,14 @@ module.exports = Aria.classDefinition({
                 while (tpl) {
                     var $css = tpl.$css;
                     if ($css) {
-                        for (var i = 0, ii = $css.length; i < ii; i++) {
-                            css[Aria.getClasspath($css[i])] = true;
+                        for (let i = 0, ii = $css.length; i < ii; i++) {
+                            css[getClasspath($css[i])] = true;
                         }
                     }
                     tpl = tpl.constructor.superclass;
                 }
 
-                dependencies = ariaUtilsObject.keys(css);
+                dependencies = Object.keys(css);
 
                 // Store the css dependencies for performance reason
                 this.__cssDependencies[classpath] = dependencies;
@@ -322,12 +325,12 @@ module.exports = Aria.classDefinition({
             var changes = [];
             var classes = [];
             for (var i = 0, len = dependencies.length; i < len; i += 1) {
-                var cssClasspath = Aria.getClasspath(dependencies[i]);
+                var cssClasspath = getClasspath(dependencies[i]);
                 // this object will be used for configuration and changed,
                 // as this is a loop on dependencies, make a copy - PTR 04543463
                 var localContextArgs = {};
                 for (var key in contextArgs) {
-                    if (contextArgs.hasOwnProperty(key)) {
+                    if (Object.prototype.hasOwnProperty.call(contextArgs, key)) {
                         localContextArgs[key] = contextArgs[key];
                     }
                 }
@@ -378,7 +381,7 @@ module.exports = Aria.classDefinition({
             // classpath may be invalid but not currently used
             delete this.__invalidClasspaths[cssClasspath];
 
-            var cssCtxt = ariaTemplatesCSSCtxtManager.getContext(cssClasspath, contextArgs);
+            var cssCtxt = CSSCtxtManager.getContext(cssClasspath, contextArgs);
             // Give a prefix to the Global file in order to have higher priority
             if (cssClasspath == "aria.templates.GlobalStyle" || cssClasspath == "aria.templates.LegacyGeneralStyle"
                     || cssClasspath == "aria.widgets.GlobalStyle") {
@@ -453,7 +456,7 @@ module.exports = Aria.classDefinition({
             }
 
             for (var i = 0, len = dependencies.length; i < len; i += 1) {
-                var cssClasspath = Aria.getClasspath(dependencies[i]);
+                var cssClasspath = getClasspath(dependencies[i]);
                 this.__unload(classpath, cssClasspath);
             }
         },
@@ -503,13 +506,12 @@ module.exports = Aria.classDefinition({
          */
         __unload : function (tplClasspath, cssClasspath) {
             this.$assert(230, tplClasspath && cssClasspath);
-            var removeUtil = ariaUtilsArray.remove;
 
             // There should be someone using this css
             var usage = this.__cssUsage[cssClasspath];
             if (usage && usage.length) {
-                removeUtil(usage, tplClasspath);
-                removeUtil(this.__pathsLoaded, cssClasspath);
+                remove(usage, tplClasspath);
+                remove(this.__pathsLoaded, cssClasspath);
 
                 if (!usage.length) {
                     // No other templates depend on this class
@@ -537,13 +539,12 @@ module.exports = Aria.classDefinition({
             // var loaded = this.__textLoaded;
             var totalSelectors = 0;
             var styleBuilders = {};
-            var utilsArray = ariaUtilsArray;
 
             for (var i = 0, len = sorted.length; i < len; i += 1) {
                 var cssPath = sorted[i];
                 var styleTagId = this.__styleTagAssociation[cssPath];
 
-                if (!utilsArray.contains(changes, styleTagId)) {
+                if (!contains(changes, styleTagId)) {
                     // This tag shouldn't be updated
                     continue;
                 } else if (!styleBuilders[styleTagId]) {
@@ -573,7 +574,7 @@ module.exports = Aria.classDefinition({
          */
         __sortPaths : function () {
             // Sorting is done by CSS prefix, we assume that the insertion order will be respected
-            var array = ariaUtilsObject.keys(this.__textLoaded);
+            var array = Object.keys(this.__textLoaded);
             // closures for the sorting function
             var prefixes = this.__prefixes;
             var prefixLength = this.__PREFIX.length;
@@ -615,7 +616,7 @@ module.exports = Aria.classDefinition({
         __reloadStyleTags : function (styleBuilders) {
             // PROFILING // var profilingId = this.$startMeasure("Inserting style in DOM");
             for (var tagName in styleBuilders) {
-                if (!styleBuilders.hasOwnProperty(tagName)) {
+                if (!Object.prototype.hasOwnProperty.call(styleBuilders, tagName)) {
                     continue;
                 }
 
@@ -632,11 +633,11 @@ module.exports = Aria.classDefinition({
                     var definition;
                     if (tag.firstChild) {
                         if (tag.firstChild.nodeValue != text) {
-                            definition = Aria.$window.document.createTextNode(text);
+                            definition = FRAMEWORK_GLOBALS.$window.document.createTextNode(text);
                             tag.replaceChild(definition, tag.firstChild);
                         }
                     } else {
-                        definition = Aria.$window.document.createTextNode(text);
+                        definition = FRAMEWORK_GLOBALS.$window.document.createTextNode(text);
                         tag.appendChild(definition);
                     }
                 }
@@ -658,11 +659,11 @@ module.exports = Aria.classDefinition({
 
             if (!tag) {
                 var id = this.__TAG_PREFX + tagName;
-                tag = ariaUtilsDom.getElementById(id);
+                tag = UtilsDom.getElementById(id);
 
                 if (!tag) {
                     // If missing, create one
-                    var document = Aria.$window.document;
+                    var document = FRAMEWORK_GLOBALS.$window.document;
                     var head = document.getElementsByTagName("head")[0];
                     tag = document.createElement("style");
 
@@ -685,7 +686,7 @@ module.exports = Aria.classDefinition({
         reset : function () {
             // Remove the style tags from the DOM
             for (var tagName in this.__styleTagPool) {
-                if (this.__styleTagPool.hasOwnProperty(tagName)) {
+                if (Object.prototype.hasOwnProperty.call(this.__styleTagPool, tagName)) {
                     this.__styleTagPool[tagName].parentNode.removeChild(this.__styleTagPool[tagName]);
                 }
             }
@@ -718,7 +719,7 @@ module.exports = Aria.classDefinition({
          * @param {Boolean} reload True if the class is used by more than one template context
          */
         invalidate : function (classpath, reload) {
-            ariaTemplatesCSSCtxtManager.disposeContext(classpath);
+            CSSCtxtManager.disposeContext(classpath);
             if (!this.__invalidClasspaths[classpath] && reload) {
                 this.__invalidClasspaths[classpath] = true;
                 this.__invalidStack.push(classpath);
@@ -757,7 +758,7 @@ module.exports = Aria.classDefinition({
          */
         registerDependencies : function (classpath, cssTemplates) {
             for (var i = 0, length = cssTemplates.length; i < length; i++) {
-                var cssClasspath = Aria.getClasspath(cssTemplates[i]);
+                var cssClasspath = getClasspath(cssTemplates[i]);
                 if (!this.__globalUsage[cssClasspath]) {
                     this.__globalUsage[cssClasspath] = [];
                 }
@@ -774,11 +775,11 @@ module.exports = Aria.classDefinition({
          * @param {Boolean} timestampNextTime if unload is asked, will trigger browser cache bypass for next load
          */
         unregisterDependencies : function (classpath, cssTemplates, unload, timestampNextTime) {
-            var array = ariaUtilsArray, classMgr = ariaCoreClassMgr;
+            var classMgr = ClassMgr;
             for (var i = 0, length = cssTemplates.length; i < length; i++) {
-                var cssClasspath = Aria.getClasspath(cssTemplates[i]);
+                var cssClasspath = getClasspath(cssTemplates[i]);
                 var usage = this.__globalUsage[cssClasspath];
-                array.remove(usage, classpath);
+                remove(usage, classpath);
                 if (unload) {
                     classMgr.unloadClass(cssClasspath, timestampNextTime);
                     // only invalidate if someone else is using it

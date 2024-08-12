@@ -12,18 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-require("./CfgBeans");
-var ariaTemplatesObjectLoading = require("./ObjectLoading");
-var ariaCoreEnvironmentCustomizations = require("../core/environment/Customizations");
-var ariaUtilsType = require("../utils/Type");
-var ariaUtilsArray = require("../utils/Array");
-var ariaCoreClassMgr = require("../core/ClassMgr");
-var ariaCoreInterfaces = require("../core/Interfaces");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from "../core/class-definition.js";
+import { getClassRef as _getClassRef } from "../core/class-registry.js";
+const { getClassRef } = _getClassRef;
+import "./CfgBeans.js";
+import { ObjectLoading as ariaTemplatesObjectLoading } from "./ObjectLoading.js";
+// ---------------------------
+// NOT_IMPLEMENTABLE: ModernAria: Customizations cannot be implemented with current mechanism as module loading is handled by the browser
+// var ariaCoreEnvironmentCustomizations = require("../core/environment/Customizations");
+// ---------------------------
+import { isInstanceOf } from "../core/core-utils/Type.js";
+import { isString } from "../utils/Type.js";
+import { remove } from "../utils/Array.js";
+import { ClassMgr as ariaCoreClassMgr } from "../core/ClassMgr.js";
+import { generateKey, linkItfWrappers } from "../core/Interfaces.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
 
 
-(function () {
+
 
     var MODULECTRL_ID_PROPERTY = "__$moduleCtrlId";
 
@@ -47,12 +53,6 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      */
     var modulesPrivateInfo = {};
 
-    /**
-     * A key generator
-     * @private
-     * @type Function
-     */
-    var generateKey = ariaCoreInterfaces.generateKey;
 
     /**
      * Error callback method called if there is a failure while loading the module controller class, or the flow
@@ -63,8 +63,10 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      */
     var loadModuleError = function (args, ex) {
         if (ex) {
+            // eslint-disable-next-line no-invalid-this
             this.$logError(this.EXCEPTION_CREATING_MODULECTRL, [args.desc.classpath], ex);
         }
+        // eslint-disable-next-line no-invalid-this
         this.$callback(args.cb, {
             error : true
         });
@@ -76,6 +78,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      * @return {Object}
      * @private
      */
+    // eslint-disable-next-line no-unused-vars
     var prototypeCopyObject = function (object) {
         var Constr = new Function();
         Constr.prototype = object;
@@ -108,24 +111,34 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      * @private
      */
     createModuleCtrl = function (args) {
-        var moduleCtrlConstr = Aria.getClassRef(args.desc.classpath);
+        var moduleCtrlConstr = getClassRef(args.desc.classpath);
         if (!moduleCtrlConstr) {
-            // try to load the module controller
-            Aria.load({
-                classes : [args.desc.classpath],
-                oncomplete : {
-                    args : args,
-                    scope : this,
-                    fn : createInstanceAndCheckFlow
-                },
-                onerror : {
-                    args : args,
-                    scope : this,
-                    fn : loadModuleError
-                }
-            });
+            // --------------------------------
+            // MUST_CHECK: ModernAria: Aria.load should no longer be needed, hence commenting and calling loadModuleError directly
+            // // try to load the module controller
+            // Aria.load({
+            //     classes : [args.desc.classpath],
+            //     oncomplete : {
+            //         args : args,
+            //         scope : this,
+            //         fn : createInstanceAndCheckFlow
+            //     },
+            //     onerror : {
+            //         args : args,
+            //         scope : this,
+            //         fn : loadModuleError
+            //     }
+            // });
+
+            // eslint-disable-next-line no-invalid-this
+            loadModuleError.call(this, args);
+
+            // -------------------------------------
+
+
         } else {
             args.moduleCtrlConstr = moduleCtrlConstr;
+            // eslint-disable-next-line no-invalid-this
             createInstanceAndCheckFlow.call(this, args);
         }
     };
@@ -140,13 +153,15 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             var moduleClasspath = args.desc.classpath;
             var moduleCtrlConstr = args.moduleCtrlConstr;
             if (!moduleCtrlConstr) {
-                moduleCtrlConstr = Aria.getClassRef(moduleClasspath);
+                moduleCtrlConstr = getClassRef(moduleClasspath);
                 args.moduleCtrlConstr = moduleCtrlConstr;
             }
 
             // Check that the module controller inherits from aria.templates.ModuleCtrl
-            if (!(moduleCtrlConstr && ariaUtilsType.isInstanceOf(moduleCtrlConstr.prototype, "aria.templates.ModuleCtrl"))) {
+            if (!(moduleCtrlConstr && isInstanceOf(moduleCtrlConstr.prototype, "aria.templates.ModuleCtrl"))) {
+                // eslint-disable-next-line no-invalid-this
                 this.$logError(this.INVALID_MODULE_CTRL, [moduleClasspath]);
+                // eslint-disable-next-line no-invalid-this
                 return loadModuleError.call(this, args);
             }
 
@@ -161,34 +176,46 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 if (flowCtrlClasspath === true) {
                     flowCtrlClasspath = moduleClasspath + "Flow";
                 }
-                // get customized classpath
-                flowCtrlClasspath = ariaCoreEnvironmentCustomizations.getFlowCP(flowCtrlClasspath);
+                // ---------------------------
+                // NOT_IMPLEMENTABLE: ModernAria: Customizations cannot be implemented with current mechanism as module loading is handled by the browser
+                // // get customized classpath
+                // flowCtrlClasspath = ariaCoreEnvironmentCustomizations.getFlowCP(flowCtrlClasspath);
+                // ---------------------------
 
                 args.flowCtrlClasspath = flowCtrlClasspath;
-                flowCtrlConstr = Aria.getClassRef(flowCtrlClasspath);
+                flowCtrlConstr = getClassRef(flowCtrlClasspath);
 
                 if (flowCtrlConstr) {
                     args.flowCtrlConstr = flowCtrlConstr;
+                    // eslint-disable-next-line no-invalid-this
                     createFlowCtrlAndCustomModules.call(this, args);
                 } else {
-                    Aria.load({
-                        classes : [flowCtrlClasspath],
-                        oncomplete : {
-                            args : args,
-                            scope : this,
-                            fn : createFlowCtrlAndCustomModules
-                        },
-                        onerror : {
-                            args : args,
-                            scope : this,
-                            fn : loadModuleError
-                        }
-                    });
+                    // --------------------------------
+                    // MUST_CHECK: ModernAria: Aria.load should no longer be needed, hence commenting and calling loadModuleError directly
+                    // Aria.load({
+                    //     classes : [flowCtrlClasspath],
+                    //     oncomplete : {
+                    //         args : args,
+                    //         scope : this,
+                    //         fn : createFlowCtrlAndCustomModules
+                    //     },
+                    //     onerror : {
+                    //         args : args,
+                    //         scope : this,
+                    //         fn : loadModuleError
+                    //     }
+                    // });
+                    // eslint-disable-next-line no-invalid-this
+                    loadModuleError.call(this, args);
+                    // ---------------------------------
+
                 }
             } else {
+                // eslint-disable-next-line no-invalid-this
                 createFlowCtrlAndCustomModules.call(this, args);
             }
         } catch (ex) {
+            // eslint-disable-next-line no-invalid-this
             return loadModuleError.call(this, args, ex);
         }
     };
@@ -209,11 +236,13 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             var flowCtrlPrivate, flowCtrl;
             if (args.flowCtrlClasspath) {
                 if (!args.flowCtrlConstr) {
-                    args.flowCtrlConstr = Aria.getClassRef(args.flowCtrlClasspath);
+                    args.flowCtrlConstr = getClassRef(args.flowCtrlClasspath);
                 }
                 // Check that the flow controller inherits from aria.templates.FlowCtrl
-                if (!(args.flowCtrlConstr && ariaUtilsType.isInstanceOf(args.flowCtrlConstr.prototype, "aria.templates.FlowCtrl"))) {
+                if (!(args.flowCtrlConstr && isInstanceOf(args.flowCtrlConstr.prototype, "aria.templates.FlowCtrl"))) {
+                    // eslint-disable-next-line no-invalid-this
                     this.$logError(this.INVALID_FLOW_CTRL, [args.flowCtrlClasspath]);
+                    // eslint-disable-next-line no-invalid-this
                     return loadModuleError.call(this, args);
                 }
 
@@ -243,26 +272,30 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 moduleCtrlPrivate : moduleCtrlPrivate,
                 moduleCtrl : moduleCtrl
             };
-
+            // ---------------------------
+            // NOT_IMPLEMENTABLE: ModernAria: Customizations cannot be implemented with current mechanism as module loading is handled by the browser
             // load custom sub modules attached to this module controller
-            var customModules = ariaCoreEnvironmentCustomizations.getCustomModules(args.desc.classpath);
-            if (customModules.length > 0) {
-                var recursionCheck = args.recursionCheck;
-                if (recursionCheck) {
-                    recursionCheck = prototypeCopyObject(recursionCheck);
-                } else {
-                    recursionCheck = {};
-                }
-                recursionCheck[args.desc.classpath] = 1;
-                loadSubModules.call(this, moduleInfo, customModules, {
-                    fn : attachListenersAndInit,
-                    scope : this,
-                    args : args
-                }, true /* custom modules */, recursionCheck /* custom module recursion check */);
-            } else {
+            // var customModules = ariaCoreEnvironmentCustomizations.getCustomModules(args.desc.classpath);
+            // if (customModules.length > 0) {
+            //     var recursionCheck = args.recursionCheck;
+            //     if (recursionCheck) {
+            //         recursionCheck = prototypeCopyObject(recursionCheck);
+            //     } else {
+            //         recursionCheck = {};
+            //     }
+            //     recursionCheck[args.desc.classpath] = 1;
+            //     loadSubModules.call(this, moduleInfo, customModules, {
+            //         fn : attachListenersAndInit,
+            //         scope : this,
+            //         args : args
+            //     }, true /* custom modules */, recursionCheck /* custom module recursion check */);
+            // } else {
+                // eslint-disable-next-line no-invalid-this
                 attachListenersAndInit.call(this, null, args);
-            }
+            // }
+            // -------------------------------------------------
         } catch (ex) {
+            // eslint-disable-next-line no-invalid-this
             return loadModuleError.call(this, args, ex);
         }
     };
@@ -284,6 +317,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 args.res.moduleCtrl.setSession(args.session);
             }
             if (args.skipInit) {
+                // eslint-disable-next-line no-invalid-this
                 this.$callback(args.cb, args.res);
             } else {
                 var initArgs = args.desc.initArgs;
@@ -293,10 +327,12 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 args.res.moduleCtrl.init(initArgs, {
                     fn : callFinalCallback,
                     args : args,
+                    // eslint-disable-next-line no-invalid-this
                     scope : this
                 });
             }
         } catch (ex) {
+            // eslint-disable-next-line no-invalid-this
             return loadModuleError.call(this, args, ex);
         }
     };
@@ -308,6 +344,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      * @private
      */
     callFinalCallback = function (unused, args) {
+        // eslint-disable-next-line no-invalid-this
         this.$callback(args.cb, args.res);
     };
 
@@ -322,7 +359,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         if (!res) {
             // we should log the error: a module controller either already disposed or not created through
             // the module controller manager is being used
-            aria.templates.ModuleCtrlFactory.$logError(aria.templates.ModuleCtrlFactory.MODULECTRL_BYPASSED_FACTORY, [moduleCtrl.$classpath]);
+            ModuleCtrlFactory.$logError(ModuleCtrlFactory.MODULECTRL_BYPASSED_FACTORY, [moduleCtrl.$classpath]);
             return null;
         }
         return res;
@@ -342,7 +379,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         }
         if (res.moduleCtrlPrivate != moduleCtrlPrivate) {
             // notifyModuleCtrlDisposed must only be called with the private module controller
-            aria.templates.ModuleCtrlFactory.$logError(aria.templates.ModuleCtrlFactory.EXPECTING_MODULECTRL_PRIVATE, [
+            ModuleCtrlFactory.$logError(ModuleCtrlFactory.EXPECTING_MODULECTRL_PRIVATE, [
                     functionName, moduleCtrlPrivate.$classpath]);
             return null;
         }
@@ -446,6 +483,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         }
 
         if (subModuleCtrl != null && alreadyExists) {
+            // eslint-disable-next-line no-invalid-this
             this.$logError(this.SUBMODULE_REFPATH_ALREADY_USED, [ref, subModuleDesc.classpath,
                     parentModule.moduleCtrlPrivate.$classpath]);
         }
@@ -467,6 +505,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         if (subModuleCtrl) {
             var parentModule = common.parentModule;
             var parentSubModules = parentModule.subModules;
+            // eslint-disable-next-line no-invalid-this
             putSubModuleAtRefPath.call(this, parentModule, subModuleDesc, subModuleCtrl, common.customModules);
             if (!parentSubModules) {
                 parentModule.subModules = [subModule.moduleCtrlPrivate];
@@ -474,13 +513,16 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 parentSubModules.push(subModule.moduleCtrlPrivate);
             }
         } else {
+            // eslint-disable-next-line no-invalid-this
             var error = args.error || this.SM_CREATION_FAILED;
             common.res.errors++;
+            // eslint-disable-next-line no-invalid-this
             this.$logError(error, [subModuleDesc.refpath, subModuleDesc.classpath,
                     common.parentModule.moduleCtrlPrivate.$classpath]);
         }
         if (common.alreadyLoaded >= common.toBeLoaded) {
             // all sub-modules were loaded successfully, call the callback
+            // eslint-disable-next-line no-invalid-this
             this.$callback(common.cb, common.res);
         }
     };
@@ -498,6 +540,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
     loadSubModules = function (parentModuleInfo, subModulesDescArray, cb, customModules, recursionCheck) {
         var subModulesDescArrayLength = subModulesDescArray.length;
         if (subModulesDescArrayLength === 0) {
+            // eslint-disable-next-line no-invalid-this
             this.$callback(cb, {
                 subModules : [],
                 errors : 0
@@ -520,11 +563,11 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             toBeLoaded : subModulesDescArrayLength,
             customModules : customModules
         };
-        var typeUtils = ariaUtilsType;
+
         for (var i = 0; i < subModulesDescArrayLength; i++) {
             var subModuleDesc = subModulesDescArray[i];
             var error = false;
-            if (customModules && typeUtils.isString(subModuleDesc)) {
+            if (customModules && isString(subModuleDesc)) {
                 subModuleDesc = {
                     classpath : subModuleDesc,
                     refpath : "custom:" + subModuleDesc
@@ -532,13 +575,17 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             }
             var classpath = subModuleDesc.classpath;
             if (!ariaCoreJsonValidator.check(subModuleDesc, "aria.templates.CfgBeans.SubModuleDefinition")) {
+                // eslint-disable-next-line no-invalid-this
                 error = this.INVALID_SM_DEF;
             } else if (customModules && subModuleDesc.refpath.substring(0, 7) != "custom:") {
+                // eslint-disable-next-line no-invalid-this
                 error = this.INVALID_CUSTOM_MODULE_REFPATH;
             } else if (recursionCheck && recursionCheck[classpath]) {
+                // eslint-disable-next-line no-invalid-this
                 error = this.CUSTOM_MODULES_INFINITE_RECURSION;
             }
             if (error) {
+                // eslint-disable-next-line no-invalid-this
                 subModuleLoaded.call(this, {}, {
                     error : error,
                     subModuleIdx : i,
@@ -547,6 +594,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 });
                 continue;
             }
+            // eslint-disable-next-line no-invalid-this
             createModuleCtrl.call(this, {
                 recursionCheck : recursionCheck,
                 subModuleInfos : {
@@ -579,6 +627,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 session : parentModuleInfo.moduleCtrlPrivate._session,
                 cb : {
                     fn : subModuleLoaded,
+                    // eslint-disable-next-line no-invalid-this
                     scope : this,
                     args : {
                         subModuleIdx : i,
@@ -601,20 +650,20 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         if (newModuleCtrl) {
             // no error while reloading
             // link the old interface wrapper the new one
-            var itfUtils = ariaCoreInterfaces;
-            itfUtils.linkItfWrappers(args.oldModuleCtrl, newModuleCtrl);
+            linkItfWrappers(args.oldModuleCtrl, newModuleCtrl);
 
             // do the same for the flow:
             if (args.oldFlowCtrl) {
                 var privateInfos = getModulePrivateInfo(newModuleCtrl);
                 var newFlowCtrl = privateInfos.flowCtrl;
                 if (newFlowCtrl) {
-                    itfUtils.linkItfWrappers(args.oldFlowCtrl, newFlowCtrl);
+                    linkItfWrappers(args.oldFlowCtrl, newFlowCtrl);
                 }
             }
         }
         objectLoading.notifyObjectLoaded(newModuleCtrl);
         objectLoading.$dispose();
+        // eslint-disable-next-line no-invalid-this
         this.$callback(args.callback);
     };
 
@@ -622,7 +671,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      * This singleton class manages the initialization and destruction of module controllers and their associated flow
      * controller. Every module controller creation or destruction should pass through this class.
      */
-    module.exports = Aria.classDefinition({
+    export const ModuleCtrlFactory = classDefinition({
         $classpath : "aria.templates.ModuleCtrlFactory",
         $singleton : true,
         $statics : {
@@ -816,7 +865,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                     // This module is a sub-module and its parent module is not being disposed
 
                     // remove the module from parent array of sub-modules
-                    ariaUtilsArray.remove(parentModule.subModules, moduleCtrlPrivate);
+                    remove(parentModule.subModules, moduleCtrlPrivate);
                     // remove module controller from refpath:
                     putSubModuleAtRefPath.call(this, parentModule, subModuleInfos.subModuleDesc, null, subModuleInfos.customModule);
                 }
@@ -848,4 +897,3 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             }
         }
     });
-})();

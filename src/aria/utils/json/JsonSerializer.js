@@ -12,13 +12,96 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
 
+import { classDefinition } from '../../core/class-definition.js';
+import { getClassRef } from '../../core/class-registry.js';
+import { $global, FRAMEWORK_PREFIX } from '../../core/framework-bootstrap.js';
+import { ariaEval } from '../../core/js-eval.js';
+import { contains } from '../Array.js';
+import { isArray, isBoolean, isDate, isFunction, isNumber, isObject, isRegExp, isString } from '../Type.js';
+
+
+
+/**
+ * Recursively copy a JSON object into another JSON object
+ * @param {Object} obj a json object
+ * @param {Boolean} rec recursive copy - default true
+ * @param {Array} filters if obj is an Object, will copy only keys in new object at first level.
+ * @param {Boolean} keepMeta keeps meta data not inserted by aria
+ *
+ * <pre>
+ * copy({
+ *     a : 1,
+ *     b : 2,
+ *     c : 3
+ * }, true, ['a', 'b']) = {
+ *     a : 1,
+ *     b : 2
+ * }
+ * </pre>
+ *
+ * MUST_DO: ModernAria: Copied the "copy" method from aria.utils.Json object to prevent circular dependency.
+ * MUST_DO: ModernAria: Figure out how to avoid this circular dependency without copying the code
+ */
+function __copy(obj, rec, filters, keepMeta) {
+  rec = (rec !== false);
+  var container = false, res;
+  if (isArray(obj)) {
+    res = [];
+    container = true;
+  } else if (isObject(obj)) {
+    res = {};
+    container = true;
+  }
+  if (container) {
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (key.indexOf(":") != -1) {
+          if (!keepMeta) {
+            continue;
+          } else {
+            // meta-data from aria : we never copy them
+            if (__isMetadata(key)) {
+              continue;
+            }
+          }
+        }
+
+        if (filters && !contains(filters, key)) {
+          continue; // filter elements
+        }
+
+        if (rec) {
+          res[key] = __copy(obj[key], rec, null, keepMeta);
+        } else {
+          res[key] = obj[key];
+        }
+      }
+    }
+  } else if (isDate(obj)) {
+    res = new Date(obj.getTime());
+  } else {
+    res = obj;
+  }
+  return res;
+}
+
+/**
+ * Checks if a property of a JSON object is used as metadata in the framework
+ * @param {String} property The property to check (String, Integer or Object)
+ * @returns {Boolean} True if the property is a String and it's used as metadata, false otherwise
+ */
+function __isMetadata(property) {
+  if (!isString(property)) {
+    return false;
+  }
+  return (property.indexOf(FRAMEWORK_PREFIX) === 0);
+}
 /**
  * Utility to convert data to a JSON string
  * @dependencies ["aria.utils.Type", "aria.utils.Json"]
  */
-module.exports = Aria.classDefinition({
+export const JsonSerializer = classDefinition({
     $classpath : "aria.utils.json.JsonSerializer",
     /**
      * @param {Boolean} optimized If true, an optimized version of the serializer will be used whwnever the options
@@ -34,6 +117,8 @@ module.exports = Aria.classDefinition({
     },
 
     $prototype : function () {
+        // TODO: ModernAria: Double check this regular expression and get rif of the eslint disables if possible
+        // eslint-disable-next-line no-useless-escape, no-control-regex, no-misleading-character-class
         var escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g, meta = {
             // table of character substitutions
             '\b' : '\\b',
@@ -63,15 +148,16 @@ module.exports = Aria.classDefinition({
         };
 
         var fastSerializer = (function () {
-            var JSON = Aria.$global.JSON || {};
+            var JSON = $global.JSON || {};
             if (JSON.stringify) {
                 return JSON.stringify;
             } else {
                 // This part was taken from https://github.com/douglascrockford/JSON-js/blob/master/json2.js
 
-                String.prototype.toJSON = Number.prototype.toJSON = Aria.$global.Boolean.prototype.toJSON = function (
-                        key) {
-                    return this.valueOf();
+                // TODO: ModernAria: Check of the "key" argument is needed.
+                // eslint-disable-next-line no-unused-vars
+                String.prototype.toJSON = Number.prototype.toJSON = $global.Boolean.prototype.toJSON = function (key) {
+                  return this.valueOf();
                 };
 
                 var gap, indent;
@@ -240,8 +326,6 @@ module.exports = Aria.classDefinition({
             }
         })();
 
-        var typeUtil = (require("../Type"));
-
         var defaults = {
             indent : "",
             maxDepth : 100,
@@ -271,9 +355,14 @@ module.exports = Aria.classDefinition({
                     var regexpToJSON = RegExp.prototype.toJSON;
                     var functionToJSON = Function.prototype.toJSON;
                     try {
-                        Date.prototype.toJSON = function () {
-                            return aria.utils.Date.format(this, options.serializedDatePattern);
-                        };
+
+                        // MUST_DO: ModernAria: Figure out import of aria.utils.Date
+                        const utilsDate = getClassRef('aria.utils.Date');
+                        if (utilsDate) {
+                          Date.prototype.toJSON = function () {
+                            return utilsDate.format(this, options.serializedDatePattern);
+                          };
+                        }
                         RegExp.prototype.toJSON = function () {
                             return this + '';
                         };
@@ -281,7 +370,7 @@ module.exports = Aria.classDefinition({
                             return "[function]";
                         };
                         return fastSerializer(item, null, options.indent);
-                    } catch (e) {
+                    } catch {
                         return null;
                     } finally {
                         Date.prototype.toJSON = dateToJSON;
@@ -298,8 +387,9 @@ module.exports = Aria.classDefinition({
              * @param {aria.utils.json.JsonSerializerBeans:JsonSerializeOptions} options
              */
             _normalizeOptions : function (options) {
+              // TODO: ModernAria: can be replaced with destructuring?? return {...defaults, ...options}
                 for (var key in defaults) {
-                    if (defaults.hasOwnProperty(key) && !(key in options)) {
+                    if (Object.prototype.hasOwnProperty.call(defaults, key) && !(key in options)) {
                         options[key] = defaults[key];
                     }
                 }
@@ -319,28 +409,28 @@ module.exports = Aria.classDefinition({
                 if (item === null) {
                     return this._serializeNull(options);
                 }
-                if (typeUtil.isBoolean(item)) {
+                if (isBoolean(item)) {
                     return this._serializeBoolean(item, options);
                 }
-                if (typeUtil.isNumber(item)) {
+                if (isNumber(item)) {
                     return this._serializeNumber(item, options);
                 }
-                if (typeUtil.isString(item)) {
+                if (isString(item)) {
                     return this._serializeString(item, options);
                 }
-                if (typeUtil.isDate(item)) {
+                if (isDate(item)) {
                     return this._serializeDate(item, options);
                 }
-                if (typeUtil.isRegExp(item)) {
+                if (isRegExp(item)) {
                     return this._serializeRegExp(item, options);
                 }
-                if (typeUtil.isArray(item)) {
+                if (isArray(item)) {
                     return this._serializeArray(item, options);
                 }
-                if (typeUtil.isObject(item)) {
+                if (isObject(item)) {
                     return this._serializeObject(item, options);
                 }
-                if (typeUtil.isFunction(item)) {
+                if (isFunction(item)) {
                     return this._serializeFunction(item, options);
                 }
 
@@ -372,7 +462,7 @@ module.exports = Aria.classDefinition({
                 var isEmpty = true;
 
                 for (var key in item) {
-                    if (item.hasOwnProperty(key) && this.__preserveObjectKey(key, options)) {
+                    if (Object.prototype.hasOwnProperty.call(item, key) && this.__preserveObjectKey(key, options)) {
                         isEmpty = false;
                         if (indent) {
                             res.push(subIndent);
@@ -387,7 +477,7 @@ module.exports = Aria.classDefinition({
                             // to be compatible with JSON.stringify
                             res.push(' ');
                         }
-                        var newOptions = require("../Json").copy(options, true);
+                        var newOptions = __copy(options, true);
                         newOptions.baseIndent = subIndent;
                         newOptions.maxDepth = options.maxDepth - 1;
                         output = this._serialize(item[key], newOptions);
@@ -426,7 +516,7 @@ module.exports = Aria.classDefinition({
              */
             __preserveObjectKey : function (key, options) {
                 if (!options.keepMetadata) {
-                    return !require("../Json").isMetadata(key);
+                    return !__isMetadata(key);
                 }
                 return true;
             },
@@ -461,7 +551,7 @@ module.exports = Aria.classDefinition({
                         if (indent) {
                             res.push(subIndent);
                         }
-                        var newOptions = require("../Json").copy(options, true);
+                        var newOptions = __copy(options, true);
                         newOptions.baseIndent = subIndent;
                         newOptions.maxDepth = options.maxDepth - 1;
                         output = this._serialize(item[i], newOptions);
@@ -496,7 +586,7 @@ module.exports = Aria.classDefinition({
              */
             _serializeString : function (item, options) {
                 var stringContent;
-                item = item.replace(/([\\\"])/g, "\\$1").replace(/(\r)?\n/g, "\\n");
+                item = item.replace(/([\\"])/g, "\\$1").replace(/(\r)?\n/g, "\\n");
                 if (options.encodeParameters === true) {
                     stringContent = encodeURIComponent(item);
                 } else {
@@ -514,6 +604,8 @@ module.exports = Aria.classDefinition({
              * serialization
              * @return {String} the serialized item. It is set to null if there is an error during the serialization
              */
+            // TODO: ModernAria: When moving to typescript remove the options
+            // eslint-disable-next-line no-unused-vars
             _serializeNumber : function (item, options) {
                 return item + '';
             },
@@ -526,6 +618,8 @@ module.exports = Aria.classDefinition({
              * serialization
              * @return {String} the serialized item. It is set to null if there is an error during the serialization
              */
+            // TODO: ModernAria: When moving to typescript remove the options
+            // eslint-disable-next-line no-unused-vars
             _serializeBoolean : function (item, options) {
                 return (item) ? 'true' : 'false';
             },
@@ -539,10 +633,13 @@ module.exports = Aria.classDefinition({
              * @return {String} the serialized item. It is set to null if there is an error during the serialization
              */
             _serializeDate : function (item, options) {
-                if (options.reversible || !aria.utils.Date) {
-                    return 'new Date(' + item.getTime() + ')';
+                // MUST_DO: ModernAria figure out aria.utils.Date usage
+                const utilsDate = getClassRef('aria.utils.Date');
+                if (options.reversible || !utilsDate) {
+                    return `new Date(${item.getTime()})`;
                 } else {
-                    return '"' + aria.utils.Date.format(item, options.serializedDatePattern) + '"';
+
+                    return '"' + utilsDate.format(item, options.serializedDatePattern) + '"';
                 }
             },
 
@@ -570,6 +667,8 @@ module.exports = Aria.classDefinition({
              * serialization
              * @return {String} the serialized item. It is set to null if there is an error during the serialization
              */
+            // TODO: ModernAria: When moving to typescript remove the item and options
+            // eslint-disable-next-line no-unused-vars
             _serializeFunction : function (item, options) {
                 return '"[function]"';
             },
@@ -596,11 +695,11 @@ module.exports = Aria.classDefinition({
              */
             parse: function (string) {
                 var text = String(string);
-                var JSON = Aria.$global.JSON;
+                var JSON = $global.JSON;
                 if (typeof JSON !== "undefined" && typeof JSON.parse === "function") {
                     try {
                         return JSON.parse(text);
-                    } catch (ex) {
+                    } catch {
                         // Fallback to eval
                         this.$logWarn(this.INVALID_JSON_SYNTAX, [text]);
                         return this._parseWithEval(text);
@@ -634,11 +733,13 @@ module.exports = Aria.classDefinition({
                 // open brackets that follow a colon or comma or that begin the text. Finally,
                 // we look to see that the remaining characters are only whitespace or ']' or
                 // ',' or ':' or '{' or '}' or 'new Date(])'. If that is so, then the text is safe for eval.
+                // eslint-disable-next-line no-useless-escape
                 if (/^((new Date\((\])?\))|([\],:{}\s]))*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
+                    // eslint-disable-next-line no-useless-escape
                     .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
                     .replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
                     // this might throw a SyntaxError
-                    return Aria["eval"]('return (' + text + ');');
+                    return ariaEval('return (' + text + ');');
                 } else {
                     throw new Error('aria.utils.json.JsonSerializer.parse');
                 }

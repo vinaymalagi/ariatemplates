@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsJson = require("../utils/Json");
-var ariaUtilsStackHashMap = require("../utils/StackHashMap");
-var ariaUtilsType = require("../utils/Type");
+import { classDefinition } from "../core/class-definition.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+import { StackHashMap as ariaUtilsStackHashMap } from "../utils/StackHashMap.js";
+import { isArray, isObject } from "../utils/Type.js";
 
 
-(function () {
+
 
     /**
      * Sorting function by ascending sortKey. Function given as a parameter to the Array.sort JavaScript function for
@@ -73,7 +73,7 @@ var ariaUtilsType = require("../utils/Type");
      * A view is an object which allows sorting, filtering and paging of an array.
      * @class aria.templates.View
      */
-    module.exports = Aria.classDefinition({
+    export default classDefinition({
         $classpath : 'aria.templates.View',
         $onload : function () {
             json = ariaUtilsJson;
@@ -87,7 +87,7 @@ var ariaUtilsType = require("../utils/Type");
          */
         $constructor : function (obj) {
 
-            if (!(ariaUtilsType.isObject(obj) || ariaUtilsType.isArray(obj))) {
+            if (!(isObject(obj) || isArray(obj))) {
                 this.$logError(this.INVALID_TYPE_OF_ARGUMENT);
                 return;
             }
@@ -321,6 +321,7 @@ var ariaUtilsType = require("../utils/Type");
              * setValue).
              * @protected
              */
+            // eslint-disable-next-line no-unused-vars
             _notifyDataChange : function (args) {
                 // this method is only called for the filteredIn property
                 this._changes = this._changes | this._CHANGED_FILTERED_IN;
@@ -361,11 +362,11 @@ var ariaUtilsType = require("../utils/Type");
                         oldValues.push(oldElt.value, oldElt);
                     }
                 }
-
-                if (ariaUtilsType.isObject(initialArray)) {
-                    var returnedItems = this._getItemsFromMap(oldValues);
+                var returnedItems;
+                if (isObject(initialArray)) {
+                    returnedItems = this._getItemsFromMap(oldValues);
                 } else {
-                    var returnedItems = this._getItemsFromArray(oldValues);
+                    returnedItems = this._getItemsFromArray(oldValues);
                 }
                 if (oldValues) {
                     this._removeListenersOnItems(oldValues.removeAll());
@@ -456,7 +457,7 @@ var ariaUtilsType = require("../utils/Type");
                 var j = 0, items = [], filteredOutElements = 0;
                 var initialArray = this.initialArray;
                 for (var p in initialArray) {
-                    if (initialArray.hasOwnProperty(p) && !json.isMetadata(p)) {
+                    if (Object.prototype.hasOwnProperty.call(initialArray, p) && !json.isMetadata(p)) {
                         var iaElt = initialArray[p];
                         var itemsElt = null;
                         if (oldValues) {
@@ -499,17 +500,17 @@ var ariaUtilsType = require("../utils/Type");
                 var newItems = [];
                 var initialArray = this.initialArray;
 
-                if (ariaUtilsType.isObject(initialArray)) {
+                if (isObject(initialArray)) {
                     var oldItemsMap = new ariaUtilsStackHashMap();
                     var oldElt;
-                    for (var i = 0; i < oldItemsLength; i++) {
+                    for (let i = 0; i < oldItemsLength; i++) {
                         oldElt = oldItems[i];
                         oldItemsMap.push(oldElt.value, oldElt);
                     }
 
                     var j = 0;
                     for (var p in initialArray) {
-                        if (initialArray.hasOwnProperty(p) && !json.isMetadata(p)) {
+                        if (Object.prototype.hasOwnProperty.call(initialArray, p) && !json.isMetadata(p)) {
                             newItems[j] = oldItemsMap.pop(initialArray[p]);
                             j++;
                         }
@@ -517,7 +518,7 @@ var ariaUtilsType = require("../utils/Type");
                     oldItemsMap.$dispose();
                 } else {
 
-                    for (var i = 0; i < oldItemsLength; i++) {
+                    for (let i = 0; i < oldItemsLength; i++) {
                         var elt = oldItems[i];
                         newItems[elt.initIndex] = elt;
                         delete oldItems[i];
@@ -744,7 +745,7 @@ var ariaUtilsType = require("../utils/Type");
              * @param {Array|Object} new obj array or map on which to create the view
              */
             updateInitialArray : function (array) {
-                if (!(ariaUtilsType.isObject(array) || ariaUtilsType.isArray(array))) {
+                if (!(isObject(array) || isArray(array))) {
                     this.$logError(this.INVALID_TYPE_OF_ARGUMENT);
                     return;
                 }
@@ -754,4 +755,3 @@ var ariaUtilsType = require("../utils/Type");
 
         }
     });
-})();

@@ -15,7 +15,7 @@
 var Aria = require("../Aria");
 var asyncRequire = require('noder-js/asyncRequire').create(module);
 var Promise = require('noder-js/promise');
-var environment = require('./environment/Environment');
+var environment = require('./environment/Environment').default;
 
 var currentEntry = null;
 var resources = {};

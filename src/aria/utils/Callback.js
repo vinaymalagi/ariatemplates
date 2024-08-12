@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("./Type");
+
+import { classDefinition } from '../core/class-definition.js';
+import { isArray, isFunction } from './Type.js';
+
 
 
 /**
@@ -87,7 +89,7 @@ var ariaUtilsType = require("./Type");
  * callback.call('my result here');
  * </code></pre>
  */
-module.exports = Aria.classDefinition({
+export const UtilsCallback = classDefinition({
     $classpath : "aria.utils.Callback",
     $statics : {
         INVALID_CALLBACK : "The callback function is invalid or missing or it was called after $dispose."
@@ -111,7 +113,7 @@ module.exports = Aria.classDefinition({
         // normalise definition
         callbackDefinition = this.$normCallback(callbackDefinition);
 
-        var valid = ariaUtilsType.isFunction(callbackDefinition.fn);
+        var valid = isFunction(callbackDefinition.fn);
 
         /**
          * Scope for callback execution
@@ -158,7 +160,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} event
          */
         call : function (evt) {
-            var args = (this._apply === true && ariaUtilsType.isArray(this._args)) ? this._args.slice() : [this._args];
+            var args = (this._apply === true && isArray(this._args)) ? this._args.slice() : [this._args];
             var resIndex = (this._resIndex === undefined) ? 0 : this._resIndex;
 
             if (resIndex > -1) {

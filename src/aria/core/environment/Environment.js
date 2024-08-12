@@ -12,19 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-require("./EnvironmentBaseCfgBeans");
-var ariaCoreAppEnvironment = require("../AppEnvironment");
+import './EnvironmentBaseCfgBeans.js';
+import { AppEnvironment, AppEnvironment as ariaCoreAppEnvironment } from '../AppEnvironment.js';
+import { EnvironmentBase } from './EnvironmentBase.js';
+import { classDefinition } from '../class-definition.js';
+import { FRAMEWORK_GLOBALS, FRAMEWORK_LOGGER } from '../framework-bootstrap.js';
+import { JsonValidator } from '../JsonValidator.js';
+import { getClassRef } from '../class-registry.js';
 
 /**
  * Public API for retrieving, applying application variables.
  * @extends aria.core.environment.EnvironmentBase
  * @dependencies ["aria.core.environment.EnvironmentBaseCfgBeans", "aria.core.AppEnvironment"]
  */
-module.exports = Aria.classDefinition({
+export const Environment = classDefinition({
     $classpath : "aria.core.environment.Environment",
     $singleton : true,
-    $extends : (require("./EnvironmentBase")),
+    $extends : EnvironmentBase,
     $statics : {
         // ERROR MESSAGES:
         INVALID_LOCALE : "Error: the locale '%1' is not in correct format"
@@ -34,8 +38,8 @@ module.exports = Aria.classDefinition({
         // hook for JsonValidator and logs, which were loaded before
         this.$on({
             "debugChanged" : function () {
-                (require("../JsonValidator"))._options.checkEnabled = this.isDebug();
-                var logs = (require("../Log"));
+                JsonValidator._options.checkEnabled = this.isDebug();
+                var logs = FRAMEWORK_LOGGER;
                 // PTR 05038013: aria.core.Log may not be available
                 if (logs) {
                     logs.setLoggingLevel("*", this.isDebug() ? logs.LEVEL_DEBUG : logs.LEVEL_ERROR);
@@ -63,14 +67,16 @@ module.exports = Aria.classDefinition({
          */
         _applyEnvironment : function (callback) {
             var debug = this.isDebug();
-            if (debug != Aria.debug) {
+            if (debug != FRAMEWORK_GLOBALS.debug) {
                 // always usefull as a shortcut
-                Aria.debug = debug;
+                FRAMEWORK_GLOBALS.debug = debug;
                 this.$raiseEvent("debugChanged");
             }
-            if (aria.core.ResMgr) {
+            // MUST_DO: ModernAria: Resource Manager code.
+            const resourceMgr = getClassRef('aria.core.ResMgr');
+            if (resourceMgr) {
                 // the resource manager may not be already loaded
-                require("../ResMgr").changeLocale(this.getLanguage(), callback);
+                resourceMgr.changeLocale(this.getLanguage(), callback);
             } else {
                 this.$callback(callback);
             }
@@ -204,7 +210,7 @@ module.exports = Aria.classDefinition({
         setEscapeHtmlByDefault : function (escape) {
             var currentValue = this.hasEscapeHtmlByDefault();
             if (currentValue !== escape && (escape === true || escape === false)) {
-                aria.core.AppEnvironment.setEnvironment({
+                AppEnvironment.setEnvironment({
                     "templateSettings" : {
                         "escapeHtmlByDefault" : escape
                     }

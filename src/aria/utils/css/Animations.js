@@ -12,11 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsClassList = require("../ClassList");
-var ariaUtilsDelegate = require("../Delegate");
-var ariaTemplatesCSSMgr = require("../../templates/CSSMgr");
-var ariaUtilsCssTransitions = require("./Transitions.tpl.css");
+import { classDefinition } from "../../core/class-definition.js";
+import { FRAMEWORK_GLOBALS } from "../../core/framework-bootstrap.js";
+import { ClassList as ariaUtilsClassList } from "../ClassList.js";
+import { Delegate as ariaUtilsDelegate } from "../Delegate.js";
+import { CSSMgr as ariaTemplatesCSSMgr } from "../../templates/CSSMgr.js";
+import ariaUtilsCssTransitions from "./Transitions.tpl.css.js";
+import { UtilsEvent } from "../Event.js";
+
 var _isSupported;
 
 /**
@@ -35,7 +38,7 @@ var _isSupported;
  *      }
  * </pre>
  */
-module.exports = Aria.classDefinition({
+export const Animations = classDefinition({
     $classpath : "aria.utils.css.Animations",
     $css : [ariaUtilsCssTransitions],
     $constructor : function () {
@@ -82,7 +85,7 @@ module.exports = Aria.classDefinition({
                 return _isSupported;
             }
             _isSupported = false;
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             var div = document.createElement("div");
             var p, pre = ["ms", "O", "Webkit", "Moz"];
             for (p in pre) {
@@ -127,7 +130,7 @@ module.exports = Aria.classDefinition({
             if (!this._cfg.sequential) {
                 this._doneOut();
             } else {
-                aria.utils.Event.addListener(this._cfg.from, this._animationEndEvent(), {
+                UtilsEvent.addListener(this._cfg.from, this._animationEndEvent(), {
                     fn : this._doneOut,
                     scope : this
                 });
@@ -154,7 +157,7 @@ module.exports = Aria.classDefinition({
          * Starts the in animation for the To HTMLElement
          */
         _startIn : function () {
-            aria.utils.Event.addListener(this._cfg.to, this._animationEndEvent(), {
+            UtilsEvent.addListener(this._cfg.to, this._animationEndEvent(), {
                 fn : this._doneIn,
                 scope : this
             });
@@ -171,7 +174,7 @@ module.exports = Aria.classDefinition({
 
             if (this._cfg.to) {
                 this._removeClass(this._cfg.to, "xout xin xreverse xinMix xoutMix xin3d xout3d " + this._name);
-                aria.utils.Event.removeListener(this._cfg.to, this._animationEndEvent());
+                UtilsEvent.removeListener(this._cfg.to, this._animationEndEvent());
             }
 
             this._toggleClassBody();
@@ -249,14 +252,14 @@ module.exports = Aria.classDefinition({
                 this._addClass(this._cfg.from, "xanimation-element");
             }
 
-            aria.utils.Event.removeListener(this._cfg.from, this._animationEndEvent());
+            UtilsEvent.removeListener(this._cfg.from, this._animationEndEvent());
         },
 
         /**
          * Toggle some classes to the body
          */
         _toggleClassBody : function () {
-            var bodyClass = new ariaUtilsClassList(Aria.$window.document.body);
+            var bodyClass = new ariaUtilsClassList(FRAMEWORK_GLOBALS.$window.document.body);
             bodyClass.toggle("xviewport-xanimation");
             bodyClass.toggle("xviewport-" + this._name);
             bodyClass.$dispose();

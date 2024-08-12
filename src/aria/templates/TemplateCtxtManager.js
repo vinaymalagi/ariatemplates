@@ -12,17 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsAriaWindow = require("../utils/AriaWindow");
-var ariaUtilsStore = require("../utils/Store");
+import { classDefinition } from '../core/class-definition.js';
+import { remove } from '../utils/Array.js';
+import { AriaWindow as ariaUtilsAriaWindow } from '../utils/AriaWindow.js';
+import { Store as ariaUtilsStore } from '../utils/Store.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
 
 
 /**
  * @class aria.templates.TemplateCtxtManager List of active templates loaded by Aria.loadTemplate
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export const TemplateCtxtManager = classDefinition({
     $classpath : 'aria.templates.TemplateCtxtManager',
     $extends : ariaUtilsStore,
     $singleton : true,
@@ -33,9 +34,7 @@ module.exports = Aria.classDefinition({
          * @protected
          * @type Array list of active root templates
          */
-        this._rootTemplateContexts = [];
-
-        Aria.rootTemplates = this._rootTemplateContexts;
+        this._rootTemplateContexts = FRAMEWORK_GLOBALS.rootTemplates;
 
         ariaUtilsAriaWindow.$on({
             "unloadWindow" : this._unloadWindow,
@@ -43,7 +42,8 @@ module.exports = Aria.classDefinition({
         });
     },
     $destructor : function () {
-        Aria.rootTemplates = this._templateContexts = null;
+        this._templateContexts = null;
+        FRAMEWORK_GLOBALS.rootTemplates = [];
         ariaUtilsAriaWindow.$unregisterListeners(this);
         this.$Store.$destructor.call(this);
     },
@@ -55,8 +55,9 @@ module.exports = Aria.classDefinition({
          * @param {Object} evt
          * @private
          */
+        // eslint-disable-next-line no-unused-vars
         _unloadWindow : function (evt) {
-            var rootTemplates = Aria.rootTemplates;
+            var rootTemplates = FRAMEWORK_GLOBALS.rootTemplates;
             for (var i = rootTemplates.length - 1; i >= 0; i--) {
                 rootTemplates[i].$dispose();
             }
@@ -84,7 +85,7 @@ module.exports = Aria.classDefinition({
 
             if (templateContext._cfg && templateContext._cfg.isRootTemplate) {
                 // now remove it from the root template contexts array, if necessary
-                if (ariaUtilsArray.remove(this._rootTemplateContexts, templateContext)) {
+                if (remove(this._rootTemplateContexts, templateContext)) {
                     // it is important to check whether the item was actually present in the array
                     // so that we don't decrement the counter in AriaWindow when it should not be decremented (this can
                     // have very bad consequences)

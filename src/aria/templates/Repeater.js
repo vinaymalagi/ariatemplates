@@ -12,19 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesSection = require("./Section");
-var ariaUtilsType = require("../utils/Type");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsJson = require("../utils/Json");
-var IdManager = require("../utils/IdMgr");
+import { classDefinition } from "../core/class-definition.js";
+import { Section as ariaTemplatesSection } from "./Section.js";
+import { isArray, isFunction, isObject } from "../utils/Type.js";
+import { clone } from "../utils/Array.js";
+import { UtilsJson } from "../utils/Json.js";
+import { IdMgr } from "../utils/IdMgr.js";
+import { RefreshManager } from "./RefreshManager.js";
+import { isInstanceOf } from "../core/core-utils/Type.js";
 
 
-(function () {
-    var idMgr = null;
-    var typeUtils = null;
-    var jsonUtils = null;
-    var arrayUtils = null;
+    /**
+     * Id Manager instance for the class.
+     * TODO: ModernAria: Maybe create instance only when first instance of Repeater is created
+     */
+    const idMgr = new IdMgr('__repeater');
 
     /**
      * Return whether the specified parameter is a callback or not.
@@ -34,14 +36,10 @@ var IdManager = require("../utils/IdMgr");
      * @private
      */
     var _isCallback = function (obj) {
-        return obj && (typeUtils.isFunction(obj) || obj.fn);
+        return obj && (isFunction(obj) || obj.fn);
     };
 
-    /**
-     * Repeater, which automatically adds or removes sub-sections when the array to which it is bound is modified.
-     * @class aria.templates.Repeater
-     */
-    module.exports = Aria.classDefinition({
+export const Repeater = classDefinition({
         $classpath : 'aria.templates.Repeater',
         $extends : ariaTemplatesSection,
         $constructor : function (tplCtxt, cfg, options) {
@@ -108,19 +106,6 @@ var IdManager = require("../utils/IdMgr");
             // this._cfg = null;
             this._unregisterIteratedSetListener();
             this.$Section.$destructor.call(this);
-        },
-        $onload : function () {
-            idMgr = new IdManager("__repeater");
-            typeUtils = ariaUtilsType;
-            jsonUtils = ariaUtilsJson;
-            arrayUtils = ariaUtilsArray;
-        },
-        $onunload : function () {
-            idMgr.$dispose();
-            idMgr = null;
-            typeUtils = null;
-            arrayUtils = null;
-            jsonUtils = null;
         },
         $statics : {
             REPEATER_INVALID_ITERATED_SET : "Error in template '%1': the value declared in bindContentTo in the repeater '%2' is not valid or not compatible with the loopType property (%3).",
@@ -247,7 +232,7 @@ var IdManager = require("../utils/IdMgr");
                 var ct = 1;
                 this.itemsMap = {};
                 for (var i in iteratedSet) {
-                    if (iteratedSet.hasOwnProperty(i) && !jsonUtils.isMetadata(i)) {
+                    if (Object.prototype.hasOwnProperty.call(iteratedSet, i) && !UtilsJson.isMetadata(i)) {
                         var item = {
                             index : i,
                             ct : ct,
@@ -265,7 +250,7 @@ var IdManager = require("../utils/IdMgr");
             },
 
             _defaultCallback_macro : function (item, constValue) {
-                var args = arrayUtils.clone(constValue.args);
+                var args = clone(constValue.args);
                 args.push(item);
                 return {
                     name : constValue.name,
@@ -279,7 +264,7 @@ var IdManager = require("../utils/IdMgr");
                 var cbProperties = [];
                 var constProperties = [];
                 for (var property in childSections) {
-                    if (childSections.hasOwnProperty(property)) {
+                    if (Object.prototype.hasOwnProperty.call(childSections, property)) {
                         var value = childSections[property];
                         res[property] = value;
                         if (_isCallback(value)) {
@@ -315,7 +300,7 @@ var IdManager = require("../utils/IdMgr");
                         scope : this,
                         fn : this._notifyChange
                     };
-                    jsonUtils.addListener(this.iteratedSet, null, listener);
+                    UtilsJson.addListener(this.iteratedSet, null, listener);
                     this._iteratedSetListener = listener;
                 }
             },
@@ -323,11 +308,12 @@ var IdManager = require("../utils/IdMgr");
             _unregisterIteratedSetListener : function () {
                 var listener = this._iteratedSetListener;
                 if (listener) {
-                    jsonUtils.removeListener(this.iteratedSet, null, listener);
+                    UtilsJson.removeListener(this.iteratedSet, null, listener);
                     this._iteratedSetListener = null;
                 }
             },
 
+            // eslint-disable-next-line no-unused-vars
             _notifyIteratedSetReplaced : function (change) {
                 this._unregisterIteratedSetListener();
                 this.tplCtxt.$refresh({
@@ -360,7 +346,7 @@ var IdManager = require("../utils/IdMgr");
             },
 
             _checkRefreshManager : function (arg) {
-                if (aria.templates.RefreshManager.isStopped()) {
+                if (RefreshManager.isStopped()) {
                     var queue = this._registerInRefreshMgr().queue;
                     if (queue) {
                         queue.push(arg);
@@ -378,18 +364,18 @@ var IdManager = require("../utils/IdMgr");
                 // on the array, and several other modifications may have happened after that
                 var change = arg.change;
                 var items = this.items;
-                if (change == jsonUtils.VALUE_CHANGED || change == jsonUtils.KEY_REMOVED
-                        || change == jsonUtils.KEY_ADDED) {
+                if (change == UtilsJson.VALUE_CHANGED || change == UtilsJson.KEY_REMOVED
+                        || change == UtilsJson.KEY_ADDED) {
                     // note that KEY_REMOVED is not different from VALUE_CHANGED with an undefined new value in this
                     // case
-                    var index = parseInt(arg.dataName, 10);
+                    const index = parseInt(arg.dataName, 10);
                     if (index != arg.dataName || index < 0) {
                         // ignore indexes which are not positive integers
                         return;
                     }
                     if (index < items.length) {
                         // only a change of item, not changing the size of the array
-                        jsonUtils.setValue(items[index], "item", arg.newValue);
+                        UtilsJson.setValue(items[index], "item", arg.newValue);
                         // refresh the corresponding section
                         this.tplCtxt.$refresh({
                             section : items[index].sectionId
@@ -397,9 +383,9 @@ var IdManager = require("../utils/IdMgr");
                     } else {
                         // the index is such that it is needed to add a number of sections at the end
                         var itemsLength = items.length;
-                        var sections = [];
-                        for (var i = itemsLength; i <= index; i++) {
-                            var itemParam = {
+                        const sections = [];
+                        for (let i = itemsLength; i <= index; i++) {
+                            const itemParam = {
                                 index : i,
                                 ct : i + 1,
                                 item : i == index ? arg.newValue : undefined
@@ -417,12 +403,12 @@ var IdManager = require("../utils/IdMgr");
                             position : "beforeEnd"
                         });
                     }
-                } else if (change == jsonUtils.SPLICE) {
-                    var index = arg.index;
+                } else if (change == UtilsJson.SPLICE) {
+                    const index = arg.index;
                     var removedLength = arg.removed.length;
                     // removing items:
                     if (removedLength) {
-                        for (var i = 0; i < removedLength; i++) {
+                        for (let i = 0; i < removedLength; i++) {
                             var item = this.items[index + i];
                             var sectionWrapper = this.tplCtxt.$getElementById(item.sectionId);
                             sectionWrapper.remove();
@@ -432,10 +418,10 @@ var IdManager = require("../utils/IdMgr");
                     var added = arg.added;
                     var addedLength = added.length;
                     if (addedLength) {
-                        var sections = [];
+                        const sections = [];
                         var spliceParams = [index, removedLength];
                         for (var i = 0; i < addedLength; i++) {
-                            var itemParam = {
+                            const itemParam = {
                                 index : index + i,
                                 ct : index + i + 1,
                                 item : added[i]
@@ -485,9 +471,9 @@ var IdManager = require("../utils/IdMgr");
                     var item = items[i];
                     if (updateIndex) {
                         // we do not update the index for maps, as the index is a key in that case
-                        jsonUtils.setValue(item, "index", i);
+                        UtilsJson.setValue(item, "index", i);
                     }
-                    jsonUtils.setValue(item, "ct", i + 1);
+                    UtilsJson.setValue(item, "ct", i + 1);
                     if (attributesCB) {
                         var section = this.getSectionById(item.sectionId);
                         section.updateAttributes(this.tplCtxt.evalCallback(attributesCB, item));
@@ -501,8 +487,8 @@ var IdManager = require("../utils/IdMgr");
 
                 // maps are not ordered, adding an item is always done at the end
                 var change = arg.change;
-                if (change != jsonUtils.VALUE_CHANGED && change != jsonUtils.KEY_REMOVED
-                        && change != jsonUtils.KEY_ADDED) {
+                if (change != UtilsJson.VALUE_CHANGED && change != UtilsJson.KEY_REMOVED
+                        && change != UtilsJson.KEY_ADDED) {
                     return;
                 }
                 if (this._checkRefreshManager(arg)) {
@@ -512,17 +498,17 @@ var IdManager = require("../utils/IdMgr");
                 var items = this.items;
                 var iteratedSet = this.iteratedSet;
                 var index = arg.dataName;
-                if (jsonUtils.isMetadata(index)) {
+                if (UtilsJson.isMetadata(index)) {
                     // ignore meta data
                     return;
                 }
                 // check if the item is already displayed
-                if (itemsMap.hasOwnProperty(index)) {
-                    var item = itemsMap[index];
+                if (Object.prototype.hasOwnProperty.call(itemsMap, index)) {
+                    const item = itemsMap[index];
                     // already displayed
-                    if (change == jsonUtils.KEY_REMOVED) {
+                    if (change == UtilsJson.KEY_REMOVED) {
                         // remove the item
-                        var sectionWrapper = this.tplCtxt.$getElementById(item.sectionId);
+                        const sectionWrapper = this.tplCtxt.$getElementById(item.sectionId);
                         sectionWrapper.remove();
                         items.splice(item.ct - 1, 1);
                         delete itemsMap[index];
@@ -530,14 +516,14 @@ var IdManager = require("../utils/IdMgr");
                     } else {
                         // key added or changed
                         // update the item and refresh the corresponding section
-                        jsonUtils.setValue(item, "item", iteratedSet[index]);
+                        UtilsJson.setValue(item, "item", iteratedSet[index]);
                         this.tplCtxt.$refresh({
                             section : item.sectionId
                         });
                     }
-                } else if (change != jsonUtils.VALUE_CHANGED) {
+                } else if (change != UtilsJson.VALUE_CHANGED) {
                     // add the new item
-                    var item = {
+                    const item = {
                         index : index,
                         ct : items.length + 1,
                         item : iteratedSet[index]
@@ -560,21 +546,21 @@ var IdManager = require("../utils/IdMgr");
                 var value = this._loopType;
                 var iteratedSet = this.iteratedSet;
                 if (value == "array") {
-                    res = typeUtils.isArray(iteratedSet);
+                    res = isArray(iteratedSet);
                 } else if (value == "map") {
-                    res = typeUtils.isObject(iteratedSet);
+                    res = isObject(iteratedSet);
                 } else if (value != null) {
-                    res = typeUtils.isInstanceOf(iteratedSet, 'aria.templates.View');
+                    res = isInstanceOf(iteratedSet, 'aria.templates.View');
                     if (value == "view") {
                         value = "pagedView";
                     }
                 } else {
                     // value is null
-                    if (typeUtils.isArray(iteratedSet)) {
+                    if (isArray(iteratedSet)) {
                         value = "array";
-                    } else if (typeUtils.isInstanceOf(iteratedSet, 'aria.templates.View')) {
+                    } else if (isInstanceOf(iteratedSet, 'aria.templates.View')) {
                         value = "pagedView";
-                    } else if (typeUtils.isObject(iteratedSet)) {
+                    } else if (isObject(iteratedSet)) {
                         value = "map";
                     } else {
                         res = false;
@@ -594,9 +580,9 @@ var IdManager = require("../utils/IdMgr");
                 return true;
             },
 
+            // eslint-disable-next-line no-unused-vars
             writeContent : function (out) {
                 this._loopOver(this.iteratedSet, this._writeRepeaterItem);
             }
         }
     });
-})();

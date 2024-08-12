@@ -13,29 +13,45 @@
  * limitations under the License.
  */
 
-var Aria = require('../Aria');
-var ArrayUtils = require('../utils/Array');
-var contextualEnvironment = require('../tools/contextual/environment/ContextualMenu');
-var AppEnvironment = require('../core/AppEnvironment');
-var ITemplate = require('./ITemplate');
-/**
- * Load the contextual menu if needed
- */
-require("./$Template").load();
+import { classDefinition } from '../core/class-definition.js';
+// ----------------------
+// MUST_DO: ModernAria: Implement Contextual menu Environment and dynamic loading of contextual menu itself
+// import { contains } from '../utils/Array.js';
+// import { contextualMenu as contextualEnvironment } from '../tools/contextual/environment/ContextualMenu.js';
+// import { AppEnvironment } from '../core/AppEnvironment.js';
+// ----------------------
+import { ITemplate } from './ITemplate.js';
+import { BaseTemplate } from './BaseTemplate.js';
+import { UtilsJson } from '../utils/Json.js';
 
-(function () {
-    /**
-     * This function handles environment change. When the contextual menu is enabled it loads the required classes.
-     */
-    var changingEnvironment = function (evt) {
-        if (!evt || !evt.changedProperties || ArrayUtils.contains(evt.changedProperties, "contextualMenu")) {
-            Aria.load({
-                classes : ["aria.tools.contextual.ContextualMenu"]
-            });
-        }
-    };
+// --------------------
+// MUST_DO: ModernAria: Implement Contextual menu Environment and dynamic loading of contextual menu itself
+// /**
+//  * Load the contextual menu if needed
+//  */
+// require("./$Template").load();
+// ----------------------
 
-    require("../utils/environment/VisualFocus");
+
+    // --------------------
+    // MUST_DO: ModernAria: Implement Contextual menu Environment and dynamic loading of contextual menu itself
+    // /**
+    //  * This function handles environment change. When the contextual menu is enabled it loads the required classes.
+    //  */
+    // var changingEnvironment = function (evt) {
+    //     if (!evt || !evt.changedProperties || contains(evt.changedProperties, "contextualMenu")) {
+    //         Aria.load({
+    //             classes : ["aria.tools.contextual.ContextualMenu"]
+    //         });
+    //     }
+    // };
+    // --------------------
+
+    // --------------------------
+    // MUST_DO: ModernAria: Implement loading of Visual focus environment and also dynamic loading if Visual focus when config enabled.
+    // import "../utils/environment/VisualFocus";
+    // --------------------------
+
 
     /**
      * Base class from which all templates inherit. Some methods will be added to instances of this class, from the
@@ -44,23 +60,26 @@ require("./$Template").load();
      * @dependencies ["aria.utils.Array", "aria.tools.contextual.environment.ContextualMenu",
      * "aria.core.AppEnvironment", "aria.templates.ITemplate", "aria.utils.environment.VisualFocus", "aria.utils.Json"]
      */
-    module.exports = Aria.classDefinition({
+    export const Template = classDefinition({
         $classpath : "aria.templates.Template",
-        $extends : require("./BaseTemplate"),
+        $extends : BaseTemplate,
         $statics : {
             // ERROR MESSAGES:
             EXCEPTION_IN_CONTROL_PARAMETERS : "line %2: Uncaught runtime exception in control %3 for parameters '%1'",
             EXCEPTION_IN_REPEATER_PARAMETER : "line %2: Uncaught runtime exception in repeater parameter '%1'"
         },
-        $onload : function () {
-            if (!contextualEnvironment.getContextualMenu().enabled) {
-                // since it's disabled, add a listener to load a class when it's enabled
-                AppEnvironment.$on({
-                    "environmentChanged" : changingEnvironment,
-                    scope : {}
-                });
-            }
-        },
+        // --------------------
+        // MUST_DO: ModernAria: Implement dynamic loading of contextual menu when enabled
+        // $onload : function () {
+        //     if (!contextualEnvironment.getContextualMenu().enabled) {
+        //         // since it's disabled, add a listener to load a class when it's enabled
+        //         AppEnvironment.$on({
+        //             "environmentChanged" : changingEnvironment,
+        //             scope : {}
+        //         });
+        //     }
+        // },
+        // --------------------
         $prototype : {
             // $width and $height are the current values for width and height
             $width : undefined,
@@ -79,7 +98,7 @@ require("./$Template").load();
                 // copy the prototype of ITemplate:
                 var itf = ITemplate.prototype;
                 for (var key in itf) {
-                    if (itf.hasOwnProperty(key) && !p.hasOwnProperty(key)) {
+                    if (Object.prototype.hasOwnProperty.call(itf, key) && !Object.prototype.hasOwnProperty.call(p, key)) {
                         // copy methods which are not already on this object (this avoids copying $classpath and
                         // $destructor)
                         p[key] = itf[key];
@@ -88,13 +107,15 @@ require("./$Template").load();
 
                 // get shortcuts to necessary functions in other classes,
                 // so that templates work even in a sandbox
-                p.$json = require('../utils/Json');
+                // TODO: ModernAria: Maybe just add $json: UtilsJson to the $prototype itself??
+                p.$json = UtilsJson;
             },
 
             /**
              * Function to be overriden by subclasses to receive events from the module controller.
              * @param {Object} evt the event object (depends on the module event)
              */
+            // eslint-disable-next-line no-unused-vars
             onModuleEvent : function (evt) {
                 // default implementation: just ignore the events
             },
@@ -103,6 +124,7 @@ require("./$Template").load();
              * Function to be overriden by subclasses to receive events from the flow controller.
              * @param {Object} evt the event object (depends on the flow event)
              */
+            // eslint-disable-next-line no-unused-vars
             onFlowEvent : function (evt) {
                 // default implementation: just ignore the events
             },
@@ -132,4 +154,3 @@ require("./$Template").load();
             }
         }
     });
-})();

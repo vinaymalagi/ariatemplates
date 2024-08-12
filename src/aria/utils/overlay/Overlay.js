@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../Dom");
 
-var Environment = require("../../core/environment/Environment");
-
+import { classDefinition } from "../../core/class-definition.js";
+import { FRAMEWORK_GLOBALS } from "../../core/framework-bootstrap.js";
+import { UtilsDom as ariaUtilsDom } from "../Dom.js";
+import { Environment } from "../../core/environment/Environment.js";
 
 
 /**
  * This class creates an overlay and keeps it positioned above a given HTML element
  * @class aria.utils.overlay.Overlay
  */
-module.exports = Aria.classDefinition({
+export const Overlay = classDefinition({
     $classpath : 'aria.utils.overlay.Overlay',
 
     /**
@@ -88,7 +88,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _createOverlay : function (params) {
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             var overlay = document.createElement(params.type || "div");
             if (params.id) {
                 overlay.id = "xOverlay" + params.id;
@@ -114,7 +114,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _appendToDOM : function (overlay) {
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             document.body.appendChild(overlay);
         },
 
@@ -159,7 +159,7 @@ module.exports = Aria.classDefinition({
         _computeZIndex : function (element, overlay) {
             // --------------------------------------------------- destructuring
 
-            var window = Aria.$window;
+            var window = FRAMEWORK_GLOBALS.$window;
             var document = window.document;
             var body = document.body;
 
@@ -222,7 +222,7 @@ module.exports = Aria.classDefinition({
                 var findChildrenCreatingANewStackingContext = function(root) {
                     var children = root.children;
 
-                    for (var index = 0, length = children.length; index < length; index++) {
+                    for (let index = 0, length = children.length; index < length; index++) {
                         var child = children[index];
 
                         if (createsANewStackingContext(child)) {
@@ -236,7 +236,7 @@ module.exports = Aria.classDefinition({
                 findChildrenCreatingANewStackingContext(element);
 
                 var zIndexes = [];
-                for (var index = 0, length = stackingContexts.length; index < length; index++) {
+                for (let index = 0, length = stackingContexts.length; index < length; index++) {
                     var stackingContext = stackingContexts[index];
 
                     var currentZIndex = getZIndex(stackingContext);

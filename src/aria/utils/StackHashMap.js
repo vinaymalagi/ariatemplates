@@ -12,33 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("./Type");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_PREFIX } from '../core/framework-bootstrap.js';
+import { isString, isNumber, isFunction } from "./Type.js";
 
-(function () {
+
     /**
      * Counter so that each StackHashMap object has its own metadata, and they won't interfere with each other in case
      * an object is a key in several MultiHashMap objects.
      */
     var __objCount = 0;
-    /**
-     * Shortcut to aria.utils.Type
-     */
-    var typeUtils;
 
     /**
      * A StackHashMap object is a map of stacks (last in, first out) of values. The key feature of this class is that it
      * accepts any type of keys (in addition to any type of values) in the map. It is implemented as metadata for object
      * keys and with a JavaScript map for strings and numbers.
      */
-    module.exports = Aria.classDefinition({
+    export const StackHashMap = classDefinition({
         $classpath : "aria.utils.StackHashMap",
-        $onload : function () {
-            typeUtils = ariaUtilsType;
-        },
-        $onunload : function () {
-            typeUtils = null;
-        },
         /**
          * Create an empty StackHashMap object.
          */
@@ -84,7 +75,7 @@ var ariaUtilsType = require("./Type");
              * @protected
              * @type String
              */
-            this._metaDataName = Aria.FRAMEWORK_PREFIX + "hash::" + __objCount;
+            this._metaDataName = FRAMEWORK_PREFIX + "hash::" + __objCount;
         },
         $destructor : function () {
             this.removeAll();
@@ -126,15 +117,15 @@ var ariaUtilsType = require("./Type");
              * depending on the type of the given key
              */
             _getMap : function (key, create) {
-                if (typeUtils.isString(key)) {
+                if (isString(key)) {
                     if (!this._stringKeys && create)
                         this._stringKeys = {};
                     return this._stringKeys;
-                } else if (typeUtils.isNumber(key)) {
+                } else if (isNumber(key)) {
                     if (!this._numberKeys && create)
                         this._numberKeys = {};
                     return this._numberKeys;
-                } else if (key != null && (typeof(key) == "object" || typeUtils.isFunction(key))) {
+                } else if (key != null && (typeof(key) == "object" || isFunction(key))) {
                     // don't use typeUtils.isObject here to be more general (it also accepts RegExp, Date, Array ...)
                     if (!this._objectKeys && create)
                         this._objectKeys = {};
@@ -178,7 +169,7 @@ var ariaUtilsType = require("./Type");
                     // we must check for an existing value to define the 'next' property,
                     // so that the order when removing values is the one of a stack
                     for (var i in map) {
-                        if (map.hasOwnProperty(i)) {
+                        if (Object.prototype.hasOwnProperty.call(map, i)) {
                             var elt = map[i];
                             if (key === elt.key) {
                                 item.index = i;
@@ -208,7 +199,7 @@ var ariaUtilsType = require("./Type");
                     item = map[key];
                 } else {
                     for (var i in map) {
-                        if (map.hasOwnProperty(i)) {
+                        if (Object.prototype.hasOwnProperty.call(map, i)) {
                             var elt = map[i];
                             if (key === elt.key) {
                                 item = elt;
@@ -248,7 +239,7 @@ var ariaUtilsType = require("./Type");
                     item = map[key];
                 } else {
                     for (var i in map) {
-                        if (map.hasOwnProperty(i)) {
+                        if (Object.prototype.hasOwnProperty.call(map, i)) {
                             var elt = map[i];
                             if (key === elt.key) {
                                 item = elt;
@@ -319,4 +310,3 @@ var ariaUtilsType = require("./Type");
 
         }
     });
-})();

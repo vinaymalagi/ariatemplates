@@ -12,20 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsEvent = require("./Event");
-var ariaDomEvent = require("../DomEvent");
-var ariaUtilsIdManager = require("./IdMgr");
-var ariaUtilsCallback = require("./Callback");
-require("./Array");
-var ariaCoreBrowser = require("../core/Browser");
-var ariaUtilsAriaWindow = require("./AriaWindow");
+import { emptyFn } from '../common/fixed-return-value-functions.js';
+import { Browser as ariaCoreBrowser } from '../core/Browser.js';
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { AriaDomEvent } from '../DomEvent.js';
+import { DomEventWrapper } from '../templates/DomEventWrapper.js'; // BENEFIT: ModernAria: Un-imported dependency detected
+import { AriaWindow as ariaUtilsAriaWindow } from './AriaWindow.js';
+import { UtilsCallback as ariaUtilsCallback } from './Callback.js';
+import { UtilsDom } from './Dom.js'; // BENEFIT: ModernAria: Un-imported dependency detected
+import { UtilsEvent as ariaUtilsEvent } from "./Event.js";
+import { IdMgr as ariaUtilsIdManager } from "./IdMgr.js";
 
 
 /**
  * Contains a reference to elements ready for event delegation, and manage delegation
  */
-module.exports = Aria.classDefinition({
+export const Delegate = classDefinition({
     $classpath : "aria.utils.Delegate",
     $singleton : true,
     $events : {
@@ -62,8 +66,8 @@ module.exports = Aria.classDefinition({
          */
         this.checkCSSPrefix = function () {
             // In non-browser environment document might be null
-            if (Aria.$window && Aria.$window.document) {
-                var div = Aria.$window.document.createElement("div");
+            if (FRAMEWORK_GLOBALS.$window && FRAMEWORK_GLOBALS.$window.document) {
+                var div = FRAMEWORK_GLOBALS.$window.document.createElement("div");
                 var prefixes = ["ms", "O", "Moz", "Webkit", ""];
                 for (var i = 0; i < prefixes.length; i += 1) {
                     var prefix = prefixes[i];
@@ -188,22 +192,22 @@ module.exports = Aria.classDefinition({
         this._delegatedMap = {};
         var index, l;
         for (index = 0, l = this.delegatedOnBody.length; index < l; index++) {
-            var eventName = this.delegatedOnBody[index];
+            const eventName = this.delegatedOnBody[index];
             this._delegatedMap[eventName] = true;
         }
         for (index = 0, l = this.delegatedOnWindow.length; index < l; index++) {
-            var eventName = this.delegatedOnWindow[index];
+            const eventName = this.delegatedOnWindow[index];
             this._delegatedMap[eventName] = true;
         }
-        for (var key in this.delegatedGestures) {
-            if (this.delegatedGestures.hasOwnProperty(key)) {
+        for (const key in this.delegatedGestures) {
+            if (Object.prototype.hasOwnProperty.call(this.delegatedGestures, key)) {
                 this._delegatedMap[key] = true;
             }
         }
 
         // supported through delegation
-        for (var key in this._delegatedMap) {
-            if (this._delegatedMap.hasOwnProperty(key)) {
+        for (const key in this._delegatedMap) {
+            if (Object.prototype.hasOwnProperty.call(this._delegatedMap, key)) {
                 this.supportedEvents[key] = true;
             }
         }
@@ -276,12 +280,12 @@ module.exports = Aria.classDefinition({
             if (mapping) {
 
                 for (var id in mapping) {
-                    if (mapping.hasOwnProperty(id)) {
+                    if (Object.prototype.hasOwnProperty.call(mapping, id)) {
                         this.remove(id);
                     }
                 }
 
-                var body = Aria.$window.document.body;
+                var body = FRAMEWORK_GLOBALS.$window.document.body;
                 var utilEvent = ariaUtilsEvent, index, l;
                 for (index = 0, l = this.delegatedOnBody.length; index < l; index++) {
                     utilEvent.removeListener(body, this.delegatedOnBody[index], {
@@ -326,8 +330,8 @@ module.exports = Aria.classDefinition({
             if (!this.__delegateMapping) {
                 ariaUtilsAriaWindow.attachWindow();
 
-                var body = Aria.$window.document.body;
-                this.rootListener = ariaCoreBrowser.isOldIE ? body : Aria.$window;
+                var body = FRAMEWORK_GLOBALS.$window.document.body;
+                this.rootListener = ariaCoreBrowser.isOldIE ? body : FRAMEWORK_GLOBALS.$window;
                 this.__delegateMapping = {};
                 var utilEvent = ariaUtilsEvent, index, l;
                 for (index = 0, l = this.delegatedOnBody.length; index < l; index++) {
@@ -378,7 +382,7 @@ module.exports = Aria.classDefinition({
             // for iOS, refer to method getMarkup
             if (ariaCoreBrowser.isIOS) {
                 if (domElt.onclick == null) {
-                    domElt.onclick = Aria.empty;
+                    domElt.onclick = emptyFn;
                 }
             }
         },
@@ -427,7 +431,7 @@ module.exports = Aria.classDefinition({
                 // It's already wrapped
                 return event;
             } else {
-                return templatesWrapper ? new aria.templates.DomEventWrapper(event) : new ariaDomEvent(event);
+                return templatesWrapper ? new DomEventWrapper(event) : new AriaDomEvent(event);
             }
         },
 
@@ -439,6 +443,7 @@ module.exports = Aria.classDefinition({
          * @param {HTMLElement} container HTML Element on which the listener is attached
          * @return {Object} Return value of the callback
          */
+        // eslint-disable-next-line no-unused-vars
         directCall : function (event, delegateId, wrapTarget, container) {
             this.$assert(286, this.__delegateMapping);
             var eventWrapper = this.__wrapEvent(event, wrapTarget), result;
@@ -460,7 +465,7 @@ module.exports = Aria.classDefinition({
          */
         mouseMovement : function (event, delegateId, wrapTarget, container) {
             // Fire the event only if we move to an element outside the container
-            if (aria.utils.Dom.isAncestor(event.relatedTarget, container) === false) {
+            if (UtilsDom.isAncestor(event.relatedTarget, container) === false) {
                 var eventWrapper = this.__wrapEvent(event, wrapTarget);
                 eventWrapper.type = event.type == "mouseover" ? "mouseenter" : "mouseleave";
                 eventWrapper.setTarget(container);
@@ -505,7 +510,7 @@ module.exports = Aria.classDefinition({
             }
 
             var depth = this.depth, stack = [], cacheStack, expandoValue, target;
-            var stopper = Aria.$window.document.body;
+            var stopper = FRAMEWORK_GLOBALS.$window.document.body;
 
             evt = this.__wrapEvent(evt);
 
@@ -593,13 +598,10 @@ module.exports = Aria.classDefinition({
             if (!nested) {
                 this._changed = null;
             }
-
-            if (result !== false && !evt.hasStopPropagation && aria.templates) {
+            const navManager = getClassRef('aria.templates.NavigationManager');
+            if (result !== false && !evt.hasStopPropagation && navManager) {
                 // handle global navigation
-                var navManager = aria.templates.NavigationManager;
-                if (navManager) {
-                    navManager.handleGlobalNavigation(evt);
-                }
+                navManager.handleGlobalNavigation(evt);
             }
 
             // focus tracking
@@ -635,7 +637,7 @@ module.exports = Aria.classDefinition({
         cleanCache : function () {
             if (this.__stackCache) {
                 for (var key in this.__stackCache) {
-                    if (this.__stackCache.hasOwnProperty(key)) {
+                    if (Object.prototype.hasOwnProperty.call(this.__stackCache, key)) {
                         var stack = this.__stackCache[key];
                         // break dom reference
                         for (var i = 0, l = stack.length; i < l; i++) {
@@ -667,7 +669,7 @@ module.exports = Aria.classDefinition({
          */
         ieFocusFix : function () {
             if (this._focusedElementRemoved) {
-                Aria.$window.document.body.focus();
+                FRAMEWORK_GLOBALS.$window.document.body.focus();
                 this._focusedElementRemoved = false;
             }
         },

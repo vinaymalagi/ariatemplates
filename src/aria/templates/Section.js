@@ -12,36 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsJson = require("../utils/Json");
-var ariaUtilsDelegate = require("../utils/Delegate");
-var ariaTemplatesNavigationManager = require("./NavigationManager");
-require("./CfgBeans");
-var ariaUtilsDom = require("../utils/Dom");
-require("../utils/String");
-var ariaTemplatesDomElementWrapper = require("./DomElementWrapper");
-var ariaUtilsHtml = require("../utils/Html");
-var ariaTemplatesDomEventWrapper = require("./DomEventWrapper");
-var ariaUtilsIdManager = require("../utils/IdMgr");
-var ariaTemplatesSectionWrapper = require("./SectionWrapper");
-var ariaUtilsCssAnimations = require("../utils/css/Animations");
-var ariaUtilsType = require("../utils/Type");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var ariaUtilsDomOverlay = require("../utils/DomOverlay");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
+import "./CfgBeans.js";
+import { remove } from '../utils/Array.js';
+import { Animations as ariaUtilsCssAnimations} from "../utils/css/Animations.js";
+import { Delegate as ariaUtilsDelegate } from "../utils/Delegate.js";
+import { UtilsDom as ariaUtilsDom } from "../utils/Dom.js";
+import { DomOverlay as ariaUtilsDomOverlay } from "../utils/DomOverlay.js";
+import { buildAttributeList, removeDataset, setDataset } from "../utils/Html.js";
+import { IdMgr as ariaUtilsIdManager } from "../utils/IdMgr.js";
+import { Json as ariaUtilsJson } from '../utils/Json.js';
+import { isBoolean, isObject } from '../utils/Type.js';
+import { DomElementWrapper as ariaTemplatesDomElementWrapper } from "./DomElementWrapper.js";
+import { DomEventWrapper as ariaTemplatesDomEventWrapper } from "./DomEventWrapper.js";
+import { NavigationManager as ariaTemplatesNavigationManager } from "./NavigationManager.js";
+import { RefreshManager } from './RefreshManager.js';
+import { SectionWrapper } from "./SectionWrapper.js";
 
-(function () {
     var idMgr = null;
 
     var TYPE_SECTION = 0;
     var TYPE_BEHAVIOR = 1;
 
-    var regexpForId = /^[\w\-:\.]+\+?$/;
+    var regexpForId = /^[\w\-:.]+\+?$/;
 
     /**
      * Represents a section in a template.
      */
-    module.exports = Aria.classDefinition({
+    export const Section = classDefinition({
         $classpath : "aria.templates.Section",
         $onload : function () {
             idMgr = new ariaUtilsIdManager("s");
@@ -189,7 +189,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 }
 
                 if (id.indexOf('+') > -1) {
-                    if (Aria.testMode) {
+                    if (FRAMEWORK_GLOBALS.testMode) {
                         domId = this.tplCtxt.$getAutoId(id);
                     }
                     // From the application's point of view, an id with a '+' inside it is equivalent to no id at all.
@@ -274,7 +274,8 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
             this.wrapper = null;
 
             // register binding on this section
-            for (var i = 0; binding = bindings[i]; i++) {
+            for (var i = 0; bindings[i]; i++) {
+                binding = bindings[i];
                 this.registerBinding(binding, this._notifyDataChange);
             }
 
@@ -388,6 +389,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
              * @param {Object} def the class definition
              * @param {Object} sdef the superclass class definition
              */
+            // eslint-disable-next-line no-unused-vars
             $init : function (p, def, sdef) {
                 p.__navigationManager = ariaTemplatesNavigationManager;
                 p.__json = ariaUtilsJson; // shortcut
@@ -472,12 +474,12 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
             removeDelegateIdsAndCallbacks : function () {
                 // remove delegation done with "on" statement
                 if (this.delegateIds) {
-                    for (var i = 0, l = this.delegateIds.length; i < l; i++) {
+                    for (let i = 0, l = this.delegateIds.length; i < l; i++) {
                         ariaUtilsDelegate.remove(this.delegateIds[i]);
                     }
                     this.delegateIds = [];
                 }
-                for (var i = 0, l = this.delegateCallbacks.length; i < l; i++) {
+                for (let i = 0, l = this.delegateCallbacks.length; i < l; i++) {
                     this.delegateCallbacks[i].$dispose();
                 }
                 this.delegateCallbacks = [];
@@ -599,7 +601,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
             removeSubSection : function (subSection) {
                 // filter the case where the parent is controlling itself the removal
                 if (!this._removingContent) {
-                    ariaUtilsArray.remove(this._content, subSection);
+                    remove(this._content, subSection);
                 }
             },
 
@@ -634,7 +636,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                             to : bind.to,
                             recursive : bind.recursive
                         });
-                    } catch (e) {
+                    } catch {
                         this.$logError(this.SECTION_BINDING_ERROR, [bind.inside, bind.to, this.id,
                                 this.tplCtxt.tplClasspath]);
                         jsonChangeCallback = null;
@@ -666,7 +668,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 }
 
                 var bindedValue = bind.inside[bind.to];
-                if (bindedValue == null || ariaUtilsType.isBoolean(bindedValue)) {
+                if (bindedValue == null || isBoolean(bindedValue)) {
                     // If it is bound to something that doesn't exist or a boolean, it is valid
                     return true;
                 }
@@ -836,9 +838,9 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
 
                 // remove old members
                 for (attribute in oldValue) {
-                    if (oldValue.hasOwnProperty(attribute)) {
+                    if (Object.prototype.hasOwnProperty.call(oldValue, attribute)) {
                         if (attribute == "dataset") {
-                            ariaUtilsHtml.removeDataset(domElt, oldValue[attribute]);
+                            removeDataset(domElt, oldValue[attribute]);
                         } else if (!newValue[attribute]) {
                             if (attribute == "classList") {
                                 this.getWrapper().classList.setClassName("");
@@ -852,12 +854,12 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 // add new members
                 for (attribute in newValue) {
                     newAttributeValue = newValue[attribute];
-                    if (newValue.hasOwnProperty(attribute) && !this.__json.isMetadata(attribute)
+                    if (Object.prototype.hasOwnProperty.call(newValue, attribute) && !this.__json.isMetadata(attribute)
                             && newAttributeValue != null) {
                         if (attribute == "classList") {
                             this.getWrapper().classList.setClassName(newAttributeValue.join(" "));
                         } else if (attribute == "dataset") {
-                            ariaUtilsHtml.setDataset(domElt, newAttributeValue);
+                            setDataset(domElt, newAttributeValue);
                         } else if (whiteList.test(attribute) && newAttributeValue !== oldValue[attribute]) {
                             domElt.setAttribute(attribute, newAttributeValue);
                         }
@@ -915,7 +917,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
             getWrapper : function () {
                 var wrapper = this.wrapper;
                 if (!wrapper) {
-                    this.wrapper = wrapper = new ariaTemplatesSectionWrapper(this.getDom(), this);
+                    this.wrapper = wrapper = new SectionWrapper(this.getDom(), this);
                 }
 
                 return wrapper;
@@ -929,7 +931,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 if (this.domType) {
                     // if domType is empty, we do not output anything for the section
                     // (used in the tooltip)
-                    var attributeList = this.attributes ? ariaUtilsHtml.buildAttributeList(this.attributes) : '';
+                    var attributeList = this.attributes ? buildAttributeList(this.attributes) : '';
                     var h = ['<', this.domType, attributeList, ' id="', this._domId, '" ',
                             ariaUtilsDelegate.getMarkup(this.delegateId), '>'];
                     out.write(h.join(''));// opening the section
@@ -980,7 +982,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 var eventListeners = this._cfg ? this._cfg.on : null;
                 if (eventListeners) {
                     for (var listener in eventListeners) {
-                        if (eventListeners.hasOwnProperty(listener)) {
+                        if (Object.prototype.hasOwnProperty.call(eventListeners, listener)) {
                             eventListeners[listener] = this.$normCallback(eventListeners[listener]);
                         }
                     }
@@ -1028,7 +1030,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                         // queue is used in the repeater
                     };
                     this._refreshMgrInfo = refreshMgrInfo;
-                    aria.templates.RefreshManager.queue({
+                    RefreshManager.queue({
                         fn : this._refreshManagerCallback,
                         scope : this
                     }, this);
@@ -1066,7 +1068,7 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                         args.macro = sectionMacro;
                     } else {
                         var targetMacro = args.macro;
-                        if (ariaUtilsType.isObject(targetMacro) && !targetMacro.name) {
+                        if (isObject(targetMacro) && !targetMacro.name) {
                             targetMacro.name = sectionMacro.name;
                             targetMacro.scope = sectionMacro.scope;
                             if (!targetMacro.args) {
@@ -1185,8 +1187,9 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 var bindings = this._bindings;
                 if (bindings) {
                     // remove binding
-                    for (var index = 0, bind; bind = bindings[index]; index++) {
+                    for (var index = 0, bind; bindings[index]; index++) {
                         // remove the recursive listener
+                        bind = bindings[index];
                         this.__json.removeListener(bind.inside, bind.to, bind.callback, bind.recursive);
                     }
                 }
@@ -1200,7 +1203,8 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
                 this._listenersStopped = false;
                 var bindings = this._bindings;
                 if (bindings) {
-                    for (var index = 0, bind; bind = bindings[index]; index++) {
+                    for (var index = 0, bind; bindings[index]; index++) {
+                        bind = bindings[index];
                         this.__json.addListener(bind.inside, bind.to, bind.callback, true, bind.recursive);
                     }
                 }
@@ -1313,4 +1317,3 @@ var ariaUtilsDomOverlay = require("../utils/DomOverlay");
 
         }
     });
-})();

@@ -12,16 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-require("../core/JsonValidator");
-var ariaCoreBrowser = require("../core/Browser");
-var ariaUtilsString = require("./String");
-var ariaUtilsCssUnits = require("./css/Units");
+
+// TODO: ModernAria: Dropping older browser checks can reduce size significantly.
+// MUST_DO: ModernAria: Check if this can be converted to individual exports without using Aria Class. Not done as there are many functions/methods which replaces itself on first call based on browser checks.
+
+import { emptyFn } from '../common/fixed-return-value-functions.js';
+import { Browser as ariaCoreBrowser } from '../core/Browser.js';
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { AriaDomEvent } from '../DomEvent.js';
+import { CssUnits as ariaUtilsCssUnits } from './css/Units.js';
+import { normalize as normalizeNumber } from './Math.js';
+import { dashedToCamel } from './String.js';
+
 
 /**
  * This class contains utilities to manipulate the DOM.
  */
-module.exports = Aria.classDefinition({
+export const UtilsDom = classDefinition({
     $classpath : "aria.utils.Dom",
     $singleton : true,
     $statics : {
@@ -45,7 +54,7 @@ module.exports = Aria.classDefinition({
         getElementById : function (id) {
             if (ariaCoreBrowser.isIE7) {
                 this.getElementById = function (id) {
-                    var document = Aria.$window.document;
+                    var document = FRAMEWORK_GLOBALS.$window.document;
                     var el = document.getElementById(id);
                     if (el) {
                         // If id match, return element
@@ -63,7 +72,7 @@ module.exports = Aria.classDefinition({
                 };
             } else {
                 this.getElementById = function (id) {
-                    var document = Aria.$window.document;
+                    var document = FRAMEWORK_GLOBALS.$window.document;
                     return document.getElementById(id);
                 };
             }
@@ -160,6 +169,7 @@ module.exports = Aria.classDefinition({
          * This method, intended to be called after changes in the DOM, makes IE understand that it must update the
          * display (which it would do only after mouse move otherwise). It does nothing on other browsers.
          * @param {HTMLElement} domElt
+         * MUST_DO: ModernAria: May can Remove: Looks like function needed only in IE7 and IE8 and is replaced by an empty function for others
          */
         refreshDomElt : function (domElt) {
             if (ariaCoreBrowser.isIE7) {
@@ -175,10 +185,12 @@ module.exports = Aria.classDefinition({
                         s2.cssText = s2.cssText.replace(dummyCss, "");
                         // PTR06973328 (IE7)
                         s2.zoom = 1;
-                    } catch (ex) {}
+                    } catch {
+                      // Ignore error
+                    }
                 };
             } else if (ariaCoreBrowser.isIE8) {
-                this.refreshDomElt = function (domElt) {
+                this.refreshDomElt = function () {
                     // why on earth it is necessary to write code like this is a mystery
                     // but as it stands, we abide. fixes PTR 04273172
                     // refreshing only the parentNode className is not enough, see regression 04563420
@@ -191,17 +203,20 @@ module.exports = Aria.classDefinition({
                     // But this causes a loss of focus, for example on text inputs. Another solution (which is less
                     // efficient
                     // but does not compromise the focus) is the following:
-                    for (var i = 0, l = Aria.rootTemplates.length; i < l; i++) {
-                        var rootTemplate = Aria.rootTemplates[i];
+                    const ariaRootTemplates = FRAMEWORK_GLOBALS.rootTemplates;
+                    for (var i = 0, l = ariaRootTemplates.length; i < l; i++) {
+                        var rootTemplate = ariaRootTemplates[i];
                         if (rootTemplate._cfg && rootTemplate._cfg.tplDiv) {
                             var tplDiv = rootTemplate._cfg.tplDiv;
+                            // MUST_DO: ModernAria: Re-check: Seems like a useless statement.
+                            // eslint-disable-next-line no-self-assign
                             tplDiv.className = tplDiv.className;
                             tplDiv = null;
                         }
                     }
                 };
             } else {
-                this.refreshDomElt = function (domElt) {};
+                this.refreshDomElt = function () {};
             }
 
             this.refreshDomElt(domElt);
@@ -223,18 +238,19 @@ module.exports = Aria.classDefinition({
                 domElt = this.getElementById(domElt);
             }
             if (domElt) {
-                if ((ariaCoreBrowser.isIE7 || ariaCoreBrowser.isIE8) && aria.utils && aria.utils.Delegate) {
+                const utilsDelegate = getClassRef('aria.utils.Delegate');
+                if ((ariaCoreBrowser.isIE7 || ariaCoreBrowser.isIE8) && utilsDelegate) {
                     try {
-                        var activeElement = Aria.$window.document.activeElement;
+                        var activeElement = FRAMEWORK_GLOBALS.$window.document.activeElement;
                         if (activeElement && this.isAncestor(activeElement, domElt)) {
                             // On IE 7-8, there is an issue after removing from the DOM a focused element.
                             // We detect it here so that next time there is a need to focus an element, we focus the
                             // body first (which is the work-around for IE 7-8)
-                            aria.utils.Delegate.ieRemovingFocusedElement();
+                            utilsDelegate.ieRemovingFocusedElement();
                         }
-                    } catch (e) {
+                    } catch {
                         // on (real) IE8, an "Unspecified error" can be raised when trying to read
-                        // Aria.$window.document.activeElement
+                        // FRAMEWORK_GLOBALS.$window.document.activeElement
                         // It happens when executing the following test: test.aria.utils.cfgframe.AriaWindowTest
                         // It does not happen with IE 11 in IE8 mode.
                     }
@@ -262,8 +278,8 @@ module.exports = Aria.classDefinition({
                 }
                 // PROFILING // var msr3 = this.$startMeasure("contentchange");
                 // use the delegate manager to forward a fake event
-                if (aria.utils && aria.utils.Delegate) {
-                    aria.utils.Delegate.delegate(aria.DomEvent.getFakeEvent('contentchange', domElt));
+                if (utilsDelegate) {
+                    utilsDelegate.delegate(AriaDomEvent.getFakeEvent('contentchange', domElt));
                 }
                 // PROFILING // this.$stopMeasure(msr3);
             } else {
@@ -322,7 +338,7 @@ module.exports = Aria.classDefinition({
          * @param {String} html HTML markup to insert at that place
          */
         insertAdjacentHTML : function (domElt, where, html) {
-            if (Aria.$window.document.body.insertAdjacentHTML) {
+            if (FRAMEWORK_GLOBALS.$window.document.body.insertAdjacentHTML) {
                 this.insertAdjacentHTML = function (domElt, where, html) {
                     // PROFILING // var msr = this.$startMeasure("insertAdjacentHTML");
                     // IE, Chrome, Safari, Opera
@@ -395,7 +411,7 @@ module.exports = Aria.classDefinition({
          * @param {String} html HTML markup to insert at that place
          */
         insertAdjacentElement : function (domElt, where, newElement) {
-            if (Aria.$window.document.body.insertAdjacentElement) {
+            if (FRAMEWORK_GLOBALS.$window.document.body.insertAdjacentElement) {
                 this.insertAdjacentElement = function (domElt, where, newElement) {
                     domElt.insertAdjacentElement(where, newElement);
                 };
@@ -428,7 +444,7 @@ module.exports = Aria.classDefinition({
             // IE has a mergeAttributes method which does exactly that. Let's use it directly.
             // Note that copying attributes with a loop on attributes and setAttributes has strange results on IE7 (for
             // example, a TR can appear as disabled)
-            if (Aria.$window.document.body.mergeAttributes) {
+            if (FRAMEWORK_GLOBALS.$window.document.body.mergeAttributes) {
                 this.copyAttributes = function (src, dest) {
                     dest.mergeAttributes(src, false);
                 };
@@ -526,11 +542,11 @@ module.exports = Aria.classDefinition({
 
                 // See also http://jakub-g.github.io/quirksmode/widthtest.html
                 return {
-                    'width' : Aria.$window.innerWidth,
-                    'height' : Aria.$window.innerHeight
+                    'width' : FRAMEWORK_GLOBALS.$window.innerWidth,
+                    'height' : FRAMEWORK_GLOBALS.$window.innerHeight
                 };
             } else {
-                var docEl = Aria.$window.document.documentElement;
+                var docEl = FRAMEWORK_GLOBALS.$window.document.documentElement;
                 return {
                     'width' : docEl.clientWidth,
                     'height' : docEl.clientHeight
@@ -567,7 +583,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _getDocumentScroll : function (base) {
-            var document = base && base.ownerDocument ? base.ownerDocument : Aria.$window.document;
+            var document = base && base.ownerDocument ? base.ownerDocument : FRAMEWORK_GLOBALS.$window.document;
             var scrollLeft = 0;
             var scrollTop = 0;
             var documentScroll = this.getDocumentScrollElement(document);
@@ -671,13 +687,13 @@ module.exports = Aria.classDefinition({
                     offsetLeft = rect.left - shiftLeft;
                     offsetTop = rect.top - shiftTop;
 
-                } catch (er) {
+                } catch {
                     offsetLeft = 0;
                     offsetTop = 0;
                 }
             } else {
                 while (obj && obj.parentNode) {
-                    objPositionCss = aria.utils.Dom.getStyle(obj, "position");
+                    objPositionCss = UtilsDom.getStyle(obj, "position");
 
                     if (stopAbsolute && i > 0 && objPositionCss == "absolute") {
                         break;
@@ -723,7 +739,7 @@ module.exports = Aria.classDefinition({
                 }
 
                 // scrollOffset calculation did not take care of the stopAbsolute
-                objPositionCss = aria.utils.Dom.getStyle(obj, "position");
+                objPositionCss = UtilsDom.getStyle(obj, "position");
                 if (i > 0 && objPositionCss == "absolute") {
                     break;
                 }
@@ -776,7 +792,7 @@ module.exports = Aria.classDefinition({
                 position.top = this.getStylePx(element, "top", null);
             }
             if (position.left == null || position.top == null) {
-                var offsetParent = isFixed ? Aria.$window.document.body : element.offsetParent;
+                var offsetParent = isFixed ? FRAMEWORK_GLOBALS.$window.document.body : element.offsetParent;
                 var offsetParentPosition = this.calculatePosition(offsetParent);
                 var elementPosition = this.calculatePosition(element);
                 if (position.left == null) {
@@ -895,7 +911,8 @@ module.exports = Aria.classDefinition({
                             }
                         }
                     }
-                } while (true);
+                // eslint-disable-next-line no-constant-condition
+                } while (true); // Will break out with a return statement when we move up to the dom tree to document or body element
             }
         },
 
@@ -914,10 +931,12 @@ module.exports = Aria.classDefinition({
                         var val = 100;
                         try { // will error if no DXImageTransform
                             val = element.filters['DXImageTransform.Microsoft.Alpha'].opacity;
-                        } catch (e) {
+                        } catch {
                             try { // make sure its in the document
                                 val = element.filters('alpha').opacity;
-                            } catch (er) {}
+                            } catch {
+                              // not an error continue with filters
+                            }
                         }
                         return (val / 100).toString(10); // to be consistent with getComputedStyle
                     } else if (property == 'width' || property == 'height') {
@@ -931,7 +950,7 @@ module.exports = Aria.classDefinition({
                         value = element.currentStyle[property];
                         if (!value) {
                             // Try the camel case
-                            var camel = ariaUtilsString.dashedToCamel(property);
+                            var camel = dashedToCamel(property);
                             value = element.currentStyle[camel];
                         }
                     }
@@ -939,7 +958,7 @@ module.exports = Aria.classDefinition({
                 };
             } else {
                 this.getStyle = function (element, property) {
-                    var window = Aria.$window;
+                    var window = FRAMEWORK_GLOBALS.$window;
                     var value = null;
                     if (property == "float") {
                         property = "cssFloat";
@@ -1042,11 +1061,11 @@ module.exports = Aria.classDefinition({
 
             var minTopValue = documentScroll.scrollTop;
             var maxTopValue = Math.max(0, documentScroll.scrollTop + viewportSize.height - size.height);
-            var top = aria.utils.Math.normalize(position.top, minTopValue, maxTopValue);
+            var top = normalizeNumber(position.top, minTopValue, maxTopValue);
 
             var minLeftValue = documentScroll.scrollLeft;
             var maxLeftValue = Math.max(0, documentScroll.scrollLeft + viewportSize.width - size.width);
-            var left = aria.utils.Math.normalize(position.left, minLeftValue, maxLeftValue);
+            var left = normalizeNumber(position.left, minLeftValue, maxLeftValue);
 
             return {
                 'top' : top,
@@ -1218,12 +1237,12 @@ module.exports = Aria.classDefinition({
 
         /**
          * Get the the document scroll element (hidden element used to measure things).
-         * @param {Object} document document to use (optional, defaults to Aria.$window.document)
+         * @param {Object} document document to use (optional, defaults to FRAMEWORK_GLOBALS.$window.document)
          * @return {HTMLElement} documentElement
          */
         getDocumentScrollElement : function (document) {
             if (document == null) {
-                document = Aria.$window.document;
+                document = FRAMEWORK_GLOBALS.$window.document;
             }
             var result = document.scrollingElement;
             if (!result) {
@@ -1299,7 +1318,7 @@ module.exports = Aria.classDefinition({
                 // we only do this check on Webkit
                 return false;
             }
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             var testElt = document.createElement("div");
             testElt.style.cssText = "overflow:auto;width:100px;height:100px;left:-1000px;top:-1000px;";
             testElt.innerHTML = '<div style="width:150px;height:100px;"></div>';
@@ -1322,7 +1341,7 @@ module.exports = Aria.classDefinition({
          * @param {HTMLElement} element
          */
         refreshScrollbars : function (domElt) {
-            this.refreshScrollbars = this._checkRefreshScrollbarsNeeded() ? this._refreshScrollbarsFix : Aria.empty;
+            this.refreshScrollbars = this._checkRefreshScrollbarsNeeded() ? this._refreshScrollbarsFix : emptyFn;
             this.refreshScrollbars(domElt);
         },
 

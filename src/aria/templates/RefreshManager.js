@@ -12,14 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { classDefinition } from "../core/class-definition.js";
+import { FRAMEWORK_PREFIX, FRAMEWORK_GLOBALS } from "../core/framework-bootstrap.js";
 
 
-/**
- * Helper for templates/widgets refresh. It allows to reduce the number of refreshes by queueing and computing the
- * minimum subset of needed refreshes.
- */
-module.exports = Aria.classDefinition({
+
+export const RefreshManager = classDefinition({
     $classpath : "aria.templates.RefreshManager",
     $singleton : true,
     $constructor : function () {
@@ -102,7 +100,7 @@ module.exports = Aria.classDefinition({
          * The property used in the "containment hierarchy" to access a template/section/widget's container parent
          * @type String
          */
-        PARENT_PROP : Aria.FRAMEWORK_PREFIX + "containedIn"
+        PARENT_PROP : FRAMEWORK_PREFIX + "containedIn"
     },
     $prototype : {
 
@@ -179,10 +177,10 @@ module.exports = Aria.classDefinition({
 
             // compute necessary refreshes
             // 1-update hierarchies
-            if (Aria.rootTemplates == null || Aria.rootTemplates.length === 0) {
+            if (FRAMEWORK_GLOBALS.rootTemplates == null || FRAMEWORK_GLOBALS.rootTemplates.length === 0) {
 
                 // trigger all cb's in the queue
-                for (var i = 0; i < queueLength; i++) {
+                for (let i = 0; i < queueLength; i++) {
                     this._triggerCB(this._queue[i].cb);
                 }
 
@@ -204,7 +202,7 @@ module.exports = Aria.classDefinition({
                 var rootNode = this._hierarchies[rootIdx];
 
                 for (var queueIdx = 0; queueIdx < queueLength; queueIdx++) {
-                    var qElem = this._queue[queueIdx];
+                    const qElem = this._queue[queueIdx];
                     var colorandum = this._findInHierarchy(qElem, rootNode);
                     if (colorandum) {
                         if (!colorandum.updated) {
@@ -227,13 +225,13 @@ module.exports = Aria.classDefinition({
             // consider subsequent call to setvalue on same data when analyzing the queue
 
             var qElem, cb;
-            for (var i = 0, len = this._nodesToRefresh.length; i < len; i++) {
+            for (let i = 0, len = this._nodesToRefresh.length; i < len; i++) {
                 qElem = this._nodesToRefresh[i].qElem;
                 cb = qElem.cb;
                 this._triggerCB(cb);
             }
             // handle 'free' callbacks, not linked to a node
-            for (var i2 = 0; i2 < queueLength; i2++) {
+            for (let i2 = 0; i2 < queueLength; i2++) {
                 qElem = this._queue[i2];
                 cb = qElem.cb;
                 this._triggerCB(cb);
@@ -352,8 +350,8 @@ module.exports = Aria.classDefinition({
             // TODO destroy data structure
             this._hierarchies.length = 0;
 
-            for (var i = 0; i < Aria.rootTemplates.length; i++) {
-                var rootTemplate = Aria.rootTemplates[i];
+            for (var i = 0; i < FRAMEWORK_GLOBALS.rootTemplates.length; i++) {
+                var rootTemplate = FRAMEWORK_GLOBALS.rootTemplates[i];
                 if (rootTemplate._mainSection) {
                     var rootEntry = this._fillNode(rootTemplate);
                     this._hierarchies.push(rootEntry);
@@ -432,7 +430,7 @@ module.exports = Aria.classDefinition({
                 nodeEntry.type = "templateWidget";
                 if (node.subTplCtxt && node.subTplCtxt._mainSection) {
                     // and it's being displayed !
-                    var widgetTemplateCtxtContent = node.subTplCtxt._mainSection._content;
+                    const widgetTemplateCtxtContent = node.subTplCtxt._mainSection._content;
                     this._addContent(nodeEntry, widgetTemplateCtxtContent);
                 }
             } else if (node._type == 1) {
@@ -443,20 +441,20 @@ module.exports = Aria.classDefinition({
                     nodeEntry.type = "templateWidget";
                     if (behavior.subTplCtxt && behavior.subTplCtxt._mainSection) {
                         // 2a ... and it's being displayed !
-                        var widgetTemplateCtxtContent = behavior.subTplCtxt._mainSection._content;
+                        const widgetTemplateCtxtContent = behavior.subTplCtxt._mainSection._content;
                         this._addContent(nodeEntry, widgetTemplateCtxtContent);
                     }
                 } else {
                     nodeEntry.type = "widget"; // it's a widget
                     if (node.behavior._subTplCtxt) {
                         // it's a tenmplate-based widget
-                        var templateBasedContent = node.behavior._subTplCtxt._mainSection._content;
+                        const templateBasedContent = node.behavior._subTplCtxt._mainSection._content;
                         this._addContent(nodeEntry, templateBasedContent);
                     } else if (node.behavior.$classpath == "aria.widgets.form.DatePicker") {
                         // date pickers have calendars
                         if (node.behavior.controller._calendar && node.behavior.controller._calendar._tplWidget) {
                             // this datepicker has a calendar: add it
-                            var dpContent = [node.behavior.controller._calendar._tplWidget];
+                            const dpContent = [node.behavior.controller._calendar._tplWidget];
                             this._addContent(nodeEntry, dpContent);
                         }
                     } else if (node.behavior.$classpath == "aria.widgets.form.MultiSelect") {

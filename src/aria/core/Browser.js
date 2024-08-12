@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-var Aria = require("../Aria");
-var UserAgent = require("./useragent/UserAgent");
-var ariaUtilsArray = require("../utils/Array");
+import { classDefinition } from './class-definition.js';
+import { $frameworkWindow, FRAMEWORK_GLOBALS } from './framework-bootstrap.js';
+import { UserAgent } from './useragent/UserAgent.js';
+import { contains } from '../utils/Array.js';
 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1397) */
-var ariaUtilsType = require("../utils/Type");
+import { isString } from '../utils/Type.js';
 /* BACKWARD-COMPATIBILITY-END (GitHub #1397) */
 
 /**
  * Global class gathering information about current browser.
  */
-module.exports = Aria.classDefinition({
+export const Browser = classDefinition({
     $classpath : 'aria.core.Browser',
     $singleton : true,
 
@@ -531,8 +532,7 @@ module.exports = Aria.classDefinition({
         ];
 
         var deprecatedProperties = [];
-        var isString = ariaUtilsType.isString;
-        ariaUtilsArray.forEach(properties, function(property) {
+        properties.forEach(function(property) {
             // ------------------------------------------------ property factory
 
             if (isString(property)) {
@@ -616,9 +616,9 @@ module.exports = Aria.classDefinition({
         __deprecateProperties : function() {
             var supportsPropertyDescriptors = this.supportsPropertyDescriptors();
 
-            ariaUtilsArray.forEach(this._deprecatedProperties, function(property) {
+            this._deprecatedProperties.forEach((property) => {
                 // ----------------------------------------------- destructuring
-
+                // TODO: ModernAria: Check if destructuring can be used const {name, type, underlying, loggingMessage, loggingMessageArguments} = {...property}
                 var name = property.name;
                 var type = property.type;
                 var underlying = property.underlying;
@@ -649,7 +649,7 @@ module.exports = Aria.classDefinition({
                         return underlying.apply(self, arguments);
                     };
                 }
-            }, this);
+            });
         },
 
         /**
@@ -658,7 +658,7 @@ module.exports = Aria.classDefinition({
         __ensureDeprecatedProperties : function() {
             // -------------------------------------------- synonymy application
 
-            ariaUtilsArray.forEach(this._deprecatedProperties, function(property) {
+            this._deprecatedProperties.forEach((property) => {
                 var type = property.type;
 
                 if (type == "attribute") {
@@ -671,12 +671,12 @@ module.exports = Aria.classDefinition({
                         this[prefixedName] = this[synonym];
                     }
                 }
-            }, this);
+            });
 
             // ----------------------------------------------- value propagation
 
             if (!this.supportsPropertyDescriptors()) {
-                ariaUtilsArray.forEach(this._deprecatedProperties, function(property) {
+                this._deprecatedProperties.forEach((property) => {
                     var type = property.type;
 
                     if (type == "attribute") {
@@ -685,7 +685,7 @@ module.exports = Aria.classDefinition({
 
                         this[name] = this[prefixedName];
                     }
-                }, this);
+                });
             }
         },
         /* BACKWARD-COMPATIBILITY-END (GitHub #1397) */
@@ -793,7 +793,7 @@ module.exports = Aria.classDefinition({
             // ------------------------------------------------------ processing
 
             for (var key in source) {
-                if (source.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(source, key)) {
                     destination[key] = source[key];
                 }
             }
@@ -820,7 +820,7 @@ module.exports = Aria.classDefinition({
             var cacheKey = userAgentWrapper.ua.toLowerCase();
 
             var values;
-            if (this._propertiesCache.hasOwnProperty(cacheKey)) {
+            if (Object.prototype.hasOwnProperty.call(this._propertiesCache, cacheKey)) {
                 values = this._propertiesCache[cacheKey];
             }
 
@@ -924,7 +924,7 @@ module.exports = Aria.classDefinition({
                     break;
 
                 default:
-                    if (ariaUtilsArray.contains(["Android", "BlackBerry", "Symbian"], osName)) {
+                    if (contains(["Android", "BlackBerry", "Symbian"], osName)) {
                         this._setFlag(output, osName);
                     } else if (!osName && uaInfo.device.vendor === "BlackBerry") {
                         osName = "BlackBerry";
@@ -991,7 +991,7 @@ module.exports = Aria.classDefinition({
                         maybeOtherBrowser = true;
                 }
 
-                if (ariaUtilsArray.contains(["Firefox", "Chrome", "IE", "Opera", "Edge", "PhantomJS"], name)) {
+                if (contains(["Firefox", "Chrome", "IE", "Opera", "Edge", "PhantomJS"], name)) {
                     this._setFlag(output, name);
                     maybeOtherBrowser = false;
                 }
@@ -1007,7 +1007,7 @@ module.exports = Aria.classDefinition({
             }
 
             // Special case - NGBrowser
-            var match = /BrowserNG\/(\d+(?:\.\d+)*)/ig.exec(output.ua);
+            const match = /BrowserNG\/(\d+(?:\.\d+)*)/ig.exec(output.ua);
             if (match != null) {
                 name = "NokiaBrowser";
                 version = match[1];
@@ -1035,7 +1035,7 @@ module.exports = Aria.classDefinition({
                 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1397) */
                 if (browser.major != "6") {
                 /* BACKWARD-COMPATIBILITY-END (GitHub #1397) */
-                var document = Aria.$frameworkWindow.document;
+                var document = $frameworkWindow.document;
                 detectedMajorVersion = document.documentMode || 7;
                 detectedMajorVersion = +detectedMajorVersion;
                 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1397) */
@@ -1063,7 +1063,7 @@ module.exports = Aria.classDefinition({
             if (detectedMajorVersion != null) {
                 majorVersion = detectedMajorVersion;
             } else if (version != null) {
-                var part = /^(\d+)*/.exec(version);
+                const part = /^(\d+)*/.exec(version);
                 if (part != null) {
                     majorVersion = part[1];
                 }
@@ -1145,12 +1145,12 @@ module.exports = Aria.classDefinition({
             ////////////////////////////////////////////////////////////////////
 
             if (output.isIEMobile) {
-                var fullMatch = /(iemobile)[\/\s]?((\d+)?[\w\.]*)/ig.exec(output.ua);
+                var fullMatch = /(iemobile)[/\s]?((\d+)?[\w.]*)/ig.exec(output.ua);
 
                 if (fullMatch != null) {
-                    var match = fullMatch[0];
+                    const ieMobileMatch = fullMatch[0];
 
-                    if (match != null && ariaUtilsArray.contains(['xblwp7', 'zunewp7'], match.toLowerCase())) {
+                    if (ieMobileMatch != null && contains(['xblwp7', 'zunewp7'], ieMobileMatch.toLowerCase())) {
                         this._setFlag(output, "DesktopView");
                     } else {
                         this._setFlag(output, "MobileView");
@@ -1222,7 +1222,7 @@ module.exports = Aria.classDefinition({
             ];
 
             for (var index = parts.length - 1; index >= 0; index--) {
-                var part = parts[index];
+                const part = parts[index];
                 if (part == null || part.length == null || part.length <= 0) {
                     parts.splice(index, 1);
                 }
@@ -1363,7 +1363,7 @@ module.exports = Aria.classDefinition({
          * @return {Boolean} <em>true</em> if so, <em>false</em> otherwise
          */
         isPhoneGap : function () {
-            var window = Aria.$window;
+            var window = FRAMEWORK_GLOBALS.$window;
             return !!((window.cordova && window.device) || (window.device && window.device.phonegap));
         },
 
@@ -1397,7 +1397,7 @@ module.exports = Aria.classDefinition({
         _isStyleSupported : function (property) {
             // ----------------------------------------------------------- cache
 
-            if (this._styleCache.hasOwnProperty(property)) {
+            if (Object.prototype.hasOwnProperty.call(this._styleCache, property)) {
                 return this._styleCache[property];
             }
 
@@ -1408,7 +1408,7 @@ module.exports = Aria.classDefinition({
 
             var prefixes = ['Moz', 'Webkit', 'Khtml', 'O', 'Ms'];
 
-            var element = Aria.$window.document.documentElement;
+            var element = FRAMEWORK_GLOBALS.$window.document.documentElement;
             var style = element.style;
 
             // test standard property

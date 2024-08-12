@@ -12,15 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsArray = require("./Array");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
 
 
 /**
  * Handle Id generation
  * @class aria.utils.IdMgr
  */
-module.exports = Aria.classDefinition({
+// TODO: ModernAria: Use an appropriate Unique ID generator like uuid or nanoUid or cuid. Then deprecate this.
+export const IdMgr = classDefinition({
     $classpath : 'aria.utils.IdMgr',
 
     $statics : {
@@ -76,7 +77,7 @@ module.exports = Aria.classDefinition({
          */
         releaseId : function (id) {
 
-            if (Aria.debug && ariaUtilsArray.indexOf(this._freeId, id) > -1) {
+            if (FRAMEWORK_GLOBALS.debug && this._freeId.indexOf(id) > -1) {
                 this.$logError(this.ID_ALREADY_RELEASED, [id]);
             }
 

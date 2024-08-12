@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaTemplatesDomElementWrapper = require("./DomElementWrapper");
+import { classDefinition } from "../core/class-definition.js";
+import { UtilsDom } from "../utils/Dom.js";
+import { DomElementWrapper } from "./DomElementWrapper.js";
 
 /**
  * Wrapper around a Section Object and it's DOM Element
  * @class aria.templates.SectionWrapper
  * @extends aria.core.JsObject
  */
-module.exports = Aria.classDefinition({
+export const SectionWrapper = classDefinition({
     $classpath : 'aria.templates.SectionWrapper',
-    $extends : ariaTemplatesDomElementWrapper,
+    $extends : DomElementWrapper,
     /**
      * Create a Wrapper object to allow safe changes in the DOM without giving direct access to the DOM. Note that a
      * closure is used to prevent access to the domElt object from the template.
@@ -46,7 +46,7 @@ module.exports = Aria.classDefinition({
          */
         this.insertAdjacentSection = function (where, sectionParam) {
             if (where != "beforeBegin" && where != "afterBegin" && where != "beforeEnd" && where != "afterEnd") {
-                this.$logError(ariaUtilsDom.INSERT_ADJACENT_INVALID_POSITION, [where]);
+                this.$logError(UtilsDom.INSERT_ADJACENT_INVALID_POSITION, [where]);
                 return;
             }
             sectionObject.tplCtxt.insertAdjacentSections({
@@ -65,8 +65,8 @@ module.exports = Aria.classDefinition({
         this.remove = function () {
             sectionObject.$dispose();
             var parentNode = domElt.parentNode;
-            ariaUtilsDom.removeElement(domElt);
-            ariaUtilsDom.refreshDomElt(parentNode);
+            UtilsDom.removeElement(domElt);
+            UtilsDom.refreshDomElt(parentNode);
             this.$dispose();
         };
 

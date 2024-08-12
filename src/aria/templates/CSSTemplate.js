@@ -12,22 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreDownloadMgr = require("../core/DownloadMgr");
+import { classDefinition } from '../core/class-definition.js';
+import { BaseTemplate } from './BaseTemplate.js';
+import { ICSS } from './ICSS.js';
 
 /**
  * Even if not used in this class, the CSSMgr is needed in order to allow a CSSTemplate to be registered
  */
-require("./CSSMgr");
+import "./CSSMgr";
 
 /**
  * Base class from which all CSS templates inherit.
  * @extends aria.core.BaseTemplate
  * @dependencies ["aria.templates.CSSMgr", "aria.core.DownloadMgr", "aria.templates.ICSS"]
  */
-module.exports = Aria.classDefinition({
+export const CSSTemplate = classDefinition({
     $classpath : "aria.templates.CSSTemplate",
-    $extends : require("./BaseTemplate"),
+    $extends : BaseTemplate,
     $constructor : function () {
         this.$BaseTemplate.constructor.call(this);
 
@@ -39,15 +40,16 @@ module.exports = Aria.classDefinition({
          */
         this.cssPath = "/" + baseLogicalPath;
 
-        // Even if we remove the whole file name afterwards, it is important to pass the extension to resolveURL:
-        var url = ariaCoreDownloadMgr.resolveURL(baseLogicalPath + ".tpl.css", true);
+        // NOT_IMPLEMENTABLE: ModernAria: "cssFolderPath" may not be possible to compute and expose to CSS template. If used/needed in templates figure out behavior and use case to implement alternative
+        // // Even if we remove the whole file name afterwards, it is important to pass the extension to resolveURL:
+        // var url = resolveURL(baseLogicalPath + ".tpl.css", true);
 
-        /**
-         * Path of the folder containing the CSS Template. It is relative to the Aria.rootFolderPath and takes into
-         * account the Root Map (not the Url map). Exposed to the {CSSTemplate}
-         * @type String
-         */
-        this.cssFolderPath = url.substring(0, url.lastIndexOf("/"));
+        // /**
+        //  * Path of the folder containing the CSS Template. It is relative to the Aria.rootFolderPath and takes into
+        //  * account the Root Map (not the Url map). Exposed to the {CSSTemplate}
+        //  * @type String
+        //  */
+        // this.cssFolderPath = url.substring(0, url.lastIndexOf("/"));
     },
     $prototype : {
         /**
@@ -61,9 +63,9 @@ module.exports = Aria.classDefinition({
             p.$BaseTemplate.constructor.classDefinition.$prototype.$init(p, def);
 
             // copy the prototype of ICSS:
-            var itf = (require("./ICSS")).prototype;
+            var itf = ICSS.prototype;
             for (var k in itf) {
-                if (itf.hasOwnProperty(k) && !p.hasOwnProperty(k)) {
+                if (Object.prototype.hasOwnProperty.call(itf, k) && !Object.prototype.hasOwnProperty.call(p, k)) {
                     // copy methods which are not already on this object (this avoids copying $classpath and
                     // $destructor)
                     p[k] = itf[k];

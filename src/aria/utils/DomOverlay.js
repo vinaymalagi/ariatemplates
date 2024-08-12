@@ -12,18 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsOverlayLoadingOverlay = require("./overlay/LoadingOverlay");
-var ariaUtilsType = require("./Type");
-var ariaUtilsEvent = require("./Event");
-var ariaUtilsAriaWindow = require("./AriaWindow");
-var ariaTemplatesLayout = require("../templates/Layout");
+import { classDefinition } from "../core/class-definition.js";
+import { FRAMEWORK_GLOBALS } from "../core/framework-bootstrap.js";
+import { LoadingOverlay as ariaUtilsOverlayLoadingOverlay } from "./overlay/LoadingOverlay.js";
+import { isArray } from "./Type.js";
+import { UtilsEvent as ariaUtilsEvent } from "./Event.js";
+import { AriaWindow as ariaUtilsAriaWindow } from "./AriaWindow.js";
+import { Layout as ariaTemplatesLayout } from "../templates/Layout.js";
 
 /**
  * This class contains utilities to show and hide a loading indicator above a DOM Element
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export const DomOverlay = classDefinition({
     $classpath : "aria.utils.DomOverlay",
     $singleton : true,
     $statics : {
@@ -74,7 +75,7 @@ module.exports = Aria.classDefinition({
                 ariaUtilsAriaWindow.attachWindow();
 
                 // Listen for scroll event to update the position of the overlay
-                ariaUtilsEvent.addListener(Aria.$window, "scroll", {
+                ariaUtilsEvent.addListener(FRAMEWORK_GLOBALS.$window, "scroll", {
                     fn : this.__refresh,
                     scope : this
                 }, true);
@@ -91,7 +92,7 @@ module.exports = Aria.classDefinition({
          */
         _reset : function () {
             if (this.overlays != null) {
-                ariaUtilsEvent.removeListener(Aria.$window, "scroll", {
+                ariaUtilsEvent.removeListener(FRAMEWORK_GLOBALS.$window, "scroll", {
                     fn : this.__refresh
                 });
                 ariaTemplatesLayout.$removeListeners({
@@ -127,7 +128,7 @@ module.exports = Aria.classDefinition({
             this._init(); // check it is initialized
 
             // Store the overlay internally
-            if (element !== Aria.$window.document.body) {
+            if (element !== FRAMEWORK_GLOBALS.$window.document.body) {
                 this.overlays[id] = overlay;
                 this._nbOverlays++;
 
@@ -156,7 +157,7 @@ module.exports = Aria.classDefinition({
             var id = overlayInfo.id;
 
             // Remove any pointer
-            if (element === Aria.$window.document.body) {
+            if (element === FRAMEWORK_GLOBALS.$window.document.body) {
                 this.bodyOverlay = null;
             } else {
                 delete this.overlays[id];
@@ -183,7 +184,7 @@ module.exports = Aria.classDefinition({
          * </pre>
          */
         __getOverlay : function (element) {
-            if (element === Aria.$window.document.body) {
+            if (element === FRAMEWORK_GLOBALS.$window.document.body) {
                 return !this.bodyOverlay ? null : {
                     overlay : this.bodyOverlay
                 };
@@ -218,7 +219,7 @@ module.exports = Aria.classDefinition({
             this.$assert(184, this.overlays != null);
             var overlays = this.overlays;
             for (var key in overlays) {
-                if (overlays.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(overlays, key)) {
                     var overlay = overlays[key];
                     overlay.refreshPosition();
                 }
@@ -233,7 +234,7 @@ module.exports = Aria.classDefinition({
          * @param {Array} ids Array of overlay id
          */
         disposeOverlays : function (ids) {
-            if (!ariaUtilsType.isArray(ids) || this.overlays == null) {
+            if (!isArray(ids) || this.overlays == null) {
                 return;
             }
             for (var i = 0, len = ids.length; i < len; i += 1) {

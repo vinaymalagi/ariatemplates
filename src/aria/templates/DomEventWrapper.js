@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesDomElementWrapper = require("./DomElementWrapper");
-var ariaDomEvent = require("../DomEvent");
+import { classDefinition } from '../core/class-definition.js';
+import { DomElementWrapper as ariaTemplatesDomElementWrapper } from './DomElementWrapper.js';
+import { AriaDomEvent } from '../DomEvent.js';
 
 
 /**
@@ -23,55 +23,55 @@ var ariaDomEvent = require("../DomEvent");
  * references by wrappers on that references for safe DOM access.
  * @class aria.templates.DomEventWrapper
  */
-module.exports = Aria.classDefinition({
-    $classpath : "aria.templates.DomEventWrapper",
-    $extends : ariaDomEvent,
+export const DomEventWrapper = classDefinition({
+  $classpath: "aria.templates.DomEventWrapper",
+  $extends: AriaDomEvent,
+  /**
+   * Build a DomEventWrapper object.
+   * @param {Object} domEvt DOM event object (passed directly)
+   */
+  $constructor: function (domEvt) {
+    var DomWrapper = ariaTemplatesDomElementWrapper;
+    this.$DomEvent.constructor.call(this, domEvt);
+
     /**
-     * Build a DomEventWrapper object.
-     * @param {Object} domEvt DOM event object (passed directly)
+     * Wrapper on the HTML element on which the event happened.
+     * @type aria.templates.DomElementWrapper
      */
-    $constructor : function (domEvt) {
-        var DomWrapper = ariaTemplatesDomElementWrapper;
-        this.$DomEvent.constructor.call(this, domEvt);
+    this.target = (this.target ? new DomWrapper(this.target) : null);
 
-        /**
-         * Wrapper on the HTML element on which the event happened.
-         * @type aria.templates.DomElementWrapper
-         */
-        this.target = (this.target ? new DomWrapper(this.target) : null);
-
-        /**
-         * Wrapper on the HTML element from/to which the event is directed. (relatedTarget/fromElement/toElement)
-         * @type aria.templates.DomElementWrapper
-         */
-        this.relatedTarget = (this.relatedTarget ? new DomWrapper(this.relatedTarget) : null);
-        // bind function to original scope so that "this" is preserved
-        // Not needed as $DomEvent constructor creates these functions
-        // this.stopPropagation = aria.utils.Function.bind(domEvt.stopPropagation, domEvt);
-        // this.preventDefault = aria.utils.Function.bind(domEvt.preventDefault, domEvt);
-    },
-    $destructor : function () {
-        if (this.target) {
-            this.target.$dispose();
-            this.target = null;
-        }
-        if (this.relatedTarget) {
-            this.relatedTarget.$dispose();
-            this.relatedTarget = null;
-        }
-        this.$DomEvent.$destructor.call(this);
-    },
-    $prototype : {
-        /**
-         * Modify the target element of this event.
-         * @param {HTMLElement} target New event target
-         * @override
-         */
-        setTarget : function (target) {
-            if (this.target) {
-                this.target.$dispose();
-            }
-            this.target = target ? new ariaTemplatesDomElementWrapper(target) : null;
-        }
+    /**
+     * Wrapper on the HTML element from/to which the event is directed. (relatedTarget/fromElement/toElement)
+     * @type aria.templates.DomElementWrapper
+     */
+    this.relatedTarget = (this.relatedTarget ? new DomWrapper(this.relatedTarget) : null);
+    // bind function to original scope so that "this" is preserved
+    // Not needed as $DomEvent constructor creates these functions
+    // this.stopPropagation = aria.utils.Function.bind(domEvt.stopPropagation, domEvt);
+    // this.preventDefault = aria.utils.Function.bind(domEvt.preventDefault, domEvt);
+  },
+  $destructor: function () {
+    if (this.target) {
+      this.target.$dispose();
+      this.target = null;
     }
+    if (this.relatedTarget) {
+      this.relatedTarget.$dispose();
+      this.relatedTarget = null;
+    }
+    this.$DomEvent.$destructor.call(this);
+  },
+  $prototype: {
+    /**
+     * Modify the target element of this event.
+     * @param {HTMLElement} target New event target
+     * @override
+     */
+    setTarget: function (target) {
+      if (this.target) {
+        this.target.$dispose();
+      }
+      this.target = target ? new ariaTemplatesDomElementWrapper(target) : null;
+    }
+  }
 });

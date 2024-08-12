@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonTypes = require("../core/JsonTypes");
+import { beanDefinitions } from "../core/bean-definitions.js";
+import { JsonTypesBeans as ariaCoreJsonTypes } from "../core/JsonTypes.js";
 
 
 /**
  * @class aria.templates.ViewCfgBeans
  */
-module.exports = Aria.beanDefinitions({
+export const ViewCfgBeans = beanDefinitions({
     $package : "aria.templates.ViewCfgBeans",
     $description : "Definition of beans used in aria.templates.View",
     $namespaces : {

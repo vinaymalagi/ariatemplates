@@ -12,18 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaUtilsDomOverlay = require("../utils/DomOverlay");
-var ariaUtilsClassList = require("../utils/ClassList");
-var ariaUtilsSandboxDOMProperties = require("../utils/sandbox/DOMProperties");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { UtilsDom as ariaUtilsDom } from '../utils/Dom.js';
+import { DomOverlay as ariaUtilsDomOverlay } from '../utils/DomOverlay.js';
+import { ClassList as ariaUtilsClassList } from '../utils/ClassList.js';
+import { isReadSafe, isWriteSafe } from '../utils/sandbox/DOMProperties.js';
 
 
 /**
  * Wrapper for DOM elements inside templates (so that the templates do not have a direct access to the DOM).
  * @class aria.templates.DomElementWrapper
  */
-module.exports = Aria.classDefinition({
+export const DomElementWrapper = classDefinition({
     $classpath : 'aria.templates.DomElementWrapper',
     /**
      * Create a DOM Wrapper object to allow safe changes in the DOM without giving direct access to the DOM. Note that a
@@ -60,7 +61,7 @@ module.exports = Aria.classDefinition({
          */
         this.getChild = function (childIndex) {
             var oElm = ariaUtilsDom.getDomElementChild(domElt, childIndex);
-            return (oElm) ? new aria.templates.DomElementWrapper(oElm) : null;
+            return (oElm) ? new DomElementWrapper(oElm) : null;
         };
 
         /**
@@ -147,7 +148,7 @@ module.exports = Aria.classDefinition({
                     attribute = element.attributes[dataKey];
                 }
             }
-            return (attribute ? new aria.templates.DomElementWrapper(element) : null);
+            return (attribute ? new DomElementWrapper(element) : null);
         };
 
         /**
@@ -162,7 +163,7 @@ module.exports = Aria.classDefinition({
         this.focus = function () {
             try {
                 return domElt.focus();
-            } catch (e) {
+            } catch {
                 this.$logDebug(this.FOCUS_FAILURE, domElt);
             }
         };
@@ -183,7 +184,7 @@ module.exports = Aria.classDefinition({
          * @param {String} propertyName name of the property to get
          */
         this.getProperty = function (propertyName) {
-            if (ariaUtilsSandboxDOMProperties.isReadSafe(tagName, propertyName)) {
+            if (isReadSafe(tagName, propertyName)) {
                 return domElt[propertyName];
             } else {
                 this.$logError(this.READ_ACCESS_DENIED, [propertyName, tagName]);
@@ -199,7 +200,7 @@ module.exports = Aria.classDefinition({
          * @param {String} value value of the property to set
          */
         this.setProperty = function (propertyName, value) {
-            if (ariaUtilsSandboxDOMProperties.isWriteSafe(tagName, propertyName)) {
+            if (isWriteSafe(tagName, propertyName)) {
                 domElt[propertyName] = value;
             } else {
                 this.$logError(this.WRITE_ACCESS_DENIED, [propertyName, tagName]);
@@ -215,12 +216,12 @@ module.exports = Aria.classDefinition({
             if (!nodeName || !domElt) {
                 return null;
             }
-            var body = Aria.$window.document.body;
+            var body = FRAMEWORK_GLOBALS.$window.document.body;
             nodeName = nodeName.toUpperCase();
             var parent = domElt.parentNode;
             while (parent && parent != body) {
                 if (parent.nodeName == nodeName) {
-                    return new aria.templates.DomElementWrapper(parent);
+                    return DomElementWrapper(parent);
                 }
                 parent = parent.parentNode;
             }
@@ -277,10 +278,10 @@ module.exports = Aria.classDefinition({
          */
         this.setScroll = function (scrollPositions) {
             if (scrollPositions) {
-                if (scrollPositions.hasOwnProperty('scrollLeft') && scrollPositions.scrollLeft != null) {
+                if (Object.prototype.hasOwnProperty.call(scrollPositions, 'scrollLeft') && scrollPositions.scrollLeft != null) {
                     domElt.scrollLeft = scrollPositions.scrollLeft;
                 }
-                if (scrollPositions.hasOwnProperty('scrollTop') && scrollPositions.scrollTop != null) {
+                if (Object.prototype.hasOwnProperty.call(scrollPositions, 'scrollTop') && scrollPositions.scrollTop != null) {
                     domElt.scrollTop = scrollPositions.scrollTop;
                 }
             }
@@ -314,8 +315,8 @@ module.exports = Aria.classDefinition({
     },
     $statics : {
 
-        attributesWhiteList : /^(data\-\w+(?:\-\w+)*|aria\-[a-z]+|name|title|style|dir|lang|abbr|height|width|size|cols|rows|rowspan|colspan|nowrap|valign|align|border|cellpadding|cellspacing|disabled|readonly|checked|selected|multiple|value|alt|maxlength|type|accesskey|tabindex|placeholder|autocomplete|autofocus|autocorrect|autocapitalize|spellcheck|min|max|step)$/,
-        expandoNameRegex : /^\w+(?:\-\w+)*$/,
+        attributesWhiteList : /^(data-\w+(?:-\w+)*|aria-[a-z]+|name|title|style|dir|lang|abbr|height|width|size|cols|rows|rowspan|colspan|nowrap|valign|align|border|cellpadding|cellspacing|disabled|readonly|checked|selected|multiple|value|alt|maxlength|type|accesskey|tabindex|placeholder|autocomplete|autofocus|autocorrect|autocapitalize|spellcheck|min|max|step)$/,
+        expandoNameRegex : /^\w+(?:-\w+)*$/,
 
         // ERROR MESSAGE:
         INVALID_EXPANDO_NAME : "Invalid expando name: '%1'.",
@@ -329,18 +330,24 @@ module.exports = Aria.classDefinition({
 
         // Empty functions are defined in the prototype to have JsDoc correctly generated.
 
+        // eslint-disable-next-line no-unused-vars
         getChild : function (childIndex) {},
 
+        // eslint-disable-next-line no-unused-vars
         getAttribute : function (attributeName) {},
 
+        // eslint-disable-next-line no-unused-vars
         setAttribute : function (attributeName, value) {},
 
+        // eslint-disable-next-line no-unused-vars
         getData : function (dataName, checkAncestors) {},
 
+        // eslint-disable-next-line no-unused-vars
         getParentWithData : function (dataName) {},
 
         focus : function () {},
 
+        // eslint-disable-next-line no-unused-vars
         setStyle : function (style) {},
 
         /**
@@ -360,10 +367,14 @@ module.exports = Aria.classDefinition({
         },
 
         _dispose : function () {},
+        // eslint-disable-next-line no-unused-vars
         getParentWithName : function (nodeName) {},
+        // eslint-disable-next-line no-unused-vars
         setProcessingIndicator : function (visible, message) {},
+        // eslint-disable-next-line no-unused-vars
         scrollIntoView : function (alignTop) {},
         getScroll : function () {},
+        // eslint-disable-next-line no-unused-vars
         setScroll : function (scrollPositions) {}
     }
 });

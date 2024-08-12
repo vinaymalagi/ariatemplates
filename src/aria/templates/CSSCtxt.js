@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-require("./CfgBeans");
-var ariaUtilsString = require("../utils/String");
-var ariaUtilsFunction = require("../utils/Function");
-var ariaTemplatesICSS = require("./ICSS");
-var ariaTemplatesBaseCtxt = require("./BaseCtxt");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var ariaCoreAppEnvironment = require("../core/AppEnvironment");
+import { classDefinition } from '../core/class-definition.js';
+import './CfgBeans.js';
+import { trim } from '../utils/String.js';
+import {ICSS as ariaTemplatesICSS} from './ICSS.js';
+import { BaseContext as ariaTemplatesBaseCtxt } from './BaseCtxt.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
+import { AppEnvironment as ariaCoreAppEnvironment} from '../core/AppEnvironment.js';
+import { getClassInstance } from '../core/class-registry.js';
 
 
 /**
@@ -28,10 +28,12 @@ var ariaCoreAppEnvironment = require("../core/AppEnvironment");
  * @class aria.templates.CSSCtxt
  * @extends aria.templates.BaseCtxt
  */
-module.exports = Aria.classDefinition({
+export const CSSCtxt = classDefinition({
     $classpath : 'aria.templates.CSSCtxt',
     $implements : [ariaTemplatesICSS],
     $extends : ariaTemplatesBaseCtxt,
+    // TODO: ModernAria: "classpath" Must be being used by the BaseCtxt constructor
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (classPath) {
         this.$BaseCtxt.constructor.apply(this, arguments);
 
@@ -108,7 +110,7 @@ module.exports = Aria.classDefinition({
             this._cfg = cfg;
 
             // Get an insatnce of the CSS template
-            var tpl = Aria.getClassInstance(cfg.classpath);
+            var tpl = getClassInstance(cfg.classpath);
             if (!tpl) {
                 this.$logError(this.TEMPLATE_CONSTR_ERROR, [cfg.classpath]);
                 return false;
@@ -187,7 +189,8 @@ module.exports = Aria.classDefinition({
             this._out = [];
             this._callMacro(null, "main");
             var text = this._out.join("");
-            if (ariaCoreAppEnvironment.applicationSettings.hasOwnProperty("imgUrlMapping") && ariaCoreAppEnvironment.applicationSettings.imgUrlMapping !== null) {
+            // MUST_DO: ModernAria: Handle image URL mapping for CSS
+            if (Object.prototype.hasOwnProperty.call(ariaCoreAppEnvironment.applicationSettings, "imgUrlMapping") && ariaCoreAppEnvironment.applicationSettings.imgUrlMapping !== null) {
                 text = this._prefixCSSImgUrl(text);
             }
             this._out = null;
@@ -217,10 +220,13 @@ module.exports = Aria.classDefinition({
          * @return {String}
          */
         _prefixCSSImgUrl : function (cssText) {
-            cssText = cssText.replace(/\burl\s*\(\s*["']?([^"'\r\n,]+|[^'\r\n,]+|[^"\r\n,]+)["']?\s*\)/gi, ariaUtilsFunction.bind(function (match, urlpart) {
+            cssText = cssText.replace(
+              /\burl\s*\(\s*["']?([^"'\r\n,]+|[^'\r\n,]+|[^"\r\n,]+)["']?\s*\)/gi,
+              ((match, urlpart) => {
                 var prefixedUrl = ariaCoreAppEnvironment.applicationSettings.imgUrlMapping(urlpart, this.tplClasspath);
                 return this._parseImgUrl(prefixedUrl);
-            }, this));
+              })
+            );
 
             return cssText;
         },
@@ -242,7 +248,7 @@ module.exports = Aria.classDefinition({
         _cleanUrl : function (url) {
             var tmp = url.replace(/\burl\s*/gi, "");    // removing url word
             tmp = tmp.charAt(0) === "(" ? tmp.substring(1, tmp.length - 1) : tmp; // removing brackets
-            tmp = tmp.charAt(0) === "\'" || tmp.charAt(0) === "\"" ? tmp.substring(1, tmp.length - 1) : tmp; // removing quotes
+            tmp = tmp.charAt(0) === "'" || tmp.charAt(0) === "\"" ? tmp.substring(1, tmp.length - 1) : tmp; // removing quotes
             return tmp;
         },
 
@@ -270,7 +276,6 @@ module.exports = Aria.classDefinition({
                 };
             }
 
-            var trim = ariaUtilsString.trim;
             var MEDIA_RULE = this.MEDIA_RULE;
 
             /* Splitting on } means that each line is a CSS rule */

@@ -12,20 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesIFlowCtrl = require("./IFlowCtrl");
-require("../utils/String");
-var ariaTemplatesPublicWrapper = require("./PublicWrapper");
+import { classDefinition } from '../core/class-definition.js';
+import { IFlowCtrl } from './IFlowCtrl.js';
+import { PublicWrapper } from './PublicWrapper.js';
 
 
 /**
  * Base class for flow controllers.
  * @class aria.templates.FlowCtrl
  */
-module.exports = Aria.classDefinition({
+export const FlowCtrl = classDefinition({
     $classpath : 'aria.templates.FlowCtrl',
-    $extends : ariaTemplatesPublicWrapper,
-    $implements : [ariaTemplatesIFlowCtrl],
+    $extends : PublicWrapper,
+    $implements : [IFlowCtrl],
     $constructor : function () {
         this.$PublicWrapper.constructor.call(this);
     },
@@ -55,6 +54,7 @@ module.exports = Aria.classDefinition({
          * Interceptor on the callback of the init method of the module controller. It is used to set the data property
          * on the flow controller.
          */
+        // eslint-disable-next-line no-unused-vars
         oninitCallback : function (param) {
             this.data = this.moduleCtrl.getData();
         }

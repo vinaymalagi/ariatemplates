@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+// TODO: ModernAria: Remove eslint-disable when moving to typescript. This is to ensure signature of interface methods can be documented. Will not needed with TS
+/* eslint-disable no-unused-vars */
+import { interfaceDefinition } from '../core/interface-definition.js';
 
 
 /**
@@ -21,7 +23,7 @@ var Aria = require("../Aria");
  * are called by the general macros in aria.templates.ClassGenerator
  * @class aria.templates.IBaseTemplate
  */
-module.exports = Aria.interfaceDefinition({
+export const IBaseTemplate = interfaceDefinition({
     $classpath : 'aria.templates.IBaseTemplate',
     $events : {},
     $interface : {

@@ -12,23 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesIModuleCtrl = require("./IModuleCtrl");
-var ariaUtilsJson = require("../utils/Json");
-var ariaUtilsType = require("../utils/Type");
-var ariaTemplatesModuleCtrlFactory = require("./ModuleCtrlFactory");
-var ariaTemplatesRefreshManager = require("./RefreshManager");
-var ariaModulesRequestMgr = require("../modules/RequestMgr");
-var ariaTemplatesPublicWrapper = require("./PublicWrapper");
-var ariaUtilsArray = require("../utils/Array");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from "../core/class-definition.js";
+import { IModuleCtrl as ariaTemplatesIModuleCtrl } from "./IModuleCtrl.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+import { isFunction, isObject, isString } from "../utils/Type.js";
+import { ModuleCtrlFactory as ariaTemplatesModuleCtrlFactory } from "./ModuleCtrlFactory.js";
+import { RefreshManager as ariaTemplatesRefreshManager } from "./RefreshManager.js";
+import { RequestMgr as ariaModulesRequestMgr } from "../modules/RequestMgr.js";
+import { PublicWrapper as ariaTemplatesPublicWrapper } from "./PublicWrapper.js";
+import { removeAt } from "../utils/Array.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
 
-/**
- * Module Controller. Base class for all module controllers.
- * @class aria.templates.ModuleCtrl
- * @extends aria.core.JsObject
- */
-module.exports = Aria.classDefinition({
+export const ModuleCtrl = classDefinition({
     $classpath : 'aria.templates.ModuleCtrl',
     $extends : ariaTemplatesPublicWrapper,
     $implements : [ariaTemplatesIModuleCtrl],
@@ -154,6 +149,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} def the class definition
          * @param {Object} sdef the superclass class definition
          */
+        // eslint-disable-next-line no-unused-vars
         $init : function (p, def, sdef) {
             p.json = ariaUtilsJson; // shortcut
         },
@@ -175,7 +171,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} info Interceptor info.
          */
         _interceptPublicInterface : function (info) {
-            if (info.step == "CallBegin" && !aria.templates.ModuleCtrl.prototype[info.method]) {
+            if (info.step == "CallBegin" && !ModuleCtrl.prototype[info.method]) {
                 ariaTemplatesRefreshManager.stop();
             }
             var evt = {
@@ -186,7 +182,7 @@ module.exports = Aria.classDefinition({
             };
             this.$raiseEvent(evt);
 
-            if (info.step == "CallEnd" && !aria.templates.ModuleCtrl.prototype[info.method]) {
+            if (info.step == "CallEnd" && !ModuleCtrl.prototype[info.method]) {
                 ariaTemplatesRefreshManager.resume();
             }
         },
@@ -206,16 +202,15 @@ module.exports = Aria.classDefinition({
          * request, such as timeout and headers.
          */
         submitJsonRequest : function (targetService, jsonData, cb, options) {
-            var typeUtils = ariaUtilsType;
             // change cb as an object if a string or a function is passed as a
             // callback
-            if (typeUtils.isString(cb) || typeUtils.isFunction(cb)) {
+            if (isString(cb) || isFunction(cb)) {
                 var ncb = {
                     fn : cb,
                     scope : this
                 };
                 cb = ncb;
-            } else if (typeUtils.isObject(cb) && cb.scope == null) {
+            } else if (isObject(cb) && cb.scope == null) {
                 cb.scope = this; // default scope = this
             }
             if (!options) {
@@ -241,7 +236,7 @@ module.exports = Aria.classDefinition({
                 headers : options.headers
             };
 
-            if (typeUtils.isString(targetService)) {
+            if (isString(targetService)) {
                 requestObject.actionName = targetService;
             } else {
                 requestObject.serviceSpec = targetService;
@@ -268,6 +263,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} evt the event object (depends on the submodule event)
          * @param {Object} args some helpful info - e.g. args.smRef (sub-module reference)
          */
+        // eslint-disable-next-line no-unused-vars
         onSubModuleEvent : function (evt, args) {
             // override me!
         },
@@ -278,13 +274,14 @@ module.exports = Aria.classDefinition({
          * @param {Object} args some helpful info - e.g. args.smRef (sub-module reference)
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _onSubModuleBeforeDisposeEvent : function (evt, args) {
             var smList = this._smList;
             if (smList) {
                 // smList can be null if the module is in the process of being disposed
                 for (var i = 0, l = smList.length; i < l; i++) {
                     if (smList[i] == evt.src) {
-                        ariaUtilsArray.removeAt(smList, i);
+                        removeAt(smList, i);
                         if (evt.reloadingObject) {
                             evt.reloadingObject.$onOnce({
                                 "objectLoaded" : {
@@ -387,7 +384,7 @@ module.exports = Aria.classDefinition({
                 if (src) {
                     this.__resources = res = {};
                     for (var itm in src) {
-                        if (src.hasOwnProperty(itm)) {
+                        if (Object.prototype.hasOwnProperty.call(src, itm)) {
                             res[itm] = this[itm];
                         }
                     }

@@ -12,31 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesLayout = require("./Layout");
-require("./CfgBeans");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsFunction = require("../utils/Function");
-var ariaUtilsType = require("../utils/Type");
-var ariaTemplatesTemplateCtxtManager = require("./TemplateCtxtManager");
-var ariaTemplatesRefreshManager = require("./RefreshManager");
-var ariaTemplatesCSSMgr = require("./CSSMgr");
-require("../utils/Path");
-var ariaUtilsDelegate = require("../utils/Delegate");
-var ariaTemplatesNavigationManager = require("./NavigationManager");
-var ariaTemplatesSectionWrapper = require("./SectionWrapper");
-require("../core/environment/Customizations");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaTemplatesDomElementWrapper = require("./DomElementWrapper");
-var ariaTemplatesMarkupWriter = require("./MarkupWriter");
-var ariaUtilsDomOverlay = require("../utils/DomOverlay");
-var ariaTemplatesITemplate = require("./ITemplate");
-var ariaTemplatesITemplateCtxt = require("./ITemplateCtxt");
-var ariaTemplatesBaseCtxt = require("./BaseCtxt");
-var ariaUtilsJson = require("../utils/Json");
-var ariaCoreCache = require("../core/Cache");
-var ariaCoreTplClassLoader = require("../core/TplClassLoader");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from "../core/class-definition.js";
+import { FRAMEWORK_GLOBALS, FRAMEWORK_PREFIX } from "../core/framework-bootstrap.js";
+import { getClassRef, getClassInstance } from "../core/class-registry.js";
+import { Layout as ariaTemplatesLayout } from "./Layout.js";
+import "./CfgBeans.js";
+import { remove } from "../utils/Array.js";
+import { bind } from "../utils/Function.js";
+import { isArray, isObject, isString } from "../utils/Type.js";
+import { TemplateCtxtManager as ariaTemplatesTemplateCtxtManager } from "./TemplateCtxtManager.js";
+import { RefreshManager as ariaTemplatesRefreshManager } from "./RefreshManager.js";
+import { CSSMgr as ariaTemplatesCSSMgr } from "./CSSMgr.js";
+// require("../utils/Path");
+import { Delegate as ariaUtilsDelegate } from "../utils/Delegate.js";
+import { NavigationManager as ariaTemplatesNavigationManager } from "./NavigationManager.js";
+import { SectionWrapper as ariaTemplatesSectionWrapper } from "./SectionWrapper.js";
+import "../core/environment/Customizations.js";
+import { UtilsDom as ariaUtilsDom } from "../utils/Dom.js";
+import { DomElementWrapper as ariaTemplatesDomElementWrapper } from "./DomElementWrapper.js";
+import { MarkupWriter as ariaTemplatesMarkupWriter } from "./MarkupWriter.js";
+import { DomOverlay as ariaUtilsDomOverlay } from "../utils/DomOverlay.js";
+import { ITemplate as ariaTemplatesITemplate } from "./ITemplate.js";
+import { ITemplateCtxt as ariaTemplatesITemplateCtxt } from "./ITemplateCtxt.js";
+import { BaseCtxt as ariaTemplatesBaseCtxt } from "./BaseCtxt.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+// NOT_IMPLEMENTABLE: ModernAria: Module loading and caching done by browser, no control available.
+// var ariaCoreCache = require("../core/Cache");
+import { TplClassLoader as ariaCoreTplClassLoader } from "../core/TplClassLoader.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
+
 
 // shortcuts
 var __getModulePrivateInfo;
@@ -56,11 +60,12 @@ var _wlibs = {};
 var __getLib = function (lib) {
     var res = _wlibs[lib];
     if (res == null) {
-        res = Aria.getClassRef(lib);
+        res = getClassRef(lib);
         // TODO: check if res is a library
         _wlibs[lib] = res;
     }
     if (res === undefined) {
+        // eslint-disable-next-line no-invalid-this
         this.$logError(this.WIDGET_LIBRARY_NOT_FOUND, [lib, this.tplClasspath]);
     }
     return res;
@@ -74,7 +79,7 @@ var idCount = 0;
  * have it yet, but want to include the markup of this template inside another markup and link the template with its
  * markup later
  */
-module.exports = Aria.classDefinition({
+export const TemplateCtxt = classDefinition({
     $classpath : "aria.templates.TemplateCtxt",
     $implements : [ariaTemplatesITemplate, ariaTemplatesITemplateCtxt],
     $extends : ariaTemplatesBaseCtxt,
@@ -161,7 +166,8 @@ module.exports = Aria.classDefinition({
             if (this._globalCssDepsLoaded) {
                 // PTR 05086835: only unload the global CSS if it was loaded by this instance
                 var deps = ['aria.templates.GlobalStyle'];
-                if (aria.widgets && aria.widgets.AriaSkin) {
+                const ariaSkin = getClassRef('aria.widgets.AriaSkin');
+                if (ariaSkin) {
                     deps.push('aria.templates.LegacyGeneralStyle');
                 }
                 ariaTemplatesCSSMgr.unloadWidgetDependencies('aria.templates.Template', deps);
@@ -213,10 +219,12 @@ module.exports = Aria.classDefinition({
 
             // remove manually set methods
             tpl.__$write = null;
-            for (var index = 0, name; name = paramMapping[index]; index++) {
+            for (let index = 0; paramMapping[index]; index++) {
+                const name = paramMapping[index];
                 delete tpl[name];
             }
-            for (index = 0; name = methodMapping[index]; index++) {
+            for (let index = 0; methodMapping[index]; index++) {
+                const name = methodMapping[index];
                 delete tpl[name];
             }
         }
@@ -236,7 +244,6 @@ module.exports = Aria.classDefinition({
                 cfg.tplDiv = null;
             }
             if (cfg.div) {
-                var isObject = ariaUtilsType.isObject;
                 if (isObject(cfg.width) || isObject(cfg.height)) {
                     ariaTemplatesLayout.unregisterAutoresize(cfg.div);
                 }
@@ -397,7 +404,7 @@ module.exports = Aria.classDefinition({
                 if (args) {
                     var sectionToRefresh = args.section;
                     if (sectionToRefresh && this._mainSection) {
-                        var section = this._mainSection.getSectionById(sectionToRefresh);
+                        const section = this._mainSection.getSectionById(sectionToRefresh);
                         if (section) {
                             section.notifyRefreshPlanned(args);
                             return;
@@ -446,7 +453,7 @@ module.exports = Aria.classDefinition({
                 // call the $beforeRefresh if defined in the script associated to the template
                 this.beforeRefresh(args);
 
-                var section = this.getRefreshedSection({
+                const section = this.getRefreshedSection({
                     section : args.section,
                     macro : args.macro
                 });
@@ -492,7 +499,7 @@ module.exports = Aria.classDefinition({
          * the widget path. This is then set into a property of the templates context.
          */
         $setFocusedWidget : function () {
-            var focusedElement = Aria.$window.document.activeElement;
+            var focusedElement = FRAMEWORK_GLOBALS.$window.document.activeElement;
             this._focusedWidgetPath = this._getWidgetPath(focusedElement);
         },
 
@@ -824,7 +831,7 @@ module.exports = Aria.classDefinition({
             if (evt) {
                 var src = evt.src, differed = this._differed;
                 if (differed) {
-                    ariaUtilsArray.remove(differed, src);
+                    remove(differed, src);
                 }
             }
             if (!differed || !differed.length) {
@@ -912,6 +919,7 @@ module.exports = Aria.classDefinition({
          * @private
          * @implements aria.templates.ITemplate
          */
+        // eslint-disable-next-line no-unused-vars
         __$statementOnEvent : function (eventName, callback, lineNumber) {
             this._out.pushDelegate(eventName, callback);
         },
@@ -950,7 +958,7 @@ module.exports = Aria.classDefinition({
                 idCount++;
             }
 
-            if (Aria.testMode) {
+            if (FRAMEWORK_GLOBALS.testMode) {
                 this._prefixIds = {};
             }
 
@@ -960,7 +968,7 @@ module.exports = Aria.classDefinition({
             // TODO: check if cfg.classpath corresponds to a template is a template
             var tpl;
             try {
-                tpl = Aria.getClassInstance(cfg.classpath);
+                tpl = getClassInstance(cfg.classpath);
             } catch (e) {
                 this.$logError(this.TEMPLATE_CONSTR_ERROR, [cfg.classpath], e);
                 return false;
@@ -994,12 +1002,13 @@ module.exports = Aria.classDefinition({
                 // However, the ModuleCtrlFactory is not a static dependency cause sometimes we don't need it.
                 // TODO: today, we just fail if it's not here, replace this with a silent dynamic loading
                 // (Aria.load)
-                if (!aria.templates.ModuleCtrlFactory) {
+                const moduleCtrlFactory = getClassRef('aria.templates.ModuleCtrlFactory');
+                if (!moduleCtrlFactory) {
                     this.$logError(this.MISSING_MODULE_CTRL_FACTORY, [cfg.classpath]);
                 } else {
 
                     if (!__getModulePrivateInfo) {
-                        __getModulePrivateInfo = aria.templates.ModuleCtrlFactory.__getModulePrivateInfoMethod();
+                        __getModulePrivateInfo = moduleCtrlFactory.__getModulePrivateInfoMethod();
                     }
                     privateInfo = __getModulePrivateInfo.call(this, moduleCtrl);
 
@@ -1062,15 +1071,17 @@ module.exports = Aria.classDefinition({
             // template context
             // LEAK & PERF IMPROVMENT : interface on these two functions results in poor performance and leaks
 
-            var oSelf = this, index, name;
+            const oSelf = this;
 
-            for (index = 0; name = paramMapping[index]; index++) {
+            for (let index = 0; paramMapping[index]; index++) {
+                const name = paramMapping[index];
                 tpl[name] = this[name];
             }
 
-            var functionUtils = ariaUtilsFunction;
-            for (index = 0; name = methodMapping[index]; index++) {
-                tpl[name] = functionUtils.bind(this[name], this);
+
+            for (let index = 0; methodMapping[index]; index++) {
+                const name = methodMapping[index];
+                tpl[name] = bind(this[name], this);
             }
 
             // do not use bind for __$write as this method is called intensively (Perf improvment)
@@ -1118,7 +1129,7 @@ module.exports = Aria.classDefinition({
          * @implements aria.templates.ITemplate
          */
         __$insertSection : function (lineNumber, sectionParam, macro) {
-            if (ariaUtilsType.isString(sectionParam)) {
+            if (isString(sectionParam)) {
                 sectionParam = {
                     id : sectionParam
                 };
@@ -1293,9 +1304,9 @@ module.exports = Aria.classDefinition({
          * @return {String}
          */
         _generateDomId : function (id) {
-            var id = id + "";
+             id = id + "";
             if (id && id.indexOf("+") != -1) {
-                if (Aria.testMode) {
+                if (FRAMEWORK_GLOBALS.testMode) {
                     return this.$getAutoId(id);
                 }
                 return null;
@@ -1371,10 +1382,10 @@ module.exports = Aria.classDefinition({
             var res = this._persistentStorage;
             if (res == null) {
                 if (this.data) {
-                    res = this.data[Aria.FRAMEWORK_PREFIX + "persist::" + this.tplClasspath];
+                    res = this.data[FRAMEWORK_PREFIX + "persist::" + this.tplClasspath];
                     if (res == null) {
                         res = {};
-                        this.data[Aria.FRAMEWORK_PREFIX + "persist::" + this.tplClasspath] = res;
+                        this.data[FRAMEWORK_PREFIX + "persist::" + this.tplClasspath] = res;
                     }
                 } else {
                     res = {};
@@ -1393,7 +1404,7 @@ module.exports = Aria.classDefinition({
         $focus : function (idArray) {
             ariaUtilsDelegate.ieFocusFix();
             var idToFocus;
-            if (ariaUtilsType.isArray(idArray)) {
+            if (isArray(idArray)) {
                 idArray = idArray.slice(0);
                 idToFocus = idArray.shift();
             } else {
@@ -1460,7 +1471,8 @@ module.exports = Aria.classDefinition({
             }
             eltName = parameters[nbrParams - 1];
             if (!view[eltName]) {
-                view[eltName] = new aria.templates.View(array);
+                const viewClass = getClassRef('aria.templates.View');
+                view[eltName] = new viewClass(array);
                 // FIXME: this view is never disposed
                 view = view[eltName];
             } else {
@@ -1489,6 +1501,7 @@ module.exports = Aria.classDefinition({
             var reloading = evt.reloadingObject;
             var tmpCfg = this._getReloadCfg();
             var isUsingModuleData = reloading && (this.moduleCtrl.getData() == tmpCfg.data);
+            // MUST_DO_BEFORE_RUN: ModernAria: Implement dispose template either in core or in templates, enusre no cyclic dependency.
             Aria.disposeTemplate(tmpCfg.div); // dispose the old template
             if (reloading) {
                 var oSelf = this;
@@ -1546,6 +1559,7 @@ module.exports = Aria.classDefinition({
                 return;
             }
             var tplWidget = div.__widget;
+            // MUST_DO_BEFORE_RUN: ModernAria: Implement load template either in core or in templates, enusre no cyclic dependency.
             Aria.loadTemplate(tmpCfg, function (args) {
                 // remap widget content
                 if (args.success && tplWidget) {
@@ -1563,6 +1577,7 @@ module.exports = Aria.classDefinition({
                 }
 
                 if (callback != null) {
+                    // eslint-disable-next-line no-invalid-this
                     this.$callback(callback);
                 }
             });
@@ -1570,29 +1585,31 @@ module.exports = Aria.classDefinition({
 
         /**
          * Reload this template context. Note: this will destroy it.
-         * @param {String} tplSource new source for template
+         * @param {String} tplSource new source for template - // NOT_IMPLEMENTABLE: ModernAria: Not possible to reload modules or replace them
          * @param {aria.core.CfgBeans:Callback} callback [optional] function called when reload is complete
          */
         $reload : function (tplSource, callback) {
 
             var tmpCfg = this._getReloadCfg();
-            if (tplSource) {
-                aria.templates.TemplateManager.$onOnce({
-                    "unloadTemplate" : {
-                        fn : function () {
-                            var logicalPath = tmpCfg.classpath.replace(/\./g, "/") + ".tpl";
-                            var cacheContent = ariaCoreCache.getItem("files", logicalPath, true);
-                            cacheContent.status = 3; // status OK
-                            cacheContent.value = tplSource;
-                        },
-                        scope : this
-                    }
-                });
-            }
+            // ------------------------------------------------
+            // NOT_IMPLEMENTABLE: ModernAria: Not possible to reload modules
+            // if (tplSource) {
+            //     aria.templates.TemplateManager.$onOnce({
+            //         "unloadTemplate" : {
+            //             fn : function () {
+            //                 var logicalPath = tmpCfg.classpath.replace(/\./g, "/") + ".tpl";
+            //                 var cacheContent = ariaCoreCache.getItem("files", logicalPath, true);
+            //                 cacheContent.status = 3; // status OK
+            //                 cacheContent.value = tplSource;
+            //             },
+            //             scope : this
+            //         }
+            //     });
+            // }
 
             tmpCfg.reload = true;
             tmpCfg.reloadByPassCache = true;
-
+            // MUST_DO_BEFORE_RUN: ModernAria: Implement load template either in core or in templates, enusre no cyclic dependency.
             var disposed = Aria.disposeTemplate(tmpCfg.div); // dispose the old template
             if (!disposed) {
                 this.$logError("Could not reload template: " + tmpCfg.classpath);
@@ -1629,7 +1646,8 @@ module.exports = Aria.classDefinition({
                 if (this._cfg.isRootTemplate) {
                     // PTR 05086835: load the global CSS here, and remember that it was loaded
                     var deps = ['aria.templates.GlobalStyle'];
-                    if (aria.widgets && aria.widgets.AriaSkin) {
+                    const ariaSkin = getClassRef('aria.widgets.AriaSkin');
+                    if (ariaSkin) {
                         deps.push('aria.templates.LegacyGeneralStyle');
                     }
                     ariaTemplatesCSSMgr.loadWidgetDependencies('aria.templates.Template', deps);
@@ -1661,7 +1679,7 @@ module.exports = Aria.classDefinition({
             if (status) {
                 this.__loadingOverlays.push(id);
             } else {
-                ariaUtilsArray.remove(this.__loadingOverlays, id);
+                remove(this.__loadingOverlays, id);
             }
         },
 
@@ -1709,10 +1727,10 @@ module.exports = Aria.classDefinition({
         setContainerScroll : function (scrollPositions) {
             var containerDiv = this.getContainerDiv();
             if (containerDiv && scrollPositions) {
-                if (scrollPositions.hasOwnProperty('scrollLeft') && scrollPositions.scrollLeft != null) {
+                if (Object.prototype.hasOwnProperty.call(scrollPositions, 'scrollLeft') && scrollPositions.scrollLeft != null) {
                     containerDiv.scrollLeft = scrollPositions.scrollLeft;
                 }
-                if (scrollPositions.hasOwnProperty('scrollTop') && scrollPositions.scrollTop != null) {
+                if (Object.prototype.hasOwnProperty.call(scrollPositions, 'scrollTop') && scrollPositions.scrollTop != null) {
                     containerDiv.scrollTop = scrollPositions.scrollTop;
                 }
             }

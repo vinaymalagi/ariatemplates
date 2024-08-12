@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaCoreJsonValidator = require("../JsonValidator");
-var ariaCoreAppEnvironment = require("../AppEnvironment");
+import { JsonValidator as ariaCoreJsonValidator } from "../JsonValidator.js";
+import { AppEnvironment as ariaCoreAppEnvironment } from '../AppEnvironment.js';
+import { classDefinition } from '../class-definition.js';
 
 
 /**
  * Base class containing shared methods for all environment classes.
  */
-module.exports = Aria.classDefinition({
+export const EnvironmentBase = classDefinition({
     $classpath : "aria.core.environment.EnvironmentBase",
     $constructor : function () {
         this.$assert(9, this._cfgPackage != null);
@@ -47,7 +47,7 @@ module.exports = Aria.classDefinition({
         });
     },
     $destructor : function () {
-        ariaCoreAppEnvironment.$unregisterListeners(this);
+      ariaCoreAppEnvironment.$unregisterListeners(this);
         this._localDefCfg = null;
     },
     $events : {

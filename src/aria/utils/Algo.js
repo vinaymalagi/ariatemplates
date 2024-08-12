@@ -13,37 +13,21 @@
  * limitations under the License.
  */
 
-var Aria = require("../Aria");
-
-
-
-var self;
-
 /**
- * @class aria.utils.Algo Utilities for writing algorithms
- * @extends aria.core.JsObject
- * @singleton
+ * Calls a callback 'count' number of times and returns the result of each call in an array.
+ * @param {number} count - Number of times to call the callback
+ * @param {Function} callback - The callback function to call
+ * @param {Object | null} thisArg - The 'this' scope of the callback call
+ * @returns
  */
-module.exports = Aria.classDefinition({
-    $classpath : 'aria.utils.Algo',
-    $singleton : true,
-
-    $constructor : function () {
-        self = this;
-    },
-    $destructor : function () {
-        self = null;
-    },
-
-    $prototype : {
-        times : function (count, callback, thisArg) {
-            var results = [];
-            var index = 0;
-            while (index < count) {
-                results.push(callback.call(thisArg, index, count));
-                index++;
-            }
-            return results;
-        }
-    }
-});
+export function times(count, callback, thisArg) {
+  var results = [];
+  var index = 0;
+  while (index < count) {
+    results.push(callback.call(thisArg, index, count));
+    index++;
+  }
+  return results;
+}
+//     }
+// });

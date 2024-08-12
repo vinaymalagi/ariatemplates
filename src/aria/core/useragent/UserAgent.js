@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var UAParser = require('./ua-parser.js');
+import { classDefinition } from '../class-definition.js';
+import { $global } from '../framework-bootstrap.js';
+import { UAParser } from 'ua-parser-js';
 
 /**
  * Wraps the use of ua-parser.js to provide its results, and some utilities to analyze them.
  */
-module.exports = Aria.classDefinition({
+export const UserAgent = classDefinition({
     $classpath : 'aria.core.useragent.UserAgent',
     $singleton: true,
 
@@ -74,7 +75,7 @@ module.exports = Aria.classDefinition({
             // -------------------------------------- input arguments processing
 
             if (userAgent == null) {
-                var navigator = Aria.$global.navigator;
+                var navigator = $global.navigator;
                 userAgent = navigator ? navigator.userAgent : "";
             }
 
@@ -85,7 +86,7 @@ module.exports = Aria.classDefinition({
             // ---------------------------------------- early termination: cache
 
             var cacheKey = userAgent.toLowerCase();
-            if (this._cache.hasOwnProperty(cacheKey)) {
+            if (Object.prototype.hasOwnProperty.call(this._cache, cacheKey)) {
                 result = this._cache[cacheKey];
             }
             if (result != null) {

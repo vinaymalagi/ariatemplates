@@ -12,19 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesIObjectLoading = require("./IObjectLoading");
-var ariaTemplatesPublicWrapper = require("./PublicWrapper");
+import { classDefinition } from "../core/class-definition.js";
+import { IObjectLoading } from "./IObjectLoading.js";
+import { PublicWrapper } from "./PublicWrapper.js";
 
 
-/**
- * Object which raises an event when an object is loaded.
- * @class aria.templates.ObjectLoading
- */
-module.exports = Aria.classDefinition({
+export const ObjectLoading = classDefinition({
     $classpath : 'aria.templates.ObjectLoading',
-    $extends : ariaTemplatesPublicWrapper,
-    $implements : [ariaTemplatesIObjectLoading],
+    $extends : PublicWrapper,
+    $implements : [IObjectLoading],
     $constructor : function () {
         this.$PublicWrapper.constructor.call(this);
     },

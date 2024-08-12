@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { classDefinition } from '../core/class-definition.js';
+import { CSSCtxt } from './CSSCtxt.js';
 
 /**
  * List of active CSS templates loaded by Aria.loadTemplate
  * @dependencies ["aria.templates.CSSCtxt"]
  */
-module.exports = Aria.classDefinition({
+export const CSSCtxtManager = classDefinition({
     $classpath : "aria.templates.CSSCtxtManager",
     $singleton : true,
     $constructor : function () {
@@ -44,7 +45,7 @@ module.exports = Aria.classDefinition({
 
             // Create a context if missing
             if (!ctxt) {
-                ctxt = new (require("./CSSCtxt"))();
+                ctxt = new CSSCtxt();
 
                 // Override the classpath
                 if (!initArgs) {
@@ -81,7 +82,7 @@ module.exports = Aria.classDefinition({
             var ctxts = [], all = this._contexts;
 
             for (var path in all) {
-                if (all.hasOwnProperty(path)) {
+                if (Object.prototype.hasOwnProperty.call(all, path)) {
                     ctxts.push(path);
                     all[path].$dispose();
                 }

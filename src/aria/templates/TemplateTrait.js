@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { classDefinition } from "../core/class-definition.js";
+import { getClassRef } from "../core/class-registry.js";
 
 
 /**
  * Class with common methods used in aria.widget.Templates and aria.html.Template
  */
-module.exports = Aria.classDefinition({
+export const TemplateTrait = classDefinition({
     $classpath : "aria.templates.TemplateTrait",
     $prototype : {
 
@@ -36,7 +37,7 @@ module.exports = Aria.classDefinition({
             if (this._needCreatingModuleCtrl) {
                 // initialize the module controller
                 var moduleCtrl = this._cfg.moduleCtrl;
-                aria.templates.ModuleCtrlFactory.createModuleCtrl(moduleCtrl, {
+                getClassRef('aria.templates.ModuleCtrlFactory').createModuleCtrl(moduleCtrl, {
                     fn : this._onTplLoad,
                     scope : this,
                     args : {

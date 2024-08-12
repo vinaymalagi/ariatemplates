@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsArray = require("./Array");
-var ariaUtilsCallback = require("./Callback");
+import { classDefinition } from '../core/class-definition.js';
+import { remove } from './Array.js';
+import { UtilsCallback as ariaUtilsCallback } from './Callback.js';
 
 
 /**
  * Store utility class. Usefull to register a stack of object, retrieve elements, filter, browse.
  * @class aria.utils.Store
  */
-module.exports = Aria.classDefinition({
+export const Store = classDefinition({
     $classpath : 'aria.utils.Store',
     $constructor : function () {
         /**
@@ -73,7 +73,7 @@ module.exports = Aria.classDefinition({
          * @return {Boolean} true if element was found and removed
          */
         remove : function (elt) {
-            if (this._store && ariaUtilsArray.remove(this._store, elt)) {
+            if (this._store && remove(this._store, elt)) {
                 this._storeLength--;
                 return true;
             }

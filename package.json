@@ -9,45 +9,37 @@
     "url": "git://github.com/ariatemplates/ariatemplates.git"
   },
   "license": "Apache-2.0",
-  "main": "src/aria/node.js",
   "config": {
     "port": "8080",
     "attesterLauncherConfig": ""
   },
-  "scripts": {
-    "start": "node scripts/server.js",
-    "prestart": "npm install",
-    "prepare": "npm run lint-src && npm run grunt",
-    "lint-src": "node build/grunt-cli.js checkStyle",
-    "lint-test": "node build/grunt-cli.js checkStyleTest",
-    "lint": "node build/grunt-cli.js checkStyle checkStyleTest",
-    "grunt": "node build/grunt-cli.js",
-    "attester": "node scripts/ciCampaigns.js",
-    "attester-browsers": "node scripts/browsersCampaigns.js",
-    "mocha": "mocha --recursive test/node",
-    "test-suites": "npm run mocha && npm run attester",
-    "test": "npm run lint && npm run grunt && npm run test-suites",
-    "attest": "node scripts/attest.js",
-    "ci": "npm run lint-test && npm run test-suites"
-  },
+  "type": "module",
+  "main": "src/aria/node.js",
+  "scripts": {},
   "dependencies": {
     "at-noder-converter": "1.1.1",
     "atpackager": "0.3.0",
     "gzip-js": "0.3.2",
-    "noder-js": "1.6.2"
+    "noder-js": "1.6.2",
+    "zod": "^3.23.8",
+    "ua-parser-js": "^0.7.26"
   },
   "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@stylistic/eslint-plugin": "^2.6.1",
     "at-diff": "0.0.9",
     "attester": "4.1.0",
+    "eslint": "^9.8.0",
     "express": "4.15.4",
+    "globals": "^15.8.0",
     "grunt": "1.0.1",
     "grunt-contrib-jshint": "1.1.0",
     "grunt-leading-indent": "0.2.0",
     "grunt-verifylowercase": "0.2.0",
+    "madge": "^7.0.0",
     "mocha": "3.5.2",
-    "pug": "2.0.0-rc.4",
     "playwright": "1.14.1",
-    "robot-server": "0.0.4",
-    "ua-parser-js": "0.7.26"
+    "pug": "2.0.0-rc.4",
+    "robot-server": "0.0.4"
   }
 }

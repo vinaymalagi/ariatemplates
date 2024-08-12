@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsObject = require("../utils/Object");
-var ariaUtilsJson = require("../utils/Json");
+import { classDefinition } from './class-definition.js';
+import { keys as objectKeys } from '../utils/Object.js';
+import { Json } from '../utils/Json.js';
 
 
 /**
  * Store for application variables.
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export const AppEnvironment  = classDefinition({
     $classpath : "aria.core.AppEnvironment",
     $singleton : true,
     $events : {
@@ -57,9 +57,9 @@ module.exports = Aria.classDefinition({
          */
         setEnvironment : function (cfg, callback, update) {
             update = !!update;
-            var keys = ariaUtilsObject.keys(cfg);
+            var keys = objectKeys(cfg);
             if (update) {
-                ariaUtilsJson.inject(cfg, this.applicationSettings, true);
+                Json.inject(cfg, this.applicationSettings, true);
             } else {
                 if (keys.length === 0) {
                     // reset stored application settings

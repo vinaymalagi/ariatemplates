@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { classDefinition } from '../core/class-definition.js';
 
 
-module.exports = Aria.classDefinition({
+export const PublicWrapper = classDefinition({
     $classpath : 'aria.templates.PublicWrapper',
     $prototype : {
         /**

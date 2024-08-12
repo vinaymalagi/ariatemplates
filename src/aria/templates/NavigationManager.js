@@ -12,16 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("../utils/Type");
-require("./CfgBeans");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from "../core/class-definition.js";
+import { FRAMEWORK_PREFIX, FRAMEWORK_GLOBALS } from "../core/framework-bootstrap.js";
+import { isNumber } from "../utils/Type.js";
+import "./CfgBeans.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
 
-/**
- * Handle keyboard navigation and shortcut for a given section.
- * @class aria.templates.NavigationManager
- */
-module.exports = Aria.classDefinition({
+
+export const NavigationManager = classDefinition({
     $classpath : "aria.templates.NavigationManager",
     $singleton : true,
     $constructor : function () {
@@ -30,14 +28,14 @@ module.exports = Aria.classDefinition({
          * @protected
          * @type String
          */
-        this._tableNavMarker = Aria.FRAMEWORK_PREFIX + "tableNavDone";
+        this._tableNavMarker = FRAMEWORK_PREFIX + "tableNavDone";
 
         /**
          * Marker used to tag the event, to notify if key map handling has already been done.
          * @protected
          * @type String
          */
-        this._keyMapMarker = Aria.FRAMEWORK_PREFIX + "keyMapDone";
+        this._keyMapMarker = FRAMEWORK_PREFIX + "keyMapDone";
 
         /**
          * List of keymaps defined at window level.
@@ -109,6 +107,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} tableNav table navigation configuration
          * @param {aria.DomEvent} event
          */
+        // eslint-disable-next-line no-unused-vars
         handleNavigation : function (keyMap, tableNav, event, keyMapOnly) {
             if (event.type == "keyup" || event.type == "keydown") {
                 // handle table navigation if not already done
@@ -184,7 +183,7 @@ module.exports = Aria.classDefinition({
          * @return {Boolean} true if something got focused, false otherwise.
          */
         focusNext : function (target, reverse) {
-            var body = Aria.$window.document.body;
+            var body = FRAMEWORK_GLOBALS.$window.document.body;
             var next;
             // find next node to inspect : either a sibling, or a parent sibling, ...
             while (!next) {
@@ -253,7 +252,7 @@ module.exports = Aria.classDefinition({
                 try {
                     domElement.focus();
                     focused = true;
-                } catch (exception) {
+                } catch {
                     // this happens in IE if the element is disable or hidden
                 }
             }
@@ -489,7 +488,7 @@ module.exports = Aria.classDefinition({
          * @return {HTMLElement}
          */
         _getContainingTD : function (focus) {
-            var body = Aria.$window.document.body;
+            var body = FRAMEWORK_GLOBALS.$window.document.body;
             var parent = focus;
             while (parent && parent != body) {
                 if (parent.nodeName == "TD") {
@@ -596,7 +595,8 @@ module.exports = Aria.classDefinition({
 
             // TODO: check configuration
 
-            for (var index = 0, mapConfig; mapConfig = keyMap[index]; index++) {
+            for (var index = 0, mapConfig; keyMap[index]; index++) {
+                mapConfig = keyMap[index];
                 if (this._validateModifiers(mapConfig, event)) {
                     keyMapEvent = (mapConfig && "event" in mapConfig) ? mapConfig["event"] : "keydown";
 
@@ -610,7 +610,7 @@ module.exports = Aria.classDefinition({
                     }
 
                     // case real key defined
-                    if (ariaUtilsType.isNumber(mapConfig.key)) {
+                    if (isNumber(mapConfig.key)) {
                         if (mapConfig.key == keyCode) {
                             bubble = this.$callback(mapConfig.callback);
                             found = true;

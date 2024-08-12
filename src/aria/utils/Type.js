@@ -12,187 +12,182 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsObject = require("../core/JsObject");
+/**
+ * aria.utils.Type Utilities for comparing types
+ */
 
 /**
- * @class aria.utils.Type Utilities for comparing types
- * @extends aria.core.JsObject
- * @singleton
+ * Check if the value is an array
+ * @param {Object} value
+ * @return {Boolean} isArray
  */
-module.exports = Aria.classDefinition({
-    $classpath : 'aria.utils.Type',
-    $singleton : true,
-    $prototype : {
+export function isArray(value) {
+  return Object.prototype.toString.apply(value) === "[object Array]";
+}
 
-        /**
-         * Check if the value is an array
-         * @param {Object} value
-         * @return {Boolean} isArray
-         */
-        isArray : function (value) {
-            return Object.prototype.toString.apply(value) === "[object Array]";
-        },
+/**
+ * Check if the value is a string (for example, typeof(new String("my String")) is "object")
+ * @param {Object} value
+ * @return {Boolean} isString
+ */
+export function isString(value) {
+  if (typeof (value) === 'string') {
+    return true;
+  }
+  return Object.prototype.toString.apply(value) === "[object String]";
+}
 
-        /**
-         * Check if the value is a string (for example, typeof(new String("my String")) is "object")
-         * @param {Object} value
-         * @return {Boolean} isString
-         */
-        isString : function (value) {
-            if (typeof(value) === 'string') {
-                return true;
-            }
-            return Object.prototype.toString.apply(value) === "[object String]";
-        },
+/**
+ * Check if the value is a RegularExpression
+ * @param {Object} value
+ * @return {Boolean} isRegExp
+ */
+export function isRegExp(value) {
+  return Object.prototype.toString.apply(value) === "[object RegExp]";
+}
 
-        /**
-         * Check if the value is a RegularExpression
-         * @param {Object} value
-         * @return {Boolean} isRegExp
-         */
-        isRegExp : function (value) {
-            return Object.prototype.toString.apply(value) === "[object RegExp]";
-        },
+/**
+ * Check if the value is a number
+ * @param {Object} value
+ * @return {Boolean} isNumber
+ */
+export function isNumber(value) {
+  // to handle the NaN bug
+  if (isNaN(value)) {
+    return false;
+  }
 
-        /**
-         * Check if the value is a number
-         * @param {Object} value
-         * @return {Boolean} isNumber
-         */
-        isNumber : function (value) {
-            // to handle the NaN bug
-            if (isNaN(value)) {
-                return false;
-            }
+  if (typeof (value) === 'number') {
+    return true;
+  }
 
-            if (typeof(value) === 'number') {
-                return true;
-            }
+  return Object.prototype.toString.apply(value) === "[object Number]";
+}
 
-            return Object.prototype.toString.apply(value) === "[object Number]";
-        },
+/**
+ * Check if the value is an integer.
+ * @param {Object} value
+ * @return {Boolean} isInteger
+ */
+export function isInteger(value) {
+  return isNumber(value) &&
+    (Math.floor(value) === value) &&
+    (value + 1) !== value; // is finite and precise
+}
 
-        /**
-         * Check if the value is an integer.
-         * @param {Object} value
-         * @return {Boolean} isInteger
-         */
-        isInteger : function (value) {
-            return this.isNumber(value) &&
-                    (Math.floor(value) === value) &&
-                    (value + 1) !== value; // is finite and precise
-        },
+/**
+ * Check if the value is a js Date
+ * @param {Object} value
+ * @return {Boolean} isDate
+ */
+export function isDate(value) {
+  return Object.prototype.toString.apply(value) === "[object Date]";
+}
 
-        /**
-         * Check if the value is a js Date
-         * @param {Object} value
-         * @return {Boolean} isDate
-         */
-        isDate : function (value) {
-            return Object.prototype.toString.apply(value) === "[object Date]";
-        },
+/**
+ * Check if the value is a valid js Date
+ * @param {Object} value
+ * @param {Boolean} isValidDate
+ */
+export function isValidDate(date) {
+  return isDate(date) && isInteger(date.valueOf());
+}
 
-        /**
-         * Check if the value is a valid js Date
-         * @param {Object} value
-         * @param {Boolean} isValidDate
-         */
-        isValidDate : function (date) {
-            return this.isDate(date) && this.isInteger(date.valueOf());
-        },
+/**
+ * Check if the value is a boolean
+ * @param {Object} value
+ * @return {Boolean} isBoolean
+ */
+export function isBoolean(value) {
+  return (value === true || value === false);
+}
 
-        /**
-         * Check if the value is a boolean
-         * @param {Object} value
-         * @return {Boolean} isBoolean
-         */
-        isBoolean : function (value) {
-            return (value === true || value === false);
-        },
+/**
+ * Check if the value is an object
+ * @param {Object} value
+ * @return {Boolean} isObject return false if value is null or undefined.
+ */
+export function isObject(value) {
+  // check that the value is not null or undefined, because otherwise,
+  // in IE, if value is undefined or null, the toString method returns Object anyway
+  if (value) {
+    return Object.prototype.toString.apply(value) === "[object Object]";
+  } else {
+    return false;
+  }
+}
 
-        /**
-         * Check if the value is a HTML element
-         * @param {Object} object
-         * @return {Boolean} isHTMLElement
-         */
-        isHTMLElement : function (object) {
-            // http://www.quirksmode.org/dom/w3c_core.html#nodeinformation
-            if (object) {
-                var nodeName = object.nodeName;
-                return object === Aria.$window || aria.utils.Type.isString(nodeName)
-                        || object === Aria.$frameworkWindow;
-            } else {
-                return false;
-            }
-        },
+/**
+ * Check if the object is a function
+ * @param {Object} value
+ * @return {Boolean} isFunction
+ */
+export function isFunction(value) {
+  return Object.prototype.toString.apply(value) === "[object Function]";
+}
 
-        /**
-         * Check if the value is an object
-         * @param {Object} value
-         * @return {Boolean} isObject return false if value is null or undefined.
-         */
-        isObject : function (value) {
-            // check that the value is not null or undefined, because otherwise,
-            // in IE, if value is undefined or null, the toString method returns Object anyway
-            if (value) {
-                return Object.prototype.toString.apply(value) === "[object Object]";
-            } else {
-                return false;
-            }
-        },
+// /**
+//  * Return true if value is an Object or an Array. It will however return false if the value is an instance of
+//  * aria.core.JsObject
+//  * @param {Object} value
+//  * @return {Boolean} isContainer
+//  */
+// MUST_DO: ModernAria: Potential Circular Dependency: Figure out access to Aria.$window and Aria.$framework window without violating circular dependency
+// export function isContainer(value) {
+//     return (isObject(value) || isArray(value)) && !(value instanceof ariaCoreJsObject);
+// }
 
-        /**
-         * Check if the value is an instance object of the given classpath.
-         * @param {Object} value
-         * @param {String} classpath
-         * @return {Boolean} true is value is an instance of the given classpath, false otherwise
-         */
-        isInstanceOf : function (value, classpath) {
-            var myClass = Aria.getClassRef(classpath);
-            if (myClass == null) {
-                /* if the classpath is not loaded, the value cannot be an instance of it */
-                return false;
-            }
-            return value instanceof myClass;
-        },
+/**
+ * Gets a proper signature callback from description given in argument
+ *
+ * Copy of $normCallback in JSObject to prevent circular dependency
+ * MUST_DO: ModernAria: Resolve this circular dependency and remove copy either here or in JsObject
+ *
+ * @param {Object|String} cn callback signature
+ * @return {Object} callback object with fn and scope
+ */
+//
+export function normCallback(cb) {
+  var scope = cb.scope, callback;
 
-        /**
-         * Check if the object is a function
-         * @param {Object} value
-         * @return {Boolean} isFunction
-         */
-        isFunction : function (value) {
-            return Object.prototype.toString.apply(value) === "[object Function]";
-        },
+  // MUST_DO: Check if the use of 'this' when scope is not passed affects the callback
+  // eslint-disable-next-line no-invalid-this
+  scope = scope ? scope : this;
+  if (!cb.fn) {
+    callback = cb;
+  } else {
+    callback = cb.fn;
+  }
 
-        /**
-         * Return true if value is an Object or an Array. It will however return false if the value is an instance of
-         * aria.core.JsObject
-         * @param {Object} value
-         * @return {Boolean} isContainer
-         */
-        isContainer : function (value) {
-            return (this.isObject(value) || this.isArray(value)) && !(value instanceof ariaCoreJsObject);
-        },
+  if (typeof (callback) == 'string') {
+    callback = scope[callback];
+  }
+  return {
+    fn: callback,
+    scope: scope,
+    args: cb.args,
+    resIndex: cb.resIndex,
+    apply: cb.apply
+  };
+}
 
-        /**
-         * Check if the object is a callback
-         * @param {Object} value
-         * @return {Boolean}
-         */
-        isCallback : function (value) {
-            if (value == null) {
-                return false;
-            }
-            if (value.$Callback) {
-                return true;
-            }
-            if (value.$classpath) {
-                return false;
-            }
-            var normCb = this.$normCallback(value);
-            return typeof(normCb.fn) == "function";
-        }
+/**
+ * Check if the object is a callback
+ * @param {Object} value
+ * @return {Boolean}
+ */
+// MUST_DO: ModernAria: Potential Circular Dependency: Figure out access to Aria.$window and Aria.$framework window without violating circular dependency
+export function isCallback(value) {
+    if (value == null) {
+        return false;
     }
-});
+    if (value.$Callback) {
+        return true;
+    }
+    if (value.$classpath) {
+        return false;
+    }
+    // TODO: ModernAria: Potential bug in original code, ideally normcallback ???
+    var normCb = normCallback(value);
+    return typeof(normCb.fn) == "function";
+}

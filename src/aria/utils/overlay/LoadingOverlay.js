@@ -13,22 +13,23 @@
  * limitations under the License.
  */
 
-var Aria = require("../../Aria");
-
-var ariaUtilsOverlayOverlay = require("./Overlay");
-var ariaCoreBrowser = require("../../core/Browser");
-var ariaUtilsEvent = require("../Event");
-var ariaUtilsType = require("../Type");
-var ariaUtilsFunction = require("../Function");
-var ariaUtilsAccessibility = require("../Accessibility");
-var ariaUtilsDomNavigationManager = require("../DomNavigationManager");
+import { classDefinition } from "../../core/class-definition.js";
+import { Overlay as ariaUtilsOverlayOverlay } from "./Overlay.js";
+import { Browser as ariaCoreBrowser } from "../../core/Browser.js";
+import { UtilsEvent as ariaUtilsEvent } from "../Event.js";
+import { isString } from "../Type.js";
+import { bind } from "../Function.js";
+import { readText } from "../Accessibility.js";
+import { UtilsDom } from "./../Dom.js";
+import { hidingManager, SkippedElementNavigationHandler } from "../DomNavigationManager.js";
+import { FRAMEWORK_GLOBALS } from "../../core/framework-bootstrap.js";
 
 
 
 /**
  * This class creates an overlay and keeps it positioned above a given HTML element
  */
-module.exports = Aria.classDefinition({
+export const LoadingOverlay = classDefinition({
     $classpath : "aria.utils.overlay.LoadingOverlay",
     $extends : ariaUtilsOverlayOverlay,
     /**
@@ -53,7 +54,7 @@ module.exports = Aria.classDefinition({
             options = {};
         }
 
-        if (ariaUtilsType.isString(options)) {
+        if (isString(options)) {
             options = {message: options};
         }
 
@@ -83,7 +84,7 @@ module.exports = Aria.classDefinition({
             waiAria: waiAria
         });
 
-        var browser = aria.core.Browser;
+        var browser = ariaCoreBrowser;
         // fix 08364518 : if IE<9, the scroll event on an element does not bubble up and trigger the handler
         // attached to the window
         if (browser.isIE8 || browser.isIE7) {
@@ -140,10 +141,10 @@ module.exports = Aria.classDefinition({
             var overlay = this.$Overlay._createOverlay.call(this, params);
 
             if (waiAria) {
-                this._showElementBack = element == Aria.$window.document.body ?
-                    ariaUtilsDomNavigationManager.hidingManager.hideOthers(overlay) :
-                    ariaUtilsDomNavigationManager.hidingManager.hide(element);
-                this._navigationInterceptor = ariaUtilsDomNavigationManager.SkippedElementNavigationHandler(element);
+                this._showElementBack = element == FRAMEWORK_GLOBALS.$window.document.body ?
+                    hidingManager.hideOthers(overlay) :
+                    hidingManager.hide(element);
+                this._navigationInterceptor = SkippedElementNavigationHandler(element);
                 this._navigationInterceptor.ensureElements();
             }
 
@@ -156,7 +157,7 @@ module.exports = Aria.classDefinition({
                     if (waiAriaReadOnceFirst) {
                         this._readText();
                     }
-                    this._waiAriaReadIntervalId = setInterval(ariaUtilsFunction.bind(this._readText, this), waiAriaReadInterval);
+                    this._waiAriaReadIntervalId = setInterval(bind(this._readText, this), waiAriaReadInterval);
                 }
             }
 
@@ -164,7 +165,7 @@ module.exports = Aria.classDefinition({
         },
 
         _readText : function () {
-            ariaUtilsAccessibility.readText(this.__text, {
+            readText(this.__text, {
                 parent: this.overlay
             });
         },
@@ -175,7 +176,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _appendToDOM : function (overlay) {
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             document.body.appendChild(overlay);
         },
 
@@ -186,8 +187,8 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _setInPosition : function (element, overlay) {
-            var geometry = aria.utils.Dom.getGeometry(element);
-            var viewportSize = aria.utils.Dom.getViewportSize();
+            var geometry = UtilsDom.getGeometry(element);
+            var viewportSize = UtilsDom.getViewportSize();
             var overlayGeometry = null;
 
             if (geometry) {
@@ -200,7 +201,7 @@ module.exports = Aria.classDefinition({
                 if (overlay.style.position == "absolute") {
                     // geometry is relative to viewport
                     // overlayGeometry will be relative to the page!
-                    var documentScroll = aria.utils.Dom._getDocumentScroll();
+                    var documentScroll = UtilsDom._getDocumentScroll();
                     overlayGeometry = {
                         x : Math.max(geometry.x, 0) + documentScroll.scrollLeft,
                         y : Math.max(geometry.y, 0) + documentScroll.scrollTop

@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-require("./CfgBeans");
-var ariaTemplatesTemplateCtxtManager = require("./TemplateCtxtManager");
-var ariaUtilsEvent = require("../utils/Event");
-var ariaCoreBrowser = require("../core/Browser");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaUtilsAriaWindow = require("../utils/AriaWindow");
-var ariaCoreTimer = require("../core/Timer");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS, minSizeMode } from '../core/framework-bootstrap.js';
+import "./CfgBeans.js";
+import { TemplateCtxtManager as ariaTemplatesTemplateCtxtManager } from './TemplateCtxtManager.js';
+import { UtilsEvent as ariaUtilsEvent } from '../utils/Event.js';
+import { Browser as ariaCoreBrowser } from '../core/Browser.js';
+import { UtilsDom as ariaUtilsDom } from '../utils/Dom.js';
+import { AriaWindow as ariaUtilsAriaWindow } from '../utils/AriaWindow.js';
+import { Timer as ariaCoreTimer } from '../core/Timer.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 
-(function () {
     var layout;
     var timer;
     var eventUtils;
@@ -41,7 +41,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         if (__autoresizes == null) {
             __autoresizes = [];
             ariaUtilsAriaWindow.attachWindow();
-            eventUtils.addListener(Aria.$window, "resize", {
+            eventUtils.addListener(FRAMEWORK_GLOBALS.$window, "resize", {
                 fn : __onResize
             });
             // PTR 08127833 - it updates the viewport sizes the first time a DOM element is registered as autoresizable
@@ -59,7 +59,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
             __cancelID = null;
         }
         if (__autoresizes != null) {
-            eventUtils.removeListener(Aria.$window, "resize", {
+            eventUtils.removeListener(FRAMEWORK_GLOBALS.$window, "resize", {
                 fn : __onResize
             });
             ariaUtilsAriaWindow.detachWindow();
@@ -82,7 +82,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
     var __computeSOSizeValue = function (obj) {
         var res;
         if (obj.min != null || obj.max != null) {
-            res = (Aria.minSizeMode && obj.min != null ? obj.min : obj.viewport);
+            res = (minSizeMode && obj.min != null ? obj.min : obj.viewport);
             if (res != null) {
                 if (obj.scrollbar) {
                     res -= layout.getScrollbarsWidth();
@@ -165,7 +165,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
      * This class listens to changes in viewport size and raises an event for templates to refresh.
      * @singleton
      */
-    module.exports = Aria.classDefinition({
+    export const Layout = classDefinition({
         $classpath : "aria.templates.Layout",
         $singleton : true,
         $events : {
@@ -353,7 +353,7 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
                 if (__scrollBarsWidth != null) {
                     return __scrollBarsWidth;
                 }
-                var document = Aria.$window.document;
+                var document = FRAMEWORK_GLOBALS.$window.document;
                 var o = document.createElement("div"); // outer div
                 var i = document.createElement("div"); // inner div
                 o.style.overflow = "";
@@ -395,4 +395,3 @@ var ariaCoreJsonValidator = require("../core/JsonValidator");
         }
     });
 
-})();

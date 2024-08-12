@@ -12,14 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsEvent = require("./Event");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { UtilsEvent as ariaUtilsEvent } from './Event.js';
 
+// MUST_DO: ModernAria: Check if this is realy needed in applications. Do we attach and detach windows in regular code???
 
 /**
  * This class manages changes to Aria.$window and page navigation in Aria.$window.
  */
-module.exports = Aria.classDefinition({
+export const AriaWindow = classDefinition({
     $classpath : 'aria.utils.AriaWindow',
     $singleton : true,
     $constructor : function () {
@@ -52,7 +54,7 @@ module.exports = Aria.classDefinition({
         attachWindow : function () {
             this._windowUsages++;
             if (this._windowUsages === 1) {
-                ariaUtilsEvent.addListener(Aria.$window, "unload", {
+                ariaUtilsEvent.addListener(FRAMEWORK_GLOBALS.$window, "unload", {
                     fn : this._unloadWindow,
                     scope : this
                 });
@@ -81,7 +83,7 @@ module.exports = Aria.classDefinition({
         _raiseDetachWindow : function () {
             this.$assert(42, this._windowUsages === 0);
             this.$raiseEvent("detachWindow");
-            ariaUtilsEvent.removeListener(Aria.$window, "unload", {
+            ariaUtilsEvent.removeListener(FRAMEWORK_GLOBALS.$window, "unload", {
                 fn : this._unloadWindow,
                 scope : this
             });
@@ -120,11 +122,11 @@ module.exports = Aria.classDefinition({
          * @param {Object} window new window object to be stored in Aria.$window
          */
         setWindow : function (window) {
-            if (window === Aria.$window) {
+            if (window === FRAMEWORK_GLOBALS.$window) {
                 return;
             }
             this._unloadWindow();
-            Aria.$window = window;
+            FRAMEWORK_GLOBALS.$window = window;
         },
 
         /**
