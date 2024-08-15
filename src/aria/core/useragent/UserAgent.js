@@ -14,7 +14,9 @@
  */
 import { classDefinition } from '../class-definition.js';
 import { $global } from '../framework-bootstrap.js';
-import { UAParser } from 'ua-parser-js';
+import 'ua-parser-js';
+// MUST_DO: ModernAria: Either find a ESM bundle of UA-Parser or wait for bundle implementations and remove this line
+const UAParser = $global.UAParser;
 
 /**
  * Wraps the use of ua-parser.js to provide its results, and some utilities to analyze them.

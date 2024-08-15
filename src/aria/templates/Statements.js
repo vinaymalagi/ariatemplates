@@ -501,7 +501,7 @@ export const Statements = classDefinition({
                     // out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
                     out.addDependency({
                       importType: 'SideEffect',
-                      modulepath: 'ariatemplates/aria/templates/Repeater.js' // dependency on the Repeater object
+                      modulePath: 'ariatemplates/aria/templates/Repeater.js' // dependency on the Repeater object
                     });
                     out.writeln("this.__$statementRepeater(", statement.lineNumber, ",(", param, "));");
                 }

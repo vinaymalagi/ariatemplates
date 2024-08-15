@@ -22,7 +22,7 @@ import { classDefinition } from '../core/class-definition.js';
 // ----------------------
 import { ITemplate } from './ITemplate.js';
 import { BaseTemplate } from './BaseTemplate.js';
-import { UtilsJson } from '../utils/Json.js';
+import { Json as UtilsJson } from '../utils/Json.js';
 
 // --------------------
 // MUST_DO: ModernAria: Implement Contextual menu Environment and dynamic loading of contextual menu itself

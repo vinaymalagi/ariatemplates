@@ -13,5 +13,5 @@ import { loadInterface } from './Interfaces.js';
  * </pre>
  */
 export function interfaceDefinition(def) {
-  loadInterface(def);
+  return loadInterface(def);
 }

@@ -16,7 +16,7 @@ import { classDefinition } from '../core/class-definition.js';
 import './CfgBeans.js';
 import { trim } from '../utils/String.js';
 import {ICSS as ariaTemplatesICSS} from './ICSS.js';
-import { BaseContext as ariaTemplatesBaseCtxt } from './BaseCtxt.js';
+import { BaseCtxt as ariaTemplatesBaseCtxt } from './BaseCtxt.js';
 import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 import { AppEnvironment as ariaCoreAppEnvironment} from '../core/AppEnvironment.js';
 import { getClassInstance } from '../core/class-registry.js';

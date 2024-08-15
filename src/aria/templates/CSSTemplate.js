@@ -19,7 +19,7 @@ import { ICSS } from './ICSS.js';
 /**
  * Even if not used in this class, the CSSMgr is needed in order to allow a CSSTemplate to be registered
  */
-import "./CSSMgr";
+import "./CSSMgr.js";
 
 /**
  * Base class from which all CSS templates inherit.

@@ -27,7 +27,7 @@ import { CSSMgr as ariaTemplatesCSSMgr } from "./CSSMgr.js";
 import { Delegate as ariaUtilsDelegate } from "../utils/Delegate.js";
 import { NavigationManager as ariaTemplatesNavigationManager } from "./NavigationManager.js";
 import { SectionWrapper as ariaTemplatesSectionWrapper } from "./SectionWrapper.js";
-import "../core/environment/Customizations.js";
+// import "../core/environment/Customizations.js";
 import { UtilsDom as ariaUtilsDom } from "../utils/Dom.js";
 import { DomElementWrapper as ariaTemplatesDomElementWrapper } from "./DomElementWrapper.js";
 import { MarkupWriter as ariaTemplatesMarkupWriter } from "./MarkupWriter.js";
@@ -38,7 +38,7 @@ import { BaseCtxt as ariaTemplatesBaseCtxt } from "./BaseCtxt.js";
 import { Json as ariaUtilsJson } from "../utils/Json.js";
 // NOT_IMPLEMENTABLE: ModernAria: Module loading and caching done by browser, no control available.
 // var ariaCoreCache = require("../core/Cache");
-import { TplClassLoader as ariaCoreTplClassLoader } from "../core/TplClassLoader.js";
+import { TplClassLoader as ariaCoreTplClassLoader } from "./TplClassLoader.js";
 import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
 
 

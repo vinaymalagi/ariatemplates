@@ -92,7 +92,7 @@ export const $singletonInstanceFactoryRegistry = new Map();
  */
 export function getClassRef(classpath) {
   if (typeof classpath === "string") {
-    return $classOrInterfaceRefRegistry.get($classOrInterfaceRefRegistry);
+    return $classOrInterfaceRefRegistry.get(classpath);
   } else {
     if (!classpath.classDefinition && !classpath.interfaceDefinition) {
       // Note: ModernAria: classpath has classDefinition or interfaceDefinition hence must be a constructor

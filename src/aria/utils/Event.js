@@ -22,8 +22,9 @@ import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
 import { Browser as ariaCoreBrowser } from '../core/Browser.js';
 import { getClassRef } from '../core/class-registry.js';
 import { UtilsCallback as ariaUtilsCallback } from './Callback.js';
-import { isObject } from './Type.js';
+import { isFunction, isObject, isString } from './Type.js';
 import { emptyFn } from '../common/fixed-return-value-functions.js';
+import { isHTMLElement } from './html-helpers.js';
 
 
 
@@ -180,10 +181,10 @@ export const UtilsEvent = classDefinition({
       element = normalized.element;
       event = normalized.event;
 
-      if (!this.typesUtil.isFunction(callback)) {
+      if (!isFunction(callback)) {
         useCapture = scope;
       }
-      var capture = ((event == FOCUSIN || event == FOCUSOUT) && !this.UA.ie) ? true : useCapture;
+      var capture = ((event == FOCUSIN || event == FOCUSOUT) && !ariaCoreBrowser.ie) ? true : useCapture;
       return this._addListener(element, this._getType(event), callback, scope, args, capture);
 
     },
@@ -235,7 +236,7 @@ export const UtilsEvent = classDefinition({
         return ok;
       }
 
-      if (this.typesUtil.isString(element)) {
+      if (isString(element)) {
         var oElement = FRAMEWORK_GLOBALS.$window.document.getElementById(element);
         if (!oElement) {
           this.$logError(this.INVALID_TARGET, [element, event]);
@@ -247,14 +248,14 @@ export const UtilsEvent = classDefinition({
         element = oElement;
       }
 
-      if (!this.typesUtil.isHTMLElement(element)) {
+      if (!isHTMLElement(element)) {
         // Element should be an html element
         return false;
       }
 
       var handler = callback;
       if (!callback.$Callback) {
-        if (!handler.fn || !this.typesUtil.isFunction(handler.fn)) {
+        if (!handler.fn || !isFunction(handler.fn)) {
           return false;
         }
         if (!handler.scope) {
@@ -445,11 +446,11 @@ export const UtilsEvent = classDefinition({
         event: event
       };
       if ('mousewheel' == event) {
-        if (this.UA.isIE) {
+        if (ariaCoreBrowser.isIE) {
           if (element == FRAMEWORK_GLOBALS.$window) {
             normalized.element = element.document;
           }
-        } else if (!(this.UA.isOpera || this.UA.isSafari || this.UA.isWebkit)) {
+        } else if (!(ariaCoreBrowser.isOpera || ariaCoreBrowser.isSafari || ariaCoreBrowser.isWebkit)) {
           normalized.event = 'DOMMouseScroll';
         }
       }
@@ -476,7 +477,7 @@ export const UtilsEvent = classDefinition({
       event = this._getType(event);
 
       // The element argument can be a string
-      if (this.typesUtil.isString(element)) {
+      if (isString(element)) {
         element = FRAMEWORK_GLOBALS.$window.document.getElementById(element);
         if (!element) {
           return false;
@@ -572,7 +573,7 @@ export const UtilsEvent = classDefinition({
       var cbCheck;
       for (var i = 0, l = a.length; i < l; i = i + 1) {
         var li = a[i];
-        if (li && this.typesUtil.isObject(li[FN]) && !li[FN].$Callback) {
+        if (li && isObject(li[FN]) && !li[FN].$Callback) {
           cbCheck = ("fn" in callback) && (li[FN].fn == callback.fn);
         } else {
           cbCheck = (li[FN] == callback);
@@ -617,7 +618,7 @@ export const UtilsEvent = classDefinition({
      * @param {String} event optional type of listener to purge. If left out, all listeners will be removed
      */
     purgeElement: function (element, recurse, event) {
-      var oElement = (this.typesUtil.isString(element))
+      var oElement = (isString(element))
         ? FRAMEWORK_GLOBALS.$window.document.getElementById(element)
         : element;
       var elementListeners = this.getListeners(oElement, event), i, len;
@@ -663,7 +664,7 @@ export const UtilsEvent = classDefinition({
         searchLists = [listeners];
       }
 
-      var oElement = (this.typesUtil.isString(element))
+      var oElement = (isString(element))
         ? FRAMEWORK_GLOBALS.$window.document.getElementById(element)
         : element;
 

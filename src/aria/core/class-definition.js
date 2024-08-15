@@ -4,7 +4,7 @@ import { isJsReservedWord } from '../utils/js-name-checks.js';
 import { applyInterface, disposeInterfaces, getInterface } from './Interfaces.js';
 import { $classDefinitions, $classOrInterfaceRefRegistry, getClassRef } from './class-registry.js';
 import { __mergeEvents, copyObject } from './definition-utils.js';
-import { BASE_CLASS_UNDEFINED, CANNOT_EXTEND_SINGLETON, DUPLICATE_CLASSNAME, EXPECT_CLASS_DEFINITION, FUNCTION_PROTOTYPE_RETURN_NULL, INCOHERENT_CLASSPATH, INVALID_CLASSNAME_FORMAT, INVALID_CLASSNAME_RESERVED, INVALID_DEFCLASSPATH, INVALID_INTERFACES, INVALID_PACKAGENAME_FORMAT, INVALID_PACKAGENAME_RESERVED, NULL_CLASSPATH, NULL_PARAMETER, PARENT_NOTCALLED, RESOURCES_HANDLE_CONFLICT, TEXT_TEMPLATE_HANDLE_CONFLICT, WRONG_BASE_CLASS, WRONGPARENT_CALLED } from './error-messages.js';
+import { BASE_CLASS_UNDEFINED, CANNOT_EXTEND_SINGLETON, DUPLICATE_CLASSNAME, EXPECT_CLASS_DEFINITION, FUNCTION_PROTOTYPE_RETURN_NULL, INCOHERENT_CLASSPATH, INVALID_CLASSNAME_FORMAT, INVALID_CLASSNAME_RESERVED, INVALID_DEFCLASSPATH, INVALID_INTERFACES, INVALID_PACKAGENAME_FORMAT, INVALID_PACKAGENAME_RESERVED, NULL_CLASSPATH, NULL_PARAMETER, PARENT_NOTCALLED, RESOURCES_HANDLE_CONFLICT, TEXT_TEMPLATE_HANDLE_CONFLICT, TPLSCRIPT_INSTANTIATED_DIRECTLY, WRONG_BASE_CLASS, WRONGPARENT_CALLED } from './error-messages.js';
 import { $global, $logError, $logInfo, FRAMEWORK_GLOBALS, FRAMEWORK_LOGGER, FRAMEWORK_PREFIX, memCheckMode } from './framework-bootstrap.js';
 
 
@@ -1674,4 +1674,25 @@ function normalizeClassDefinition(def) {
 
   def.$noargConstructor = new Function();
 
+}
+
+
+export function tplScriptDefinition(def) {
+  return classDefinition({
+    $classpath : def.$classpath,
+    $dependencies : def.$dependencies,
+    $resources : def.$resources,
+    $statics : def.$statics,
+    $texts : def.$texts,
+    $prototype : def.$prototype,
+    $onload : function (constructor) {
+        constructor.tplScriptDefinition = def;
+    },
+    $constructor : function () {
+        // This is to prevent direct instantiation of template scripts.
+        // Yet it is still possible do define $constructor and $destructor on template scripts, as they will be
+        // imported later on in TplClassLoader._importScriptPrototype()
+        this.$logError(TPLSCRIPT_INSTANTIATED_DIRECTLY);
+    }
+});
 }

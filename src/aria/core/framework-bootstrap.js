@@ -56,6 +56,10 @@ export const FRAMEWORK_GLOBALS = {
  */
 export const minSizeMode = ARIA_OVERRIDE_LAUNCH_SETTINGS.minSizeMode === true;
 
+console.log(`Import Meta URL: ${import.meta.url}`);
+// MUST_DO: ModernAria: Root folder path Using
+export const rootFolderPath = ARIA_OVERRIDE_LAUNCH_SETTINGS.rootFolderPath || ($frameworkWindow && $frameworkWindow.location.protocol + "//" + $frameworkWindow.location.host + "/") || undefined;
+
 
 
 

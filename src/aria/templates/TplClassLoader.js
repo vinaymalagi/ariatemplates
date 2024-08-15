@@ -12,15 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { classDefinition } from './class-definition.js';
-import { JsObject as ariaCoreJsObject } from './class-definition.js';
-import { Browser as ariaCoreBrowser } from './Browser.js';
-import { JsonValidator as ariaCoreJsonValidator } from './JsonValidator.js';
+import { classDefinition, JsObject as ariaCoreJsObject } from '../core/class-definition.js';
+import { Browser as ariaCoreBrowser } from '../core/Browser.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 import { getClassRef } from '../core/class-registry.js';
 import { FRAMEWORK_GLOBALS, minSizeMode } from '../core/framework-bootstrap.js';
 import { copyObject } from '../core/definition-utils.js';
 import { DUPLICATE_CLASSNAME, RESOURCES_HANDLE_CONFLICT, TEXT_TEMPLATE_HANDLE_CONFLICT } from '../core/error-messages.js';
 import { emptyFn } from '../common/fixed-return-value-functions.js';
+import './CSSMgr.js';
+import './GlobalStyle.tpl.css.js';
+import './TemplateCtxt.js';
 
     /**
      * Display an error in the template container and call the callback notifying the error.
@@ -166,12 +168,11 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
         }
         // MUST_CHECK: ModernAria: Does CSS loader do anything else apart from compiling CSS template to class and loading it?
         // var cssToReload = ['aria.templates.GlobalStyle'];
-        classes.push(import('./GlobalStyle.js'));
+        classes.push(import('./GlobalStyle.tpl.css.js'));
         const ariaWidgetsAriaSkin = getClassRef('aria.widgets.AriaSkin');
         if (ariaWidgetsAriaSkin) {
             // MUST_CHECK: ModernAria: Does CSS loader do anything else apart from compiling CSS template to class and loading it?
             // cssToReload.push('aria.templates.LegacyGeneralStyle');
-            classes.push(import('./GlobalStyle.tpl.css.js'));
             classes.push(import('./LegacyGeneralStyle.tpl.css.js'));
         }
         if (cfg.reload) {
@@ -229,7 +230,7 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
           // eslint-disable-next-line no-invalid-this
           () => {__loadTemplate2.call(this, args);}, //On fulfilled
           // eslint-disable-next-line no-invalid-this
-          () => {errorInTemplateDiv.call(this, args);} //On rejected
+          (e) => {console.log(e); errorInTemplateDiv.call(this, args);} //On rejected
         );
         // Aria.load({
         //     classes : classes,
@@ -261,7 +262,8 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
         $classpath : "aria.templates.TplClassLoader",
         // $extends : (require("./ClassLoader")),
         $onload : function () {
-            var cstr = TplClassLoader;
+            // MUST_CHECK: ModernAria: Is this still needed? can be added after class definition call ends?
+            var cstr = getClassRef('aria.templates.TplClassLoader');
             // TODO: think to something more elegant here:
             // To be able to call the $callback function from a static method
             cstr.$callback = ariaCoreJsObject.prototype.$callback;
