@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesTplParser = require("./TplParser");
-var ariaTemplatesTplClassGenerator = require("./TplClassGenerator");
-var ariaTemplatesClassGenerator = require("./ClassGenerator");
+import { classDefinition } from "../core/class-definition.js";
+import { TplParser as ariaTemplatesTplParser } from "./TplParser.js";
+import { TplClassGenerator as ariaTemplatesTplClassGenerator } from "./TplClassGenerator.js";
+import { ClassGenerator as ariaTemplatesClassGenerator } from "./ClassGenerator.js";
 
 
 /**
  * Generate the class definition for an HTML Template library
  * @class aria.templates.TmlClassGenerator
  */
-module.exports = Aria.classDefinition({
+export const TmlClassGenerator = classDefinition({
     $classpath : 'aria.templates.TmlClassGenerator',
     $extends : ariaTemplatesClassGenerator,
     $singleton : true,
@@ -36,7 +36,7 @@ module.exports = Aria.classDefinition({
         this._parser = ariaTemplatesTplParser;
 
         // Redefine the class used as the parent for templates which do not inherit from any other template
-        this._superClass = "aria.templates.Template";
+        this._superClassImportSpec = { importType: 'Named', modulePath: 'ariatemplates/aria/templates/Template.js', name: 'Template', alias: 'ariaTemplatesTemplate', classpath: 'aria.templates.Template' };
 
         this._classType = "TML";
         this._rootStatement = "Library";

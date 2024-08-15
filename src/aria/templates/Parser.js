@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsString = require("../utils/String");
+import { classDefinition } from "../core/class-definition.js";
+import { isEscaped, indexOfNotEscaped, nextWhiteSpace } from "../utils/String.js";
 
 /**
  * Template parser: builds a tree of type aria.templates.TreeBeans.Root from a template string.
  */
-module.exports = Aria.classDefinition({
+export const Parser = classDefinition({
     $classpath : "aria.templates.Parser",
     $singleton : false,
     $constructor : function () {
@@ -61,6 +61,7 @@ module.exports = Aria.classDefinition({
          * Parse the given template and return a tree representing the template. This is an abstract method and is
          * implemented by the subclasses aria.templates.TplParser and aria.templates.CSSParser
          */
+        // eslint-disable-next-line no-unused-vars
         parseTemplate : function (template, context, statements, throwErrors) {},
 
         /**
@@ -81,7 +82,7 @@ module.exports = Aria.classDefinition({
 
             var cdataSplit = template.split("{CDATA}"), parts = [], cdataParts;
             parts.push(cdataSplit[0]);
-            for (var index = 1, l = cdataSplit.length; index < l; index++) {
+            for (let index = 1, l = cdataSplit.length; index < l; index++) {
                 cdataParts = cdataSplit[index].split("{/CDATA}");
                 if (cdataParts.length != 2) {
                     this.logOrThrowError(this.MISSING_CLOSING_STATEMENT, ["CDATA"], this.context, throwErrors);
@@ -92,12 +93,13 @@ module.exports = Aria.classDefinition({
             }
 
             // one on two is outside cdata -> remove comments and spaces
-            for (var index2 = 0, l = parts.length, tplFragment, match; index2 < l; index2++) {
+            for (let index2 = 0, l = parts.length, tplFragment, match; index2 < l; index2++) {
                 tplFragment = parts[index2];
                 if (index2 % 2 === 0) {
 
                     // Replace multi line comments with empty lines
                     var multiLineCommentRegEx = /\/\*(.|\n|\r)*?\*\//m;
+                    // eslint-disable-next-line no-cond-assign
                     while (match = tplFragment.match(multiLineCommentRegEx)) {
                         match = match + "";
                         var newLines = "";
@@ -114,7 +116,7 @@ module.exports = Aria.classDefinition({
                     // to avoid misinterpretation of links.
                     // For quotes, do a positive lookahead to see that we have
                     // an even number of double quotes on the rest of the line
-                    tplFragment = tplFragment.replace(/([\s\;\}\>\{\,\(])\/\/(?=(?:(?:[^"]*"){2})*[^"]*$).*$/gm, "$1");
+                    tplFragment = tplFragment.replace(/([\s;}>{,(])\/\/(?=(?:(?:[^"]*"){2})*[^"]*$).*$/gm, "$1");
 
                     if (!this._keepWhiteSpace) {
                         tplFragment = tplFragment.replace(/^[ \t]+/gm, ""); // remove spaces at the begining of each
@@ -185,13 +187,12 @@ module.exports = Aria.classDefinition({
          */
         __findClosingBraces : function (str, start) {
             var cursorPos = start, nbrOfBlockOpened = 0, nextBlockBegin = -1, nextBlockEnd = -1;
-            var utilString = ariaUtilsString;
             do {
                 if (nextBlockBegin < cursorPos) {
-                    nextBlockBegin = utilString.indexOfNotEscaped(str, '{', cursorPos);
+                    nextBlockBegin = indexOfNotEscaped(str, '{', cursorPos);
                 }
                 if (nextBlockEnd < cursorPos) {
-                    nextBlockEnd = utilString.indexOfNotEscaped(str, '}', cursorPos);
+                    nextBlockEnd = indexOfNotEscaped(str, '}', cursorPos);
                 }
                 if (nextBlockBegin > -1 && nextBlockBegin < nextBlockEnd) {
                     nbrOfBlockOpened++;
@@ -226,7 +227,7 @@ module.exports = Aria.classDefinition({
             res = res.replace(/^[\r\n]+/, ''); // remove new lines at the begining and
             res = res.replace(/[\r\n]+$/, ''); // the end of the param
             // find each \ character followed by $ { } / \ * and suppress the first \ character
-            res = res.replace(/\\([\/\{\}\$\\*])/g, "$1");
+            res = res.replace(/\\([/{}$\\*])/g, "$1");
             return res;
         },
 
@@ -245,7 +246,7 @@ module.exports = Aria.classDefinition({
             }
             // don't remove new lines
             // find each \ character followed by $ { } / \ * and suppress the first \ character
-            res = res.replace(/\\([\/\{\}\$\\*])/g, "$1");
+            res = res.replace(/\\([/{}$\\*])/g, "$1");
             return res;
         },
 
@@ -289,11 +290,11 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _buildTree : function (throwErrors) {
-            var utilString = ariaUtilsString;
+
             this.__currentLn = 0;
             var tpl = this.template, begin = 0, // start of the current block
             end = 0, // end of the current block
-            index = utilString.indexOfNotEscaped(tpl, '{'), // next index of { or }
+            index = indexOfNotEscaped(tpl, '{'), // next index of { or }
             dollar = false, curStatement, curContainer = [], res = {
                 name : "#ROOT#",
                 paramBlock : "",
@@ -303,7 +304,7 @@ module.exports = Aria.classDefinition({
                 source: tpl
             }, stack = [res]; // stack of content containers
             while (index != -1) {
-                dollar = (tpl.charAt(index - 1) == "$" && !utilString.isEscaped(tpl, index - 1));
+                dollar = (tpl.charAt(index - 1) == "$" && !isEscaped(tpl, index - 1));
                 end = dollar ? index - 1 : index;
                 if (end - begin > 0) {
                     curStatement = {
@@ -363,7 +364,7 @@ module.exports = Aria.classDefinition({
                         closingStatement = null;
                     } else {
                         var nextBegin = end + 1, singleStatement = tpl.charAt(end - 1) == '/'
-                                && !utilString.isEscaped(tpl, end - 1), statementName, firstCharParamIndex;
+                                && !isEscaped(tpl, end - 1), statementName, firstCharParamIndex;
 
                         // adjust end index for singleStatement (remove one char for the /)
                         if (singleStatement) {
@@ -376,7 +377,7 @@ module.exports = Aria.classDefinition({
                         };
                         curContainer.push(curStatement);
 
-                        firstCharParamIndex = utilString.nextWhiteSpace(tpl, begin, end, /[\s\{]/);
+                        firstCharParamIndex = nextWhiteSpace(tpl, begin, end, /[\s{]/);
                         if (firstCharParamIndex == -1) {
                             firstCharParamIndex = end; // empty parameter
                             statementName = tpl.substring(begin, end);
@@ -414,7 +415,7 @@ module.exports = Aria.classDefinition({
                             var cdataEnd = tpl.indexOf("{/CDATA}");
                             if (cdataEnd != -1) {
                                 curStatement.paramBlock = tpl.substring(end + 1, cdataEnd);
-                                var info = this.__findClosingBraces(tpl, cdataEnd + 1);
+                                const info = this.__findClosingBraces(tpl, cdataEnd + 1);
                                 begin = info.indexClose + 1;
                                 index = info.indexOpen;
                             } else {

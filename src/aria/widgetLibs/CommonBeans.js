@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonTypes = require("../core/JsonTypes");
+import { beanDefinitions } from '../core/bean-definitions.js';
+import ariaCoreJsonTypes from '../core/JsonTypes.js';
 
 
 /**
  * Configuration Beans that can be shared among different widget libraries
  */
-module.exports = Aria.beanDefinitions({
+export const CommonBeans = beanDefinitions({
     $package : "aria.widgetLibs.CommonBeans",
     $description : "Configuration Beans that can be shared among different widget libraries",
     $namespaces : {

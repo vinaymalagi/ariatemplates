@@ -15,14 +15,16 @@
 
 {CSSTemplate {
     $classpath : "aria.templates.LegacyGeneralStyle",
-    $dependencies : ["aria.widgets.AriaSkinInterface"],
+    $dependencies : [
+      {importType: 'Default', modulePath: '../widgets/AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'}
+    ],
     $csslibs : {
-        text : "aria.widgets.TextStyle"
+      text : {importType: 'SideEffect', modulePath: '../widgets/TextStyle.cml.js', classpath: 'aria.widgets.TextStyle'}
     }
 }}
 
 {macro main()}
-    {var general = aria.widgets.AriaSkinInterface.getGeneral() /}
+    {var general = ariaWidgetsAriaSkinInterface.getGeneral() /}
     {call writeGeneralStyle(general) /}
 {/macro}
 

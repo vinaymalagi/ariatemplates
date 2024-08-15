@@ -12,22 +12,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaWidgetLibsWidgetLib = require("../widgetLibs/WidgetLib");
+import { classDefinition } from '../core/class-definition.js';
+import { WidgetLib as ariaWidgetLibsWidgetLib } from '../widgetLibs/WidgetLib.js';
 
 
-module.exports = Aria.classDefinition({
+export const HtmlLibrary = classDefinition({
     $classpath : "aria.html.HtmlLibrary",
     $extends : ariaWidgetLibsWidgetLib,
     $singleton : true,
     $prototype : {
         widgets : {
-            "TextInput" : "aria.html.TextInput",
-            "TextArea" : "aria.html.TextArea",
-            "Template" : "aria.html.Template",
-            "CheckBox" : "aria.html.CheckBox",
-            "RadioButton" : "aria.html.RadioButton",
-            "Select" : "aria.html.Select"
+            "TextInput" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/TextInput.js",
+              name: "TextInput",
+              alias: "ariaHtmlTextInput",
+              classpath: "aria.html.TextInput"
+            },
+            "TextArea" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/TextArea.js",
+              name: "TextArea",
+              alias: "ariaHtmlTextArea",
+              classpath: "aria.html.TextArea"
+            },
+            "Template" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/Template.js",
+              name: "Template",
+              alias: "ariaHtmlTemplate",
+              classpath: "aria.html.Template"
+            },
+            "CheckBox" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/CheckBox.js",
+              name: "CheckBox",
+              alias: "ariaHtmlCheckBox",
+              classpath: "aria.html.CheckBox"
+            },
+            "RadioButton" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/RadioButton.js",
+              name: "RadioButton",
+              alias: "ariaHtmlRadioButton",
+              classpath: "aria.html.RadioButton"
+            },
+            "Select" : {
+              importType: "Named",
+              modulePath: "ariatemplates/aria/html/Select.js",
+              name: "Select",
+              alias: "ariaHtmlSelect",
+              classpath: "aria.html.Select"
+            }
         }
     }
 });

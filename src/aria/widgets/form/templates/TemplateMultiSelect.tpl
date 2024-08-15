@@ -16,7 +16,7 @@
 // Default template for List Widget
 {Template {
     $classpath:'aria.widgets.form.templates.TemplateMultiSelect',
-    $hasScript:true,
+    $script: {importType: 'Default', modulePath: './TemplateMultiSelectScript.js', name: 'AriaWidgetsFormTemplatesTemplateMultiSelectScript', classpath: 'aria.widgets.form.templates.TemplateMultiSelectScript'},
     $res:{
       footerRes : 'aria.resources.multiselect.FooterRes'
     }

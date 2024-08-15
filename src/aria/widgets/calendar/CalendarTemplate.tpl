@@ -15,7 +15,7 @@
 
 {Template {
     $classpath: "aria.widgets.calendar.CalendarTemplate",
-    $hasScript: true,
+    $script: {importType: 'Default', modulePath: './CalendarTemplateScript.js', name: 'ariaWidgetsCalendarCalendarTemplateScript', classpath: 'aria.widgets.calendar.CalendarTemplateScript'},
     $res: {
         res:"aria.resources.CalendarRes"
     }

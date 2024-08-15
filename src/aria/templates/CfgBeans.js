@@ -27,25 +27,127 @@ export const TemplatesCfgBeans = beanDefinitions({
     "coreBeans": CoreCfgBeans
   },
   $beans: {
+    "BaseImportDependencySpecCfg": {
+      $type: "json:Object",
+      $description: "Base Spec to define import statements for a dependency. This is an abstract base type and actual import string will be defined by the subtypes.",
+      $properties: {
+        "modulePath": {
+          $type: "json:String",
+          $description: "Path to the module, to import item from. This is the part after 'from'",
+          $mandatory: true
+        },
+        "importType": {
+          $type: "json:Enum",
+          $enumValues: ['Named', 'Default', 'Namespace', 'SideEffect'],
+          $description: "How the required module is imported as detailed at https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#forms_of_import_declarations",
+          $mandatory: true
+        },
+        "classpath": {
+          $type: "json:PackageName",
+          $description: "Classpath of the dependency. Needed to generate calls to superclass constructor/destructor.",
+        }
+      }
+    },
+    "BaseImportDependencySpecWithClasspathCfg": {
+      // MUST_CHECK: ModernAria: Come up with bean def design for a classpath mandatory version of all *ImportSpecCfg beans.
+      // MUST_DO: ModernAria: Come up with bean def design for a classpath mandatory version of all *ImportSpecCfg beans.
+      $type: "json:Object",
+      $description: "Same as BaseImportDependencySpecCfg but with classpath mandatory.",
+      $properties: {
+        "modulePath": {
+          $type: "json:String",
+          $description: "Path to the module, to import item from. This is the part after 'from'",
+          $mandatory: true
+        },
+        "importType": {
+          $type: "json:Enum",
+          $enumValues: ['Named', 'Default', 'Namespace', 'SideEffect'],
+          $description: "How the required module is imported as detailed at https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#forms_of_import_declarations",
+          $mandatory: true
+        },
+        "classpath": {
+          $type: "json:PackageName",
+          $description: "Classpath of the dependency. Needed to generate calls to superclass constructor/destructor.",
+          $mandatory: true
+        }
+      }
+    },
+    "NamedImportSpecCfg": {
+      $type: "BaseImportDependencySpecCfg",
+      $description: "Spec to generate a named import statement for a dependency (format import {<name> as <alia>} from <modulePath>). Refer to the imported property by alias when present, or by name otherwise.",
+      $properties: {
+        "name": {
+          $type: "json:String",
+          $description: "The name of the exported property to import. When alias is not present, the template code should refer to the imported property by this name.",
+          $mandatory: true
+        },
+        "alias": {
+          $type: "json:String",
+          $description: "Alias for the imported property. This is the variable that is to be used to refer to the imported property in rest of the code when present."
+        }
+      }
+    },
+    "DefaultImportSpecCfg": {
+      $type: "BaseImportDependencySpecCfg",
+      $description: "For importing a default export from a module (format generated import <name> from <modulePath>). The imported property can be referred to by the name.",
+      $properties: {
+        "name": {
+          $type: "json:String",
+          $description: "The name of the exported property to import. The template code should refer to the imported property by this name.",
+          $mandatory: true
+        }
+      }
+    },
+    "NamespaceImportSpecCfg": {
+      $type: "BaseImportDependencySpecCfg",
+      $description: "For importing all named exports from a module and accessing with a namespace name. Generated import string \"import * as <namespace> from '<modulePath>'\".",
+      $properties: {
+        "namespace": {
+          $type: "json:String",
+          $description: "Name for the namespace. The template code should refer to imports from the module by <name>.<exportedName>.",
+          $mandatory: true
+        }
+      }
+    },
+    "SideEffectImportSpecCfg": {
+      $type: "BaseImportDependencySpecCfg",
+      $description: "Spec to generate a side effect import statement. Used when a module is imported only for its side effects, and not for any of its exports. Generated import string \"import '<modulePath>'\".",
+      $properties: {}
+    },
+    "NamedOrDefaultImportSpecCfg": {
+      $type: "json:MultiTypes",
+      $description: "When import spec required should either be a Named or Default import spec",
+      $contentTypes: [{
+        $type: "NamedImportSpecCfg",
+        $description: "Named import spec for the dependency."
+      }, {
+        $type: "DefaultImportSpecCfg",
+        $description: "Default import spec for the dependency."
+      }]
+    },
     "ClassGeneratorCfg": {
       $type: "json:Object",
       $description: "Options for the class generator.",
       $properties: {
         "parseOnly": {
           $type: "json:Boolean",
-          $description: "If true, the class will not be generated, but the template will be fully parsed, including all statement properties."
+          $description: "If true, the class will not be generated, but the template will be fully parsed, including all statement properties.",
+          default: false
         },
         "dontLoadWidgetLibs": {
           $type: "json:Boolean",
-          $description: "If true, widget libraries referenced in the template will not be loaded during the class generation process, which is convenient if they are not available at that time. However, as a result, there will probably be missing dependencies in the generated class."
+          $description: "If true, widget libraries referenced in the template will not be loaded during the class generation process, which is convenient if they are not available at that time. However, as a result, there will probably be missing dependencies in the generated class.",
+          $default: false
         },
         "allDependencies": {
           $type: "json:Boolean",
-          $description: "If true, all dependencies should be included in the generated class, otherwise only classes which are not currently loaded are added as dependencies of the generated class."
+          $description: "If true, all dependencies should be included in the generated class, otherwise only classes which are not currently loaded are added as dependencies of the generated class.",
+          $default: true
         },
         "debug": {
           $type: "json:Boolean",
-          $description: "If true, extra code is added in the generated class to help debugging."
+          $description: "If true, extra code is added in the generated class to help debugging.",
+          $default: false
         },
         "errorContext": {
           $type: "json:ObjectRef",
@@ -53,7 +155,40 @@ export const TemplatesCfgBeans = beanDefinitions({
         },
         "skipLogError": {
           $type: "json:Boolean",
-          $description: "If true, passes the errors to the callback instead of logging them with $logError."
+          $description: "If true, passes the errors to the callback instead of logging them with $logError.",
+          $default: true
+        },
+        "escapeHtmlByDefault": {
+          $type: "json:Boolean",
+          $description: "If true, ensures default escape modifier for the class generator type is called for all expressions.",
+        },
+        "allowSectionsAsContainers": {
+          $type: "json:Boolean",
+          $description: "Indicates whether sections can be used as containers ({section {...}}...{/section}) in templates",
+          $default: false
+        },
+        "sourceFilePath": {
+          $type: "json:String",
+          $description: "Path of the source file being processed.",
+          $mandatory: true
+        },
+        "isInternalAriatemplatesBuild": {
+          $type: "json:Boolean",
+          $description: "If true, the build is for internal templates in AriaTemplates, and the generated class will modify the import module path to be relative to internal paths.",
+          $default: false
+        },
+        "sourcesRootDirectory": {
+          $type: "json:String",
+          $description: "Path to the root source directory. For internal ariatemplates build, this is necessary to generate correct import paths."
+        },
+        "defaultWidgetLibsImportSpecs": {
+          $type: "json:Map",
+          $description : "Widget libraries to be available by default in all templates. The key in the map is the prefix used inside the template to refer to that widget library. The value is the import spec for the library file. The settings in the environment can be overridden in templates if the same key is used. See also the $wlibs property of the {Template} statement in aria.templates.CfgBeans.TemplateCfg.$wlibs.",
+          $contentType: {
+            $type: "BaseImportDependencySpecWithClasspathCfg",
+            $description: "Import spec of the widget library with classpath."
+          }
+
         }
       }
     },
@@ -75,25 +210,37 @@ export const TemplatesCfgBeans = beanDefinitions({
           $description: "Additional dependencies",
           $default: [],
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Any class that the template is dependent of"
+            $type: "json:MultiTypes",
+            $description: "Import spec of the dependency.",
+            $contentTypes: [{
+              $type: "NamedImportSpecCfg",
+              $description: "Named import spec for the dependency."
+            }, {
+              $type: "DefaultImportSpecCfg",
+              $description: "Default import spec for the dependency."
+            }, {
+              $type: "NamespaceImportSpecCfg",
+              $description: "Namespace import spec for the dependency."
+            }, {
+              $type: "SideEffectImportSpecCfg",
+              $description: "Side effect import spec for the dependency."
+            }]
           }
         },
-        "$hasScript": {
-          $type: "json:Boolean",
-          $description: "Specifies whether a script is associated with the template. If this property is true, the script is a class declared with Aria.tplScriptDefinition whose classpath is the same as the one of the template, with the suffix Script added to the end.",
-          $default: false
+        "$script": {
+          $type: "NamedOrDefaultImportSpecCfg",
+          $description: "If a template has a script, then the import spec for the script. Can be only Default or Named import spec."
         },
         "$extends": {
-          $type: "json:PackageName",
-          $description: "Classpath of the parent template, if any."
+          $type: "NamedOrDefaultImportSpecCfg",
+          $description: "Import spec for the parent template, if any."
         },
         "$texts": {
           $type: "json:Map",
           $description: "Text templates used inside the Template",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the text template.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec for of the text template.",
             $mandatory: true
           }
         }
@@ -118,8 +265,8 @@ export const TemplatesCfgBeans = beanDefinitions({
           $type: "json:Map",
           $description: "Map of widget libraries used in the template. The key in the map is the prefix used inside the template to refer to that widget library. The value is the classpath of the library. The aria library is defined by default and refers to aria.widgets.AriaLib.",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the widget library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the widget library.",
             $sample: "aria.widgets.AriaLib",
             $mandatory: true
           },
@@ -139,24 +286,24 @@ export const TemplatesCfgBeans = beanDefinitions({
           $type: "json:Array",
           $description: "Template dependencies",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Any template that should be loaded before the template is loaded."
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default Import spec for any template that should be loaded before the template is loaded."
           }
         },
         "$css": {
           $type: "json:Array",
           $description: "CSS dependencies",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Any CSS template that should be loaded along with the template."
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec for any CSS template that should be loaded along with the template."
           }
         },
         "$macrolibs": {
           $type: "json:Map",
           $description: "Static macro libraries",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the macro library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the macro library.",
             $mandatory: true
           }
         }
@@ -175,8 +322,8 @@ export const TemplatesCfgBeans = beanDefinitions({
           $type: "json:Map",
           $description: "Map of widget libraries used in the library. The key in the map is the prefix used inside the library to refer to that widget library. The value is the classpath of the library. The aria library is defined by default and refers to aria.widgets.AriaLib.",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the widget library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the widget library.",
             $sample: "aria.widgets.AriaLib",
             $mandatory: true
           },
@@ -187,16 +334,16 @@ export const TemplatesCfgBeans = beanDefinitions({
           $description: "Library dependencies",
           $default: [],
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Any template that should be loaded before the library is loaded."
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec for any template that should be loaded before the library is loaded."
           }
         },
         "$macrolibs": {
           $type: "json:Map",
           $description: "Static macro libraries",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the macro library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the macro library.",
             $mandatory: true
           }
         },
@@ -220,8 +367,8 @@ export const TemplatesCfgBeans = beanDefinitions({
           $type: "json:Map",
           $description: "Static CSS macro libraries",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the CSS macro library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the CSS macro library.",
             $mandatory: true
           }
         },
@@ -240,8 +387,8 @@ export const TemplatesCfgBeans = beanDefinitions({
           $type: "json:Map",
           $description: "Static CSS macro libraries",
           $contentType: {
-            $type: "json:PackageName",
-            $description: "Classpath of the CSS macro library.",
+            $type: "NamedOrDefaultImportSpecCfg",
+            $description: "Named/Default import spec of the CSS macro library.",
             $mandatory: true
           }
         },

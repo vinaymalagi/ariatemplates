@@ -12,714 +12,770 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesClassWriter = require("./ClassWriter");
-require("./TreeBeans");
-require("./CfgBeans");
-var ariaTemplatesStatements = require("./Statements");
-require("./Modifiers");
-var ariaUtilsArray = require("../utils/Array");
-var ariaUtilsJson = require("../utils/Json");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var ariaCoreEnvironmentEnvironment = require("../core/environment/Environment");
+import { classDefinition } from "../core/class-definition.js";
+import { getLogicalPath } from "../core/framework-bootstrap.js";
+import { ariaEval } from "../core/js-eval.js";
+import { ClassWriter as ariaTemplatesClassWriter } from "./ClassWriter.js";
+import "./TreeBeans.js";
+import "./CfgBeans.js";
+import { Statements as ariaTemplatesStatements } from "./Statements.js";
+import "./Modifiers.js";
+import { extractValuesFromMap } from "../utils/Array.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
+import { getUsageAliasFromNamedOrDefaultImportSpec } from "./class-generator-utils.js";
 
-var normalizeOptions = function (optionsOrAllDeps, context, debug, skipLogError) {
-    var options = (typeof optionsOrAllDeps == "object") ? optionsOrAllDeps : {
-        allDependencies: optionsOrAllDeps,
-        errorContext: context,
-        debug: debug,
-        skipLogError: skipLogError
-    };
-    ariaCoreJsonValidator.check(options, "aria.templates.CfgBeans.ClassGeneratorCfg");
-    return options;
+var normalizeOptions = function (inputOptions, context, debug, skipLogError) {
+  const options ={
+    allDependencies: true,
+    ...(context !== undefined ? {errorContext: context}: {}),
+    ...(debug !== undefined ? {debug} : {}),
+    ...(skipLogError !== undefined ? {skipLogError} : {}),
+    ...(inputOptions || {})
+  };
+
+  ariaCoreJsonValidator.normalize({json: options, beanName: "aria.templates.CfgBeans.ClassGeneratorCfg"});
+  // ariaCoreJsonValidator.check(options, "aria.templates.CfgBeans.ClassGeneratorCfg");
+  return options;
 };
+
+const CLASS_DEFINITION_ALIAS_FOR_INTERNAL_IMPORTS = 'ariaCoreClassDefinition';
+const COPY_OBJECT_ALIAS_FOR_INTERNAL_IMPORTS = 'ariaCoreCopyObject';
 
 /**
  * The class generator is used to generate the class corresponding to a template. This class uses the tree from the
  * template parser, and generates a string containing the corresponding class definition. This is an abstract class and
  * is extended by the more specific classes aria.templates.TplClassGenerator and aria.templates.CSSClassGenerator
  */
-module.exports = Aria.classDefinition({
-    $classpath : "aria.templates.ClassGenerator",
-    $singleton : false,
-    $constructor : function () {
-        /**
-         * Parser. It convert the text to a tree representation.
-         * @type aria.templates.Parser
-         * @protected
-         */
-        this._parser = null;
+export const ClassGenerator = classDefinition({
+  $classpath: "aria.templates.ClassGenerator",
+  $singleton: false,
+  $constructor: function () {
+    /**
+     * Parser. It convert the text to a tree representation.
+     * @type aria.templates.Parser
+     * @protected
+     */
+    this._parser = null;
 
-        /**
-         * Super class to be used for templates with no parent.
-         * @type String
-         * @protected
-         */
-        this._superClass = null;
+    /**
+     * The import spec for the Super class to be used for templates with no parent.
+     * @type {aria.templates.CfgBeans:NamedOrDefaultImportSpecCfg} - Import spec for the super class, classpath is mandatory
+     * @protected
+     */
+    this._superClassImportSpec = null;
 
-        /**
-         * Class loader type to load templates of the same type (used for parent templates).
-         * @type String
-         * @protected
-         */
-        this._classType = null;
+    /**
+     * Class loader type to load templates of the same type (used for parent templates).
+     * @type String
+     * @protected
+     */
+    this._classType = null;
 
-        /**
-         * Expected root statement name.
-         * @type String
-         * @protected
-         */
-        this._rootStatement = null;
+    /**
+     * Expected root statement name.
+     * @type String
+     * @protected
+     */
+    this._rootStatement = null;
 
-        /**
-         * Template parameter bean.
-         * @type String
-         * @protected
-         */
-        this._templateParamBean = null;
+    /**
+     * Template parameter bean.
+     * @type String
+     * @protected
+     */
+    this._templateParamBean = null;
 
-        /**
-         * Map of statements. It is loaded by one of the descendant class
-         * @type Object
-         */
-        this.STATEMENTS = {};
+    /**
+     * Map of statements. It is loaded by one of the descendant class
+     * @type Object
+     */
+    this.STATEMENTS = {};
 
-        /**
-         * Map of all statements allowed
-         * @type Object
-         */
-        this.ALLSTATEMENTS = ariaTemplatesStatements.ALLSTATEMENTS;
+    /**
+     * Map of all statements allowed
+     * @type Object
+     */
+    this.ALLSTATEMENTS = ariaTemplatesStatements.ALLSTATEMENTS;
 
-        // Automatically load general statements:
-        this._loadStatements(["#ROOT#", "#TEXT#", "#CDATA#", "#EXPRESSION#", "if", "elseif", "else", "for", "foreach",
-                "separator", "var", "set", "checkDefault", "macro", "call", "memo"]);
+    // Automatically load general statements:
+    this._loadStatements(["#ROOT#", "#TEXT#", "#CDATA#", "#EXPRESSION#", "if", "elseif", "else", "for", "foreach",
+      "separator", "var", "set", "checkDefault", "macro", "call", "memo"]);
 
-        /**
-         * Track the debug state, used to insert extra statement to track runtime exceptions in debug mode
-         * @protected
-         * @type Boolean
-         */
-        this._isDebug = ariaCoreEnvironmentEnvironment.isDebug();
-        ariaCoreEnvironmentEnvironment.$on({
-            "debugChanged" : function () {
-                this._isDebug = ariaCoreEnvironmentEnvironment.isDebug();
-            },
-            scope : this
+    /**
+     * Track the debug state, used to insert extra statement to track runtime exceptions in debug mode
+     * @protected
+     * @type Boolean
+     */
+    this._isDebug = false;
+  },
+  $statics: {
+    // ERROR MESSAGES:
+    TEMPLATE_STATEMENT_EXPECTED: "Template error: please check that the whole template is enclosed in a '%1' statement.",
+    ERROR_IN_TEMPLATE_PARAMETER: "Template error, while evaluating the parameter of the '%1' statement.",
+    CHECK_ERROR_IN_TEMPLATE_PARAMETER: "Template error: the parameter of the '%1' statement does not respect the bean definition.",
+    EXTENDS_IMPORT_SPEC_DOES_NOT_HAVE_CLASSPATH: "Template error: $extends must be a \"Named\" or \"Default\" import spec, and must have a classpath.",
+    SCRIPT_IMPORT_SPEC_DOES_NOT_HAVE_CLASSPATH: "Template error: $script must be a \"Named\" or \"Default\" import spec, and must have a classpath.",
+    UNKNOWN_STATEMENT: "line %2: Template error: unknown statement '%1'.",
+    EXPECTED_CONTAINER: "line %2: Template error: statement '%1' must be used as a container.",
+    UNEXPECTED_CONTAINER: "line %2: Template error: statement '%1' cannot be used as a container.",
+    SHOULD_BE_OUT_OF_MACRO: "line %2: Template error: statement '%1' cannot be used in a macro.",
+    INVALID_STATEMENT_SYNTAX: "line %3: Template error: invalid parameter for statement '%1'; it should respect the regular expression %2."
+  },
+  $prototype: {
+    /**
+     * Parse the given template, and send the generated class definition to the callback function. The first
+     * parameter given to the callback function is: { classDef: {String} if null, errors occured during parsing or
+     * class generation; otherwise contains the generated class }
+     * @param {String} template the template
+     * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for the class generation.
+     * @param {aria.core.CfgBeans:Callback} callback the callback description
+     */
+    parseTemplate: function (template, inputOptions, callback, context, debug, skipLogError) {
+      var tree, errors;
+      var options = normalizeOptions(inputOptions, context, debug, skipLogError);
+      try {
+        tree = this._parser.parseTemplate(template, options.errorContext, this.STATEMENTS, options.skipLogError);
+      } catch (e) {
+        errors = e.errors || e;
+      }
+      if (tree == null) {
+        this.$callback(callback, {
+          classDef: null,
+          errors: errors || true
         });
+        return;
+      }
+      this.__buildClass(tree, options, callback);
     },
-    $statics : {
-        // ERROR MESSAGES:
-        TEMPLATE_STATEMENT_EXPECTED : "Template error: please check that the whole template is enclosed in a '%1' statement.",
-        ERROR_IN_TEMPLATE_PARAMETER : "Template error, while evaluating the parameter of the '%1' statement.",
-        CHECK_ERROR_IN_TEMPLATE_PARAMETER : "Template error: the parameter of the '%1' statement does not respect the bean definition.",
-        UNKNOWN_STATEMENT : "line %2: Template error: unknown statement '%1'.",
-        EXPECTED_CONTAINER : "line %2: Template error: statement '%1' must be used as a container.",
-        UNEXPECTED_CONTAINER : "line %2: Template error: statement '%1' cannot be used as a container.",
-        SHOULD_BE_OUT_OF_MACRO : "line %2: Template error: statement '%1' cannot be used in a macro.",
-        INVALID_STATEMENT_SYNTAX : "line %3: Template error: invalid parameter for statement '%1'; it should respect the regular expression %2."
+
+    /**
+     * Parse a debug template from the tree
+     * @param {aria.templates.TreeBeans:Root} tree tree returned by the parser.
+     * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for class generation.
+     * @param {aria.core.CfgBeans:Callback} callback callback the callback description
+     */
+    parseTemplateFromTree: function (tree, inputOptions, callback, context, debug, skipLogError) {
+      var options = normalizeOptions(inputOptions, context, debug, skipLogError);
+      this.__buildClass(tree, options, callback);
     },
-    $prototype : {
-        /**
-         * Parse the given template, and send the generated class definition to the callback function. The first
-         * parameter given to the callback function is: { classDef: {String} if null, errors occured during parsing or
-         * class generation; otherwise contains the generated class }
-         * @param {String} template the template
-         * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for the class generation.
-         * @param {aria.core.CfgBeans:Callback} callback the callback description
-         */
-        parseTemplate : function (template, optionsOrAllDeps, callback, context, debug, skipLogError) {
-            var tree, errors;
-            var options = normalizeOptions(optionsOrAllDeps, context, debug, skipLogError);
-            try {
-                tree = this._parser.parseTemplate(template, options.errorContext, this.STATEMENTS, options.skipLogError);
-            } catch (e) {
-                errors = e.errors || e;
-            }
-            if (tree == null) {
-                this.$callback(callback, {
-                    classDef : null,
-                    errors : errors || true
-                });
-                return;
-            }
-            this.__buildClass(tree, options, callback);
-        },
 
-        /**
-         * Parse a debug template from the tree
-         * @param {aria.templates.TreeBeans:Root} tree tree returned by the parser.
-         * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for class generation.
-         * @param {aria.core.CfgBeans:Callback} callback callback the callback description
-         */
-        parseTemplateFromTree : function (tree, optionsOrAllDeps, callback, context, debug, skipLogError) {
-            var options = normalizeOptions(optionsOrAllDeps, context, debug, skipLogError);
-            this.__buildClass(tree, options, callback);
-        },
+    /**
+     * Load the list of statements that are allowed for this class generator. The list is specified by the
+     * descendant class aria.templates.TplClassGenerator and aria.templates.CSSClassGenerator
+     * @param {Array} statements List of statements name
+     * @protected
+     */
+    _loadStatements: function (statements) {
+      for (var i = 0, len = statements.length; i < len; i += 1) {
+        var statement = statements[i];
+        this.STATEMENTS[statement] = this.ALLSTATEMENTS[statement];
+      }
+    },
 
-        /**
-         * Load the list of statements that are allowed for this class generator. The list is specified by the
-         * descendant class aria.templates.TplClassGenerator and aria.templates.CSSClassGenerator
-         * @param {Array} statements List of statements name
-         * @protected
-         */
-        _loadStatements : function (statements) {
-            for (var i = 0, len = statements.length; i < len; i += 1) {
-                var statement = statements[i];
-                this.STATEMENTS[statement] = this.ALLSTATEMENTS[statement];
-            }
-        },
+    /**
+     * Get the list of statements loaded for this ClassGenerator
+     * @return {Object}
+     */
+    getStatements: function () {
+      return this.STATEMENTS;
+    },
 
-        /**
-         * Get the list of statements loaded for this ClassGenerator
-         * @return {Object}
-         */
-        getStatements : function () {
-            return this.STATEMENTS;
-        },
+    /**
+     * Build the template class from the tree given by the parser.
+     * @private
+     * @param {aria.templates.TreeBeans:Root} tree tree returned by the parser.
+     * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for class generation.
+     * @param {aria.core.CfgBeans:Callback} callback the callback description
+     */
+    __buildClass: function (tree, options, callback) {
+      ariaCoreJsonValidator.check(tree, "aria.templates.TreeBeans.Root");
+      var out = new ariaTemplatesClassWriter({
+        fn: this.__processStatement,
+        scope: this
+      }, options.skipLogError ? null : {
+        fn: this.__logError,
+        scope: this
+      });
 
-        /**
-         * Build the template class from the tree given by the parser.
-         * @private
-         * @param {aria.templates.TreeBeans:Root} tree tree returned by the parser.
-         * @param {aria.templates.CfgBeans:ClassGeneratorCfg} options Options for class generation.
-         * @param {aria.core.CfgBeans:Callback} callback the callback description
-         */
-        __buildClass : function (tree, options, callback) {
-            ariaCoreJsonValidator.check(tree, "aria.templates.TreeBeans.Root");
-            var out = new ariaTemplatesClassWriter({
-                fn : this.__processStatement,
-                scope : this
-            }, options.skipLogError ? null : {
-                fn : this.__logError,
-                scope : this
-            });
+      out.errorContext = options.errorContext;
+      out.allDependencies = options.allDependencies;
+      out.callback = callback;
+      out.tree = tree;
+      out.debug = (options.debug === true);
+      out.dontLoadWidgetLibs = (options.dontLoadWidgetLibs === true);
+      out.escapeHtmlByDefault = (options.escapeHtmlByDefault !== false);
+      out.allowSectionsAsContainers = (options.allowSectionsAsContainers === true);
+      out.isInternalAriatemplatesBuild = options.isInternalAriatemplatesBuild;
+      out.sourceFilePath = options.sourceFilePath;
+      out.sourcesRootDirectory = options.sourcesRootDirectory;
+      out.defaultWidgetLibsImportSpecs = options.defaultWidgetLibsImportSpecs;
+      if (options.parseOnly) {
+        out.enableParseOnly();
+      }
+      this._processRootStatement(out, tree);
+      if (out.errors) {
+        out.$dispose();
+        this.$callback(callback, {
+          errors: out.errors,
+          classDef: null
+        });
+      }
+    },
 
-            out.errorContext = options.errorContext;
-            out.allDependencies = options.allDependencies;
-            out.callback = callback;
-            out.tree = tree;
-            out.debug = (options.debug === true);
-            out.dontLoadWidgetLibs = (options.dontLoadWidgetLibs === true);
-            if (options.parseOnly) {
-                out.enableParseOnly();
-            }
-            this._processRootStatement(out, tree);
-            if (out.errors) {
-                out.$dispose();
-                this.$callback(callback, {
-                    errors : out.errors,
-                    classDef : null
-                });
-            }
-        },
+    /**
+     * Process the root statement of the template.
+     * @param {aria.templates.ClassWriter} out
+     * @param {aria.templates.TreeBeans:Statement} tree
+     * @protected
+     */
+    _processRootStatement: function (out, tree) {
+      var rootStatement = tree.content[0];
+      if (tree.content.length != 1 || (rootStatement.name != this._rootStatement)) {
+        return out.logError(tree, this.TEMPLATE_STATEMENT_EXPECTED, [this._rootStatement]);
+      }
+      if (rootStatement.content == null) {
+        return out.logError(rootStatement, this.EXPECTED_CONTAINER, [this._rootStatement]);
+      }
+      var param;
+      try {
+        // The parameter should be a JSON object
+        param = ariaEval("return (" + rootStatement.paramBlock + ");");
+      } catch (e) {
+        return out.logError(rootStatement, this.ERROR_IN_TEMPLATE_PARAMETER, [this._rootStatement], e);
+      }
 
-        /**
-         * Process the root statement of the template.
-         * @param {aria.templates.ClassWriter} out
-         * @param {aria.templates.TreeBeans:Statement} tree
-         * @protected
-         */
-        _processRootStatement : function (out, tree) {
-            var rootStatement = tree.content[0];
-            if (tree.content.length != 1 || (rootStatement.name != this._rootStatement)) {
-                return out.logError(tree, this.TEMPLATE_STATEMENT_EXPECTED, [this._rootStatement]);
-            }
-            if (rootStatement.content == null) {
-                return out.logError(rootStatement, this.EXPECTED_CONTAINER, [this._rootStatement]);
-            }
-            var param;
-            try {
-                // The parameter should be a JSON object
-                param = Aria["eval"]("return (" + rootStatement.paramBlock + ");");
-            } catch (e) {
-                return out.logError(rootStatement, this.ERROR_IN_TEMPLATE_PARAMETER, [this._rootStatement], e);
-            }
-
-            if (!ariaCoreJsonValidator.normalize({
-                json : param,
-                beanName : this._templateParamBean
-            })) {
-                return out.logError(rootStatement, this.CHECK_ERROR_IN_TEMPLATE_PARAMETER, [this._rootStatement]);
-            }
-            out.templateParam = param;
-            rootStatement.properties = param;
-
-            this._processTemplateContent({
-                out : out,
-                statement : rootStatement
-            });
-        },
-
-        /**
-         * This method is called for each statement to produce an output in the class definition. It propagates the call
-         * to the correct process function in this.STATEMENTS, or logs errors, if the statement is unknown, or misused.
-         * @private
-         * @param {aria.templates.ClassWriter} out
-         * @param {aria.templates.TreeBeans:Statement} statement
-         */
-        __processStatement : function (out, statement) {
-            var statname = statement.name;
-            if (statname.charAt(0) == '@') {
-                statname = '@';
-            }
-
-            var handler = this.STATEMENTS[statname];
-            if (handler == null) {
-                out.logError(statement, this.UNKNOWN_STATEMENT, [statname]);
-            } else if (handler.container === true && statement.content === undefined) {
-                out.logError(statement, this.EXPECTED_CONTAINER, [statname]);
-            } else if (handler.container === false && statement.content !== undefined) {
-                out.logError(statement, this.UNEXPECTED_CONTAINER, [statname]);
-            } else if (handler.inMacro !== undefined && out.isOutputReady() !== handler.inMacro) {
-                if (handler.inMacro) {
-                    out.logError(statement, ariaTemplatesStatements.SHOULD_BE_IN_MACRO, [statname]);
-                } else {
-                    out.logError(statement, this.SHOULD_BE_OUT_OF_MACRO, [statname]);
-                }
-            } else {
-                if (handler.paramRegexp) {
-                    var res = handler.paramRegexp.exec(statement.paramBlock);
-                    if (res == null) {
-                        out.logError(statement, this.INVALID_STATEMENT_SYNTAX, [statname, handler.paramRegexp]);
-                    } else {
-                        if (this._isDebug) {
-                            out.trackLine(statement.lineNumber);
-                        }
-                        handler.process(out, statement, res);
-                    }
-                } else {
-                    if (this._isDebug) {
-                        out.trackLine(statement.lineNumber);
-                    }
-                    handler.process(out, statement, this);
-                }
-            }
-        },
-
-        /**
-         * Log the given error.
-         * @private
-         * @param {aria.templates.TreeBeans:Statement} statement Statement in the template tree from which the error is
-         * being raised. It will be transformed into the corresponding line number in the source template and added at
-         * the end of otherParams.
-         * @param {String} msgId error id, used to find the error message
-         * @param {Array} msgArgs parameters of the error message
-         * @param {Object} errorContext
-         */
-        __logError : function (statement, msgId, msgArgs, errorContext) {
-            if (msgArgs == null) {
-                msgArgs = [];
-            }
-            msgArgs.push(statement.lineNumber);
-            this.$logError(msgId, msgArgs, errorContext);
-        },
-
-        /**
-         * Create the required blocks in the class writer.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _createBlocks : function (out) {
-            out.newBlock("main", 0);
-            out.newBlock("classDefinition", 0);
-            out.newBlock("prototype", 2);
-            out.newBlock("globalVars", 5);
-            out.newBlock("initTemplate", 3);
-            out.newBlock("classInit", 3);
-        },
-
-        /**
-         * Write to the current block of the class writer the begining of the class definition.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeClassDefHeaders : function (out) {
-            var tplParam = out.templateParam;
-            out.writeln("module.exports = Aria.classDefinition({");
-            out.increaseIndent();
-            out.writeln("$classpath: ", out.stringify(tplParam.$classpath), ",");
-            if (out.parentClasspath) {
-                out.writeln("$extends: require(", out.stringify(Aria.getLogicalPath(out.parentClasspath, Aria.ACCEPTED_TYPES[out.parentClassType])), "),");
-            }
-        },
-
-        /**
-         * Extract the class name from the classpath (part after last '.').
-         * @param {String} classpath
-         * @return {String}
-         * @protected
-         */
-        _getClassName : function (classpath) {
-            var parts = classpath.split('.');
-            return parts[parts.length - 1];
-        },
-
-        /**
-         * Set the out.parentClasspath, out.parentClassName and out.parentClassType from the values available in
-         * out.templateParam.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _processInheritance : function (out) {
-            var tplParam = out.templateParam;
-            // normal inheritance processing: set out.parentClasspath, out.parentClassName and out.parentClassType
-            if (tplParam.$extends) {
-                out.parentClasspath = tplParam.$extends;
-                out.parentClassType = this._classType;
-            } else {
-                out.parentClasspath = this._superClass;
-            }
-            if (out.parentClasspath) {
-                out.parentClassName = this._getClassName(out.parentClasspath);
-            }
-        },
-
-        /**
-         * Set the out.scriptClasspath, out.scriptClassName from the values available in out.templateParam.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _processScript : function (out) {
-            var tplParam = out.templateParam;
-            if (tplParam.$hasScript) {
-                out.scriptClasspath = tplParam.$classpath + "Script";
-                out.scriptClassName = this._getClassName(out.scriptClasspath);
-                out.addDependency(out.scriptClasspath);
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer the constructor of the class definition. The body of the
-         * method contains a call to the parent constructor and a call to the script constructor.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeConstructor : function (out) {
-            out.writeln("$constructor: function() { ");
-            out.increaseIndent();
-            var parentClassName = out.parentClassName;
-            if (parentClassName) {
-                out.writeln("this.$", parentClassName, ".constructor.call(this);");
-            }
-            var scriptClassName = out.scriptClassName;
-            if (scriptClassName) {
-                out.writeln("this.$", scriptClassName, ".constructor.call(this);");
-            }
-            out.decreaseIndent();
-            out.writeln("},");
-        },
-
-        /**
-         * Write to the current block of the class writer the destructor of the class definition. The body of the method
-         * contains a call to the script destructor and a call to the parent destructor.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeDestructor : function (out) {
-            out.writeln("$destructor: function() {");
-            out.increaseIndent();
-            var scriptClassName = out.scriptClassName;
-            if (scriptClassName) {
-                out.writeln("this.$", scriptClassName, ".$destructor.call(this);");
-            }
-            var parentClassName = out.parentClassName;
-            if (parentClassName) {
-                out.writeln("this.$", parentClassName, ".$destructor.call(this);");
-            }
-            out.decreaseIndent();
-            out.writeln("},");
-        },
-
-        /**
-         * Add $dependencies, $templates, $macrolibs and $csslibs to the set of dependencies referenced by the class
-         * writer.
-         * @param {aria.templates.ClassWriter} out
-         */
-        _processDependencies : function (out) {
-            var tplParam = out.templateParam;
-            out.addDependencies(tplParam.$dependencies);
-            out.addDependencies(tplParam.$templates, ".tpl");
-            if (tplParam.$macrolibs) {
-                out.addDependencies(ariaUtilsArray.extractValuesFromMap(tplParam.$macrolibs), ".tml");
-            }
-            if (tplParam.$csslibs) {
-                out.addDependencies(ariaUtilsArray.extractValuesFromMap(tplParam.$csslibs), ".cml");
-            }
-        },
-
-        /**
-         * Returns a resource dependency
-         * @param {Object|String} res
-         */
-        _getResourceDependency : function (out, res) {
-            if (typeof res == "string") {
-                var logicalPath = Aria.getLogicalPath(res);
-                var serverRes = /([^\/]*)\/Res$/.exec(logicalPath);
-                return 'require("ariatemplates/$resources").' + (serverRes ? "module(" + out.stringify(serverRes[1]) + "," : "file(")
-                        + out.stringify(logicalPath) + ")";
-            }
-            if (typeof res == "object") {
-                var tplParam = out.templateParam;
-                var params = ["", Aria.getLogicalPath(res.provider), tplParam.$classpath, res.onLoad || "",
-                        res.handler || ""].concat(res.resources || []);
-                for (var i = 0, l = params.length; i < l; i++) {
-                    params[i] = out.stringify(params[i]);
-                }
-                return 'require("ariatemplates/$resourcesProviders").fetch(' + params.join(",") + ')';
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer the dependencies of the template, including JS classes,
-         * resources, templates, css, macrolibs and text templates.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeDependencies : function (out) {
-            var tplParam = out.templateParam;
-            var res = tplParam.$res;
-            if (res) {
-                out.writeln("$resources: {");
-                out.increaseIndent();
-                var first = true;
-                for (var key in res) {
-                    if (res.hasOwnProperty(key)) {
-                        out.writeln(first ? "" : ",", out.stringify(key), ": ", this._getResourceDependency(out, res[key]));
-                        first = false;
-                    }
-                }
-                out.decreaseIndent();
-                out.writeln("},");
-            }
-            var css = tplParam.$css;
-            if (css && css.length) {
-                out.writeln("$css: [");
-                out.increaseIndent();
-                for (var i = 0, l = css.length; i < l; i++) {
-                    out.writeln("require(", out.stringify(Aria.getLogicalPath(css[i], ".tpl.css")), (i == l - 1
-                            ? ")"
-                            : "),"));
-                }
-                out.decreaseIndent();
-                out.writeln("],");
-            }
-            var texts = tplParam.$texts;
-            if (texts) {
-                out.writeln("$texts: {");
-                out.increaseIndent();
-                var first = true;
-                for (var key in texts) {
-                    if (texts.hasOwnProperty(key)) {
-                        out.writeln(first ? "" : ",", out.stringify(key), ": require(", out.stringify(Aria.getLogicalPath(texts[key], ".tpl.txt"))
-                                + ")");
-                        first = false;
-                    }
-                }
-                out.decreaseIndent();
-                out.writeln("},");
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer some code to handle inheritance of a map (e.g.: macrolibs).
-         * This code is intended to be put in the $init method. The map is merged with the parent map: any property not
-         * defined in the map is inherited from the parent.
-         * @param {aria.templates.ClassWriter} out markup writer.
-         * @param {String} name Name of the value in the class prototype
-         * @param {Object} map Map at this level.
-         * @param {String} defaultValue default value
-         * @protected
-         */
-        _writeMapInheritance : function (out, name, map, defaultValue) {
-            if (out.parentClassType == this._classType) {
-                // merge maps at class loading time, as there is a parent template:
-                if (map) {
-                    var newMap = out.newVarName();
-                    // create the map of the child (which is now a different object, and we can change it)
-                    out.writeln("var ", newMap, " = {};");
-                    // get parent macrolibs:
-                    out.writeln("Aria.copyObject(proto.", name, ",", newMap, ");");
-                    // add or change child's own macrolibs:
-                    out.writeln("Aria.copyObject(", ariaUtilsJson.convertToJsonString(map), ",", newMap, ");");
-                    out.writeln("proto.", name, " = ", newMap, ";");
-                }
-            } else {
-                var mapStr = map ? ariaUtilsJson.convertToJsonString(map) : defaultValue;
-                out.writeln("proto.", name, " = ", mapStr, ";");
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer some code to handle inheritance of a value. This code is
-         * intended to be put in the $init method.
-         * @param {aria.templates.ClassWriter} out markup writer.
-         * @param {String} name Name of the value in the class prototype
-         * @param {Object} value Value to set for the property. If null, the value will be inherited from parent, or the
-         * default value will be used if there is no parent.
-         * @param {String} defaultValue default value
-         * @protected
-         */
-        _writeValueInheritance : function (out, name, value, defaultValue) {
-            if (out.parentClassType == this._classType) {
-                // override value at class loading time, as there is a parent template:
-                if (value != null) {
-                    out.writeln("proto.", name, " = ", ariaUtilsJson.convertToJsonString(value), ";");
-                }
-            } else {
-                var valueStr = value != null ? ariaUtilsJson.convertToJsonString(value) : defaultValue;
-                out.writeln("proto.", name, " = ", valueStr, ";");
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer the $init method which is used to import the script prototype.
-         * This is only done if out.scriptClasspath is defined (no $init method is written if no script is defined).
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeClassInit : function (out) {
-            var scriptClasspath = out.scriptClasspath;
-            if (scriptClasspath) {
-                // this is the new way of including template scripts
-                out.enterBlock("classInit");
-                out.addDependencies(["aria.core.TplClassLoader"]);
-                out.writeln("aria.core.TplClassLoader._importScriptPrototype(" + scriptClasspath + ",proto);");
-                out.leaveBlock();
-            }
-            var classInit = out.getBlockContent("classInit");
-            if (classInit.length > 0) {
-                out.writeln("$init: function(proto) {");
-                out.increaseIndent();
-                out.write(classInit);
-                out.decreaseIndent();
-                out.writeln("},");
-            }
-        },
-
-        /**
-         * Write to the current block of the class writer the __$initTemplate method which is used to do some
-         * initialization in the template (global variables...). This method writes both the initTemplate and globalVars
-         * block of the class writer.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeInitTemplate : function (out) {
-            out.writeln("__$initTemplate: function() {");
-            out.increaseIndent();
-            if (out.parentClassType == this._classType) {
-                // call the parent __$initTemplate only in case of template inheritance
-                out.writeln("if (! this.$", out.parentClassName, ".__$initTemplate.call(this)) { return false; }");
-            }
-            out.write(out.getBlockContent("initTemplate"));
-            var gv = out.getBlockContent("globalVars");
-            if (gv.length > 0) {
-                out.writeln("try {");
-                out.increaseIndent();
-                out.writeln("with (this) {");
-                out.increaseIndent();
-                out.write(gv);
-                out.decreaseIndent();
-                out.writeln("}"); // end with
-                out.decreaseIndent();
-                out.writeln("} catch (_ex) {");
-                out.increaseIndent();
-                out.writeln("this.$logError(this.EXCEPTION_IN_VARINIT,[this.$classpath],_ex);");
-                out.writeln("return false;");
-                out.decreaseIndent();
-                out.writeln("}");
-            }
-            out.writeln("return true;");
-            out.decreaseIndent();
-            out.writeln("}");
-        },
-
-        /**
-         * Write to the current block of the class writer the end of the class definition, including the prototype block
-         * of the class writer.
-         * @param {aria.templates.ClassWriter} out
-         * @protected
-         */
-        _writeClassDefEnd : function (out) {
-            out.writeln("$prototype: {");
-            out.increaseIndent();
-            out.write(out.getBlockContent("prototype"));
-            out.decreaseIndent();
-            out.writeln("}");
-            out.decreaseIndent();
-            out.writeln("});");
-            out.leaveBlock();
-        },
-
-        /**
-         * Process template content. This method is called from _processRootStatement.
-         * @param {Object} Process template content properties (contains out and statement objects).
-         * @protected
-         */
-        _processTemplateContent : function (arg) {
-            var out = arg.out;
-            var statement = arg.statement;
-
-            // Add dependencies specified explicitly in the template declaration
-            this._processDependencies(out);
-
-            this._createBlocks(out);
-            this._processInheritance(out);
-            this._processScript(out);
-
-            out.enterBlock("main");
-            out.writeln("var Aria = require('ariatemplates/Aria');");
-            out.leaveBlock();
-
-            out.enterBlock("classDefinition");
-            this._writeClassDefHeaders(out);
-            this._writeConstructor(out);
-            this._writeDestructor(out);
-            out.leaveBlock();
-
-            // main part of the processing (process the whole template):
-            out.processContent(statement.content);
-
-            if (out.errors) {
-                out.$dispose();
-                this.$callback(out.callback, {
-                    classDef : null,
-                    errors : out.errors
-                });
-                // in case of synchronous call, the following line prevents a second call of the callback
-                // to report the error
-                out.errors = false;
-                return;
-            }
-
-            out.enterBlock("prototype");
-            this._writeClassInit(out);
-            this._writeInitTemplate(out);
-            out.leaveBlock();
-
-            out.enterBlock("classDefinition");
-            this._writeDependencies(out);
-            this._writeClassDefEnd(out);
-            out.leaveBlock();
-
-            out.enterBlock("main");
-            out.writeDependencies();
-            out.write(out.getBlockContent("classDefinition"));
-            out.leaveBlock();
-
-            out.tree.properties = {
-                macros: out.macros,
-                views: out.views,
-                wlibs: out.wlibs
-            };
-            var res = null;
-            res = out.getBlockContent("main");
-            out.$dispose();
-            this.$callback(out.callback, {
-                classDef : res,
-                logicalPath : Aria.getLogicalPath(out.templateParam.$classpath, Aria.ACCEPTED_TYPES[this._classType]),
-                tree : out.tree,
-                debug : out.debug
-            });
+      if (!ariaCoreJsonValidator.normalize({
+        json: param,
+        beanName: this._templateParamBean
+      })) {
+        return out.logError(rootStatement, this.CHECK_ERROR_IN_TEMPLATE_PARAMETER, [this._rootStatement]);
+      }
+      // ModernAria: Manual Normalization
+      if (param.$extends) {
+        if(!param.$extends.classpath) {
+          return out.logError(rootStatement, this.EXTENDS_IMPORT_SPEC_DOES_NOT_HAVE_CLASSPATH, [this._rootStatement]);
         }
+      }
+      if (param.$script) {
+        if(!param.$script.classpath) {
+          return out.logError(rootStatement, this.EXTENDS_IMPORT_SPEC_DOES_NOT_HAVE_CLASSPATH, [this._rootStatement]);
+        }
+      }
+      out.templateParam = param;
+      rootStatement.properties = param;
+
+      this._processTemplateContent({
+        out: out,
+        statement: rootStatement
+      });
+    },
+
+    /**
+     * This method is called for each statement to produce an output in the class definition. It propagates the call
+     * to the correct process function in this.STATEMENTS, or logs errors, if the statement is unknown, or misused.
+     * @private
+     * @param {aria.templates.ClassWriter} out
+     * @param {aria.templates.TreeBeans:Statement} statement
+     */
+    __processStatement: function (out, statement) {
+      var statname = statement.name;
+      if (statname.charAt(0) == '@') {
+        statname = '@';
+      }
+
+      var handler = this.STATEMENTS[statname];
+      if (handler == null) {
+        out.logError(statement, this.UNKNOWN_STATEMENT, [statname]);
+      } else if (handler.container === true && statement.content === undefined) {
+        out.logError(statement, this.EXPECTED_CONTAINER, [statname]);
+      } else if (handler.container === false && statement.content !== undefined) {
+        out.logError(statement, this.UNEXPECTED_CONTAINER, [statname]);
+      } else if (handler.inMacro !== undefined && out.isOutputReady() !== handler.inMacro) {
+        if (handler.inMacro) {
+          out.logError(statement, ariaTemplatesStatements.SHOULD_BE_IN_MACRO, [statname]);
+        } else {
+          out.logError(statement, this.SHOULD_BE_OUT_OF_MACRO, [statname]);
+        }
+      } else {
+        if (handler.paramRegexp) {
+          var res = handler.paramRegexp.exec(statement.paramBlock);
+          if (res == null) {
+            out.logError(statement, this.INVALID_STATEMENT_SYNTAX, [statname, handler.paramRegexp]);
+          } else {
+            if (this._isDebug) {
+              out.trackLine(statement.lineNumber);
+            }
+            handler.process(out, statement, res);
+          }
+        } else {
+          if (this._isDebug) {
+            out.trackLine(statement.lineNumber);
+          }
+          handler.process(out, statement, this);
+        }
+      }
+    },
+
+    /**
+     * Log the given error.
+     * @private
+     * @param {aria.templates.TreeBeans:Statement} statement Statement in the template tree from which the error is
+     * being raised. It will be transformed into the corresponding line number in the source template and added at
+     * the end of otherParams.
+     * @param {String} msgId error id, used to find the error message
+     * @param {Array} msgArgs parameters of the error message
+     * @param {Object} errorContext
+     */
+    __logError: function (statement, msgId, msgArgs, errorContext) {
+      if (msgArgs == null) {
+        msgArgs = [];
+      }
+      msgArgs.push(statement.lineNumber);
+      this.$logError(msgId, msgArgs, errorContext);
+    },
+
+    /**
+     * Create the required blocks in the class writer.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _createBlocks: function (out) {
+      out.newBlock("main", 0);
+      out.newBlock("classDefinition", 0);
+      out.newBlock("prototype", 2);
+      out.newBlock("globalVars", 5);
+      out.newBlock("initTemplate", 3);
+      out.newBlock("classInit", 3);
+    },
+
+    /**
+     * Write to the current block of the class writer the begining of the class definition.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeClassDefHeaders: function (out) {
+      var tplParam = out.templateParam;
+      if(!out.isInternalAriatemplatesBuild) {
+        out.writeln("export default Aria.classDefinition({");
+      } else {
+        out.writeln(`export default ${CLASS_DEFINITION_ALIAS_FOR_INTERNAL_IMPORTS}({`);
+      }
+      out.increaseIndent();
+      out.writeln("$classpath: ", out.stringify(tplParam.$classpath), ",");
+      if (out.parentAccessName) {
+        out.writeln("$extends: ", out.parentAccessName, ",");
+      }
+    },
+
+    /**
+     * Extract the class name from the classpath (part after last '.').
+     * @param {String} classpath
+     * @return {String}
+     * @protected
+     */
+    _getClassName: function (classpath) {
+      var parts = classpath.split('.');
+      return parts[parts.length - 1];
+    },
+
+    /**
+     * Set the out.parentClasspath, out.parentClassName and out.parentClassType from the values available in
+     * out.templateParam.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _processInheritance: function (out) {
+      var tplParam = out.templateParam;
+      // normal inheritance processing: set out.parentClasspath, out.parentClassName and out.parentClassType
+      if (tplParam.$extends) {
+        out.parentImportSpec = tplParam.$extends;
+        out.parentClassType = this._classType;
+      } else {
+        out.parentImportSpec = this._superClassImportSpec;
+      }
+      out.parentClasspath = out.parentImportSpec.classpath;
+      out.parentAccessName = getUsageAliasFromNamedOrDefaultImportSpec(out.parentImportSpec);
+      out.addDependency(out.parentImportSpec);
+      if (out.parentClasspath) {
+        out.parentClassName = this._getClassName(out.parentClasspath);
+      }
+    },
+
+    /**
+     * Set the out.scriptClasspath, out.scriptClassName from the values available in out.templateParam.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _processScript: function (out) {
+      var tplParam = out.templateParam;
+      if (tplParam.$script) {
+        out.scriptClasspath = tplParam.$script.classpath;
+        out.scriptClassName = this._getClassName(out.scriptClasspath);
+        out.scriptImportSpec = tplParam.$script;
+        out.addDependency(out.scriptImportSpec);
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer the constructor of the class definition. The body of the
+     * method contains a call to the parent constructor and a call to the script constructor.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeConstructor: function (out) {
+      out.writeln("$constructor: function() { ");
+      out.increaseIndent();
+      var parentClassName = out.parentClassName;
+      if (parentClassName) {
+        out.writeln("this.$", parentClassName, ".constructor.call(this);");
+      }
+      var scriptClassName = out.scriptClassName;
+      if (scriptClassName) {
+        out.writeln("this.$", scriptClassName, ".constructor.call(this);");
+      }
+      out.decreaseIndent();
+      out.writeln("},");
+    },
+
+    /**
+     * Write to the current block of the class writer the destructor of the class definition. The body of the method
+     * contains a call to the script destructor and a call to the parent destructor.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeDestructor: function (out) {
+      out.writeln("$destructor: function() {");
+      out.increaseIndent();
+      var scriptClassName = out.scriptClassName;
+      if (scriptClassName) {
+        out.writeln("this.$", scriptClassName, ".$destructor.call(this);");
+      }
+      var parentClassName = out.parentClassName;
+      if (parentClassName) {
+        out.writeln("this.$", parentClassName, ".$destructor.call(this);");
+      }
+      out.decreaseIndent();
+      out.writeln("},");
+    },
+
+    /**
+     * Add $dependencies, $templates, $macrolibs and $csslibs to the set of dependencies referenced by the class
+     * writer.
+     * @param {aria.templates.ClassWriter} out
+     */
+    _processDependencies: function (out) {
+      var tplParam = out.templateParam;
+      out.addDependencies(tplParam.$dependencies);
+      out.addDependencies(tplParam.$templates);
+      if (tplParam.$macrolibs) {
+        out.addDependencies(extractValuesFromMap(tplParam.$macrolibs), ".tml");
+      }
+      if (tplParam.$csslibs) {
+        out.addDependencies(extractValuesFromMap(tplParam.$csslibs));
+      }
+    },
+
+    /**
+     * Returns a resource dependency
+     * @param {Object|String} res
+     */
+    _getResourceDependency: function (out, res) {
+      if (typeof res == "string") {
+        var logicalPath = getLogicalPath(res);
+        var serverRes = /([^/]*)\/Res$/.exec(logicalPath);
+        return 'require("ariatemplates/$resources").' + (serverRes ? "module(" + out.stringify(serverRes[1]) + "," : "file(")
+          + out.stringify(logicalPath) + ")";
+      }
+      if (typeof res == "object") {
+        var tplParam = out.templateParam;
+        var params = ["", getLogicalPath(res.provider), tplParam.$classpath, res.onLoad || "",
+          res.handler || ""].concat(res.resources || []);
+        for (var i = 0, l = params.length; i < l; i++) {
+          params[i] = out.stringify(params[i]);
+        }
+        return 'require("ariatemplates/$resourcesProviders").fetch(' + params.join(",") + ')';
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer the dependencies of the template, including JS classes,
+     * resources, templates, css, macrolibs and text templates.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeDependencies: function (out) {
+      var tplParam = out.templateParam;
+      var res = tplParam.$res;
+      if (res) {
+        // MUST_DO: ModernAria: Implement Resource imports and definitions
+        // out.writeln("$resources: {");
+        // out.increaseIndent();
+        // let first = true;
+        // for (const key in res) {
+        //   if (Object.prototype.hasOwnProperty.call(res, key)) {
+        //     out.writeln(first ? "" : ",", out.stringify(key), ": ", this._getResourceDependency(out, res[key]));
+        //     first = false;
+        //   }
+        // }
+        // out.decreaseIndent();
+        // out.writeln("},");
+      }
+      var css = tplParam.$css;
+
+      if (css && css.length) {
+        out.writeln("$css: [");
+        out.increaseIndent();
+        const cssAliasList = [];
+        for (var i = 0, l = css.length; i < l; i++) {
+          out.addDependency(css[i]);
+          cssAliasList.push(getUsageAliasFromNamedOrDefaultImportSpec(css[i]));
+        }
+        out.writeln(cssAliasList.join(", "));
+        out.decreaseIndent();
+        out.writeln("],");
+      }
+      var texts = tplParam.$texts;
+      if (texts) {
+        out.writeln("$texts: {");
+        out.increaseIndent();
+        let first = true;
+        for (const key in texts) {
+          if (Object.prototype.hasOwnProperty.call(texts, key)) {
+            out.addDependency(texts[key]);
+            const textAlias = getUsageAliasFromNamedOrDefaultImportSpec(texts[key]);
+            out.writeln(first ? "" : ",", out.stringify(key), ": ", textAlias);
+            first = false;
+          }
+        }
+        out.decreaseIndent();
+        out.writeln("},");
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer some code to handle inheritance of a map (e.g.: macrolibs).
+     * This code is intended to be put in the $init method. The map is merged with the parent map: any property not
+     * defined in the map is inherited from the parent.
+     * @param {aria.templates.ClassWriter} out markup writer.
+     * @param {String} name Name of the value in the class prototype
+     * @param {Object} map Map at this level.
+     * @param {String} defaultValue default value
+     * @protected
+     */
+    _writeMapInheritance: function (out, name, map, defaultValue) {
+      if (out.parentClassType == this._classType) {
+        // merge maps at class loading time, as there is a parent template:
+        if (map) {
+          var newMap = out.newVarName();
+          // create the map of the child (which is now a different object, and we can change it)
+          out.writeln("var ", newMap, " = {};");
+          // get parent macrolibs:
+          if(!out.isInternalAriatemplatesBuild) {
+            out.writeln("Aria.copyObject(proto.", name, ",", newMap, ");");
+            // add or change child's own macrolibs:
+            out.writeln("Aria.copyObject(", ariaUtilsJson.convertToJsonString(map), ",", newMap, ");");
+          } else {
+            out.addDependency({importType: 'Named', modulePath: 'ariatemplates/aria/core/definition-utils.js', name: 'copyObject', alias: COPY_OBJECT_ALIAS_FOR_INTERNAL_IMPORTS});
+            out.writeln(COPY_OBJECT_ALIAS_FOR_INTERNAL_IMPORTS, "(proto.", name, ",", newMap, ");");
+            // add or change child's own macrolibs:
+            out.writeln(COPY_OBJECT_ALIAS_FOR_INTERNAL_IMPORTS, "(", ariaUtilsJson.convertToJsonString(map), ",", newMap, ");");
+          }
+          out.writeln("proto.", name, " = ", newMap, ";");
+        }
+      } else {
+        var mapStr = map ? ariaUtilsJson.convertToJsonString(map) : defaultValue;
+        out.writeln("proto.", name, " = ", mapStr, ";");
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer some code to handle inheritance of a value. This code is
+     * intended to be put in the $init method.
+     * @param {aria.templates.ClassWriter} out markup writer.
+     * @param {String} name Name of the value in the class prototype
+     * @param {Object} value Value to set for the property. If null, the value will be inherited from parent, or the
+     * default value will be used if there is no parent.
+     * @param {String} defaultValue default value
+     * @protected
+     */
+    _writeValueInheritance: function (out, name, value, defaultValue) {
+      if (out.parentClassType == this._classType) {
+        // override value at class loading time, as there is a parent template:
+        if (value != null) {
+          out.writeln("proto.", name, " = ", ariaUtilsJson.convertToJsonString(value), ";");
+        }
+      } else {
+        var valueStr = value != null ? ariaUtilsJson.convertToJsonString(value) : defaultValue;
+        out.writeln("proto.", name, " = ", valueStr, ";");
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer the $init method which is used to import the script prototype.
+     * This is only done if out.scriptClasspath is defined (no $init method is written if no script is defined).
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeClassInit: function (out) {
+      if (out.scriptImportSpec) {
+        const scriptClassAlias = getUsageAliasFromNamedOrDefaultImportSpec(out.scriptImportSpec);
+        // this is the new way of including template scripts
+        out.enterBlock("classInit");
+        const importScriptPrototypeAlias = 'ariaTemplatesImportScriptPrototype';
+        out.addDependency({
+          importType: 'Named',
+          modulePath: 'ariatemplates/aria/templates/import-script-proptotype.js',
+          name: 'importScriptPrototype',
+          alias: importScriptPrototypeAlias
+        });
+        out.writeln(`${importScriptPrototypeAlias}(${scriptClassAlias}, proto);`);
+        out.leaveBlock();
+      }
+      var classInit = out.getBlockContent("classInit");
+      if (classInit.length > 0) {
+        out.writeln("$init: function(proto) {");
+        out.increaseIndent();
+        out.write(classInit);
+        out.decreaseIndent();
+        out.writeln("},");
+      }
+    },
+
+    /**
+     * Write to the current block of the class writer the __$initTemplate method which is used to do some
+     * initialization in the template (global variables...). This method writes both the initTemplate and globalVars
+     * block of the class writer.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeInitTemplate: function (out) {
+      out.writeln("__$initTemplate: function() {");
+      out.increaseIndent();
+      if (out.parentClassType == this._classType) {
+        // call the parent __$initTemplate only in case of template inheritance
+        out.writeln("if (! this.$", out.parentClassName, ".__$initTemplate.call(this)) { return false; }");
+      }
+      out.write(out.getBlockContent("initTemplate"));
+      var gv = out.getBlockContent("globalVars");
+      if (gv.length > 0) {
+        out.writeln("try {");
+        out.increaseIndent();
+        // out.writeln("with (this) {");
+        // out.increaseIndent();
+        out.write(gv);
+        // out.decreaseIndent();
+        // out.writeln("}"); // end with
+        out.decreaseIndent();
+        out.writeln("} catch (_ex) {");
+        out.increaseIndent();
+        out.writeln("this.$logError(this.EXCEPTION_IN_VARINIT,[this.$classpath],_ex);");
+        out.writeln("return false;");
+        out.decreaseIndent();
+        out.writeln("}");
+      }
+      out.writeln("return true;");
+      out.decreaseIndent();
+      out.writeln("}");
+    },
+
+    /**
+     * Write to the current block of the class writer the end of the class definition, including the prototype block
+     * of the class writer.
+     * @param {aria.templates.ClassWriter} out
+     * @protected
+     */
+    _writeClassDefEnd: function (out) {
+      out.writeln("$prototype: {");
+      out.increaseIndent();
+      out.write(out.getBlockContent("prototype"));
+      out.decreaseIndent();
+      out.writeln("}");
+      out.decreaseIndent();
+      out.writeln("});");
+      out.leaveBlock();
+    },
+
+    /**
+     * Process template content. This method is called from _processRootStatement.
+     * @param {Object} Process template content properties (contains out and statement objects).
+     * @protected
+     */
+    _processTemplateContent: function (arg) {
+      var out = arg.out;
+      var statement = arg.statement;
+
+      // Add dependencies specified explicitly in the template declaration
+      this._processDependencies(out);
+
+      this._createBlocks(out);
+      this._processInheritance(out);
+      this._processScript(out);
+
+      out.enterBlock("main");
+      // TODO: ModernAria: Process output differently for internal and external templates
+      if(!out.isInternalAriatemplatesBuild) {
+        out.writeln("import { * as Aria } from 'ariatemplates/Aria.js');");
+      } else {
+        out.addDependency({
+          importType: 'Named',
+          modulePath: 'ariatemplates/aria/core/class-definition.js',
+          name: 'classDefinition',
+          alias: CLASS_DEFINITION_ALIAS_FOR_INTERNAL_IMPORTS
+        });
+      }
+      out.leaveBlock();
+
+      out.enterBlock("classDefinition");
+      this._writeClassDefHeaders(out);
+      this._writeConstructor(out);
+      this._writeDestructor(out);
+      out.leaveBlock();
+
+      // main part of the processing (process the whole template):
+      out.processContent(statement.content);
+
+      if (out.errors) {
+        out.$dispose();
+        this.$callback(out.callback, {
+          classDef: null,
+          errors: out.errors
+        });
+        // in case of synchronous call, the following line prevents a second call of the callback
+        // to report the error
+        out.errors = false;
+        return;
+      }
+
+      out.enterBlock("prototype");
+      this._writeClassInit(out);
+      this._writeInitTemplate(out);
+      out.leaveBlock();
+
+      out.enterBlock("classDefinition");
+      this._writeDependencies(out);
+      this._writeClassDefEnd(out);
+      out.leaveBlock();
+
+      out.enterBlock("main");
+      out.writeDependencies();
+      out.write(out.getBlockContent("classDefinition"));
+      out.leaveBlock();
+
+      out.tree.properties = {
+        macros: out.macros,
+        views: out.views,
+        wlibs: out.wlibs
+      };
+      var res = null;
+      res = out.getBlockContent("main");
+      out.$dispose();
+      this.$callback(out.callback, {
+        classDef: res,
+        // logicalPath: getLogicalPath(out.templateParam.$classpath, ACCEPTED_TYPES[this._classType]),
+        tree: out.tree,
+        debug: out.debug
+      });
     }
+  }
 });

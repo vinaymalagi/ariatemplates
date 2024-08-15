@@ -15,13 +15,15 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.IconStyle",
-    $extends : "aria.widgets.WidgetStyle",
-    $dependencies : ["aria.widgets.environment.WidgetSettings"]
+    $extends : {importType: 'Default', modulePath: './WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'},
+    $dependencies : [
+      {importType: 'Default', modulePath: './environment/WidgetSettings.js', name: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'}
+    ]
 }}
     {var skinnableClassName="Icon"/}
 
     {macro writeSkinClass(info)}
-        {var widgetSettings = aria.widgets.environment.WidgetSettings.getWidgetSettings() /}
+        {var widgetSettings = ariaWidgetsEnvironmentWidgetSettings.getWidgetSettings() /}
 
         /* Icon class: ${info.skinClassName} */
         {if info.skinClass.spriteURL}

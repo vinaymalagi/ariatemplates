@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-require("./WidgetSettingsCfgBeans");
-var ariaCoreEnvironmentEnvironmentBase = require("../../core/environment/EnvironmentBase");
+import { classDefinition } from "../../core/class-definition.js";
+import "./WidgetSettingsCfgBeans.js";
+import { EnvironmentBase as ariaCoreEnvironmentEnvironmentBase } from "../../core/environment/EnvironmentBase.js";
 
 
 /**
@@ -23,7 +23,7 @@ var ariaCoreEnvironmentEnvironmentBase = require("../../core/environment/Environ
  * @extends aria.core.environment.EnvironmentBase
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export default classDefinition({
     $classpath : "aria.widgets.environment.WidgetSettings",
     $extends : ariaCoreEnvironmentEnvironmentBase,
     $singleton : true,

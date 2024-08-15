@@ -12,14 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsString = require("../utils/String");
-var ariaTemplatesModifiers = require("./Modifiers");
-require("../utils/Path");
-var ariaUtilsDelegate = require("../utils/Delegate");
-var ariaUtilsType = require("../utils/Type");
-var ariaCoreEnvironmentEnvironment = require("../core/environment/Environment");
-var ariaCoreAppEnvironment = require("../core/AppEnvironment");
+import { classDefinition } from "../core/class-definition.js";
+import { indexOfNotEscaped } from "../utils/String.js";
+import { Modifiers as ariaTemplatesModifiers } from "./Modifiers.js";
+import { isInstanceOf } from "../core/core-utils/Type.js";
+import { FRAMEWORK_PREFIX } from "../core/framework-bootstrap.js";
+import { isJsReservedWord } from "../utils/js-name-checks.js";
+import { getClassRef } from "../core/class-registry.js";
+import { convertToSideEffectImportSpec } from "./class-generator-utils.js";
+// import { Environment as ariaCoreEnvironmentEnvironment } from "../core/environment/Environment.js";
+// MUST_DO: ModernAria: Conditionally add these dependencies if running in browser context
+// import { Delegate as ariaUtilsDelegate } from "../utils/Delegate.js";
+// import { AppEnvironment as ariaCoreAppEnvironment } from "../core/AppEnvironment.js";
 
 /**
  * Counter for the generation of unique macro names for sections used as containers
@@ -61,7 +65,7 @@ var currentMacroName = "";
 /**
  * Template statements. Note that root statements are special ones and are not included here.
  */
-module.exports = Aria.classDefinition({
+export const Statements = classDefinition({
     $classpath : "aria.templates.Statements",
     $singleton : true,
     $statics : {
@@ -85,7 +89,6 @@ module.exports = Aria.classDefinition({
         SECTIONS_AS_CONTAINERS : "Sections as container statements ({section {...}}...{/section}) have been allowed through the application environment. Nevertheless, it is strongly advisable to use them as self-closing statements ({section {...}/})."
     },
     $constructor : function () {
-        var utilString = ariaUtilsString;
         var modifiers = ariaTemplatesModifiers;
         var statementsSingleton = this;
 
@@ -132,12 +135,12 @@ module.exports = Aria.classDefinition({
                 inMacro : true,
                 container : false,
                 process : function (out, statement, classGenerator) {
-                    var param = statement.paramBlock, nextPipe = utilString.indexOfNotEscaped(param, "|"), parts = [];
+                    var param = statement.paramBlock, nextPipe = indexOfNotEscaped(param, "|"), parts = [];
                     // split param against unescaped |
                     while (nextPipe != -1) {
                         parts.push(param.substr(0, nextPipe));
                         param = param.substr(nextPipe + 1);
-                        nextPipe = utilString.indexOfNotEscaped(param, "|");
+                        nextPipe = indexOfNotEscaped(param, "|");
                     }
                     parts.push(param);
 
@@ -159,8 +162,10 @@ module.exports = Aria.classDefinition({
 
                     if (escapeModifierName != null) {
                         var escapeByDefault = out.templateParam.$escapeHtmlByDefault;
-                        if (escapeByDefault == null) {
-                            escapeByDefault = ariaCoreEnvironmentEnvironment.hasEscapeHtmlByDefault(out.templateParam.$classpath);
+                        if (escapeByDefault === undefined) {
+                            // MUST_DO: ModernAria: Implemment package based escapeHtmlByDefault in template builds
+                            // escapeByDefault = ariaCoreEnvironmentEnvironment.hasEscapeHtmlByDefault(out.templateParam.$classpath);
+                            escapeByDefault = out.escapeHtmlByDefault;
                         }
                         if (escapeByDefault) {
                             escapeModifierName = escapeModifierName.toLowerCase();
@@ -233,7 +238,7 @@ module.exports = Aria.classDefinition({
                         out.logError(statement, statementsSingleton.SEPARATOR_NOT_FIRST_IN_FOREACH);
                         return;
                     }
-                    var variterct = foreachStruct[Aria.FRAMEWORK_PREFIX + 'foreachCounter'];
+                    var variterct = foreachStruct[FRAMEWORK_PREFIX + 'foreachCounter'];
                     out.writeln("if (", variterct, ">1) {");
                     out.increaseIndent();
                     out.processContent(statement.content);
@@ -260,14 +265,16 @@ module.exports = Aria.classDefinition({
                 process : function (out, statement, param) {
                     var eventName = param[1];
                     var callback = param[2];
-                    var delegate = ariaUtilsDelegate;
-                    var eventDependencies = delegate.delegatedGestures[eventName];
-                    if (eventDependencies) {
-                        out.addDependency(eventDependencies);
-                    }
-                    if (!delegate.supportedEvents[eventName]) {
-                        out.logWarn(statement, statementsSingleton.INVALID_EVENT_TYPE, [eventName]);
-                    }
+                    // MUST_DO: ModernAria: Implement dependency injection for delegated Events
+                    // var delegate = ariaUtilsDelegate;
+                    // var eventDependencies = delegate.delegatedGestures[eventName];
+                    // if (eventDependencies) {
+                    //     out.addDependency(eventDependencies);
+                    // }
+                    // MUST_DO: ModernAria: Maybe Implement dependency checks for valid event names.
+                    // if (!delegate.supportedEvents[eventName]) {
+                    //     out.logWarn(statement, statementsSingleton.INVALID_EVENT_TYPE, [eventName]);
+                    // }
                     out.writeln("this.__$statementOnEvent(", out.stringify(eventName), ",this.$normCallback(", callback, "),", statement.lineNumber, ');');
                     statement.properties = {
                         eventName: eventName,
@@ -285,7 +292,7 @@ module.exports = Aria.classDefinition({
                     out.processContent(statement.content);
 
                     // clean statement in case of reprocessing of the tree
-                    delete statement[Aria.FRAMEWORK_PREFIX + "elsepresent"];
+                    delete statement[FRAMEWORK_PREFIX + "elsepresent"];
 
                     out.decreaseIndent();
                     out.writeln("}");
@@ -300,7 +307,7 @@ module.exports = Aria.classDefinition({
                     if (ifstruct.name != "if") {
                         return out.logError(statement, statementsSingleton.ELSE_WITHOUT_IF);
                     }
-                    if (ifstruct[Aria.FRAMEWORK_PREFIX + "elsepresent"]) {
+                    if (ifstruct[FRAMEWORK_PREFIX + "elsepresent"]) {
                         return out.logError(statement, statementsSingleton.ELSEIF_AFTER_ELSE);
                     }
                     out.decreaseIndent();
@@ -316,10 +323,10 @@ module.exports = Aria.classDefinition({
                     var ifstruct = statement.parent;
                     if (ifstruct.name != "if") {
                         return out.logError(statement, statementsSingleton.ELSE_WITHOUT_IF);
-                    } else if (ifstruct[Aria.FRAMEWORK_PREFIX + "elsepresent"]) {
+                    } else if (ifstruct[FRAMEWORK_PREFIX + "elsepresent"]) {
                         return out.logError(statement, statementsSingleton.ELSE_ALREADY_USED);
                     }
-                    ifstruct[Aria.FRAMEWORK_PREFIX + "elsepresent"] = true;
+                    ifstruct[FRAMEWORK_PREFIX + "elsepresent"] = true;
                     out.decreaseIndent();
                     out.writeln("} else {");
                     out.increaseIndent();
@@ -329,10 +336,10 @@ module.exports = Aria.classDefinition({
                 inMacro : undefined, /* may be either in or out of a macro */
                 container : false,
                 // syntax: createView myView[param1][param2] on myArray
-                paramRegexp : /^([_\w]+)(\[([^\[\]]+(\]\[[^\[\]])*)\])?\s+on\s+([\s\S]+)$/,
+                paramRegexp : /^([_\w]+)(\[([^[\]]+(\]\[[^[\]])*)\])?\s+on\s+([\s\S]+)$/,
                 process : function (out, statement, param) {
                     var viewBaseName = param[1];
-                    if (Aria.isJsReservedWord(viewBaseName)) {
+                    if (isJsReservedWord(viewBaseName)) {
                         return out.logError(statement, statementsSingleton.INCORRECT_VARIABLE_NAME, [viewBaseName]);
                     }
                     var viewParametersString = param[3];
@@ -358,7 +365,11 @@ module.exports = Aria.classDefinition({
                         view.firstDefinition = statement;
                         view.nbParams = numberOfParameters;
                     }
-                    out.addDependency("aria.templates.View"); // dependency on the view object
+                    // out.addDependency({"aria.templates.View"}); // dependency on the view object
+                    out.addDependency({
+                      importType: 'SideEffect',
+                      modulepath: 'ariatemplates/templates/View.js' // dependency on the view object
+                    });
                     var isGlobal = !out.isOutputReady();
                     if (isGlobal) {
                         out.enterBlock("globalVars");
@@ -399,7 +410,7 @@ module.exports = Aria.classDefinition({
                 process : function (out, statement, param) {
                     var variterset = out.newVarName();
                     var varitervalue = param[1];
-                    if (Aria.isJsReservedWord(varitervalue)) {
+                    if (isJsReservedWord(varitervalue)) {
                         return out.logError(statement, statementsSingleton.INCORRECT_VARIABLE_NAME, [varitervalue]);
                     }
                     var inKeyWord = param[2];
@@ -432,7 +443,7 @@ module.exports = Aria.classDefinition({
                     out.writeln("}");
 
                     var variterct = varitervalue + "_ct";
-                    statement[Aria.FRAMEWORK_PREFIX + 'foreachCounter'] = variterct; // for the separator statement
+                    statement[FRAMEWORK_PREFIX + 'foreachCounter'] = variterct; // for the separator statement
                     out.writeln("var ", variterct, "=0;");
                     var varLastIndex;
                     if (iteratesView) {
@@ -487,7 +498,11 @@ module.exports = Aria.classDefinition({
                     if (out.debug) {
                         param = out.wrapExpression(param, statement, "this.EXCEPTION_IN_REPEATER_PARAMETER");
                     }
-                    out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
+                    // out.addDependency("aria.templates.Repeater"); // dependency on the Repeater object
+                    out.addDependency({
+                      importType: 'SideEffect',
+                      modulepath: 'ariatemplates/aria/templates/Repeater.js' // dependency on the Repeater object
+                    });
                     out.writeln("this.__$statementRepeater(", statement.lineNumber, ",(", param, "));");
                 }
             },
@@ -512,16 +527,16 @@ module.exports = Aria.classDefinition({
                     out.increaseIndent();
                     out.writeln("try {");
                     out.increaseIndent();
-                    out.writeln("with (this) {");
-                    out.increaseIndent();
+                    // out.writeln("with (this) {");
+                    // out.increaseIndent();
                     out.processContent(statement.content);
-                    out.decreaseIndent();
-                    out.writeln("}");
+                    // out.decreaseIndent();
+                    // out.writeln("}");
                     out.decreaseIndent();
                     out.writeln("} catch (_ex) {");
                     out.increaseIndent();
                     out.writeln("this.$logError(this.EXCEPTION_IN_MACRO,[", out.stringify(macroname), ",__filename, this['"
-                            + Aria.FRAMEWORK_PREFIX + "currentLineNumber']],_ex);");
+                            + FRAMEWORK_PREFIX + "currentLineNumber']],_ex);");
                     out.decreaseIndent();
                     out.writeln("}");
                     if (globalMacroVariables.length > 0) {
@@ -542,6 +557,7 @@ module.exports = Aria.classDefinition({
                 container : true,
                 // Syntax: macro macroname ( macroparam1, macroparam2 ... )
                 paramRegexp : /^[\S\s]*$/,
+                // eslint-disable-next-line no-unused-vars
                 process : function (out, statement, param) {
                     out.processContent(statement.content);
                 }
@@ -606,7 +622,7 @@ module.exports = Aria.classDefinition({
                         out.writeln("} catch (_ex) {");
                         out.increaseIndent();
                         out.writeln("this.$logError(this.EXCEPTION_IN_MACRO,[", out.stringify(currentMacroName), ",__filename, this['"
-                                + Aria.FRAMEWORK_PREFIX + "currentLineNumber']],_ex);");
+                                + FRAMEWORK_PREFIX + "currentLineNumber']],_ex);");
                         out.decreaseIndent();
                         out.writeln("}");
                         out.decreaseIndent();
@@ -629,7 +645,7 @@ module.exports = Aria.classDefinition({
 
                     var varname = param[1];
                     var value = param[2];
-                    if (Aria.isJsReservedWord(varname)) {
+                    if (isJsReservedWord(varname)) {
                         return out.logError(statement, statementsSingleton.INCORRECT_VARIABLE_NAME, [varname]);
                     }
                     if (out.isOutputReady()) {
@@ -661,14 +677,14 @@ module.exports = Aria.classDefinition({
             "set" : {
                 inMacro : true,
                 container : false,
-                paramRegexp : /^([_\w]+(?:\.[_\w]+)*)\s*([\+\-]?\=)([\s\S]*)$/,
+                paramRegexp : /^([_\w]+(?:\.[_\w]+)*)\s*([+-]?=)([\s\S]*)$/,
                 process : function (out, statement, param) {
                     var varname = param[1];
                     var op = param[2];
                     var value = param[3];
                     var varnames = varname.split('.');
                     for (var i = 0, ii = varnames.length; i < ii; i++) {
-                        if (Aria.isJsReservedWord(varnames[i])) {
+                        if (isJsReservedWord(varnames[i])) {
                             return out.logError(statement, statementsSingleton.INCORRECT_VARIABLE_NAME, [varname]);
                         }
                     }
@@ -686,11 +702,11 @@ module.exports = Aria.classDefinition({
             "checkDefault" : {
                 inMacro : true,
                 container : false,
-                paramRegexp : /^([_\w]+)\s*\=([\s\S]*)$/,
+                paramRegexp : /^([_\w]+)\s*=([\s\S]*)$/,
                 process : function (out, statement, param) {
                     var varname = param[1];
                     var value = param[2];
-                    if (Aria.isJsReservedWord(varname)) {
+                    if (isJsReservedWord(varname)) {
                         return out.logError(statement, statementsSingleton.INCORRECT_VARIABLE_NAME, [varname]);
                     }
                     if (out.debug) {
@@ -717,34 +733,38 @@ module.exports = Aria.classDefinition({
                     }
                     var libName = parsename[1];
                     var widgetName = parsename[2];
-                    var libclasspath = out.templateParam.$wlibs[libName];
-                    if (libclasspath === undefined) {
+                    const libImportSpec = out.templateParam.$wlibs[libName];
+                    if (libImportSpec === undefined) {
                         return out.logError(statement, statementsSingleton.UNDECLARED_WIDGET_LIBRARY, [libName]);
                     }
-                    if (!out.dontLoadWidgetLibs) {
+                    const libclass = libImportSpec.classpath;
+
+                    // if (!out.dontLoadWidgetLibs) {
                         var wlib = out.wlibs[libName];
                         if (!wlib) {
-                            wlib = Aria.getClassRef(libclasspath);
-                            if (!ariaUtilsType.isInstanceOf(wlib, "aria.widgetLibs.WidgetLib")) {
-                                return out.logError(statement, statementsSingleton.INVALID_WIDGET_LIBRARY, [libName,
-                                        libclasspath]);
+                            wlib = getClassRef(libImportSpec.classpath);
+                            if (!isInstanceOf(wlib, "aria.widgetLibs.WidgetLib")) {
+                                return out.logError(statement, statementsSingleton.INVALID_WIDGET_LIBRARY, [libName, libImportSpec]);
                             }
                             out.wlibs[libName] = wlib;
                         }
-                        var dep = wlib.getWidgetDependencies(widgetName, out.allDependencies);
+                        var dep = wlib.getWidgetDependencies(widgetName, true);
                         if (!dep) {
                             return out.logError(statement, statementsSingleton.UNKNOWN_WIDGET, [statement.name]);
                         }
+                        out.addDependency(convertToSideEffectImportSpec(libImportSpec));
                         out.addDependencies(dep);
-                    }
+                    // }
                     var param = statement.paramBlock;
                     if (param.length === 0) {
                         param = "undefined";
                     } else {
                         // Look for use of standard binding transforms
                         // and automatically add those to dependencies
+
+                        // MUST_DO: ModernAria: Implement dependency injection for standard binding transforms
                         var transformDependencies = [];
-                        var regEx = /[\'\"](aria\.widgets\.transform\.(.+))[\'\"]/g;
+                        var regEx = /['"](aria\.widgets\.transform\.(.+))['"]/g;
                         var myMatch = regEx.exec(param);
                         while (myMatch) {
                             transformDependencies.push(myMatch[1]);
@@ -759,7 +779,7 @@ module.exports = Aria.classDefinition({
 
                     if (statement.content) {
                         // container widget
-                        out.writeln("if (this.__$beginContainerWidget(", out.stringify(libclasspath), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ")) {");
+                        out.writeln("if (this.__$beginContainerWidget(", out.stringify(libclass), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ")) {");
                         out.increaseIndent();
                         out.processContent(statement.content);
                         out.writeln("this.__$endContainerWidget();");
@@ -767,25 +787,25 @@ module.exports = Aria.classDefinition({
                         out.writeln("}");
                     } else {
                         // simple widget
-                        out.writeln("this.__$processWidgetMarkup(", out.stringify(libclasspath), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ");");
+                        out.writeln("this.__$processWidgetMarkup(", out.stringify(libclass), ",", out.stringify(widgetName), ",(", param, "),", statement.lineNumber, ");");
                     }
                     statement.properties = {
                         libName: libName,
-                        libClasspath: libclasspath,
+                        libClasspath: libImportSpec,
                         widgetName: widgetName
                     };
                 }
             }
         };
 
-        ariaCoreAppEnvironment.$on({
-            "environmentChanged" : this.__onEnvironmentChanged,
-            scope : this
-        });
+        // ariaCoreAppEnvironment.$on({
+        //     "environmentChanged" : this.__onEnvironmentChanged,
+        //     scope : this
+        // });
 
     },
     $destructor : function () {
-        ariaCoreAppEnvironment.$unregisterListeners(this);
+        // ariaCoreAppEnvironment.$unregisterListeners(this);
     },
     $prototype : {
 
@@ -795,12 +815,13 @@ module.exports = Aria.classDefinition({
          * @private
          */
         __allowSectionsAsContainers : function () {
-            var allowSectionsAsContainers = ariaCoreEnvironmentEnvironment.checkApplicationSettings("templateSettings").allowSectionsAsContainers;
+            // var allowSectionsAsContainers = ariaCoreEnvironmentEnvironment.checkApplicationSettings("templateSettings").allowSectionsAsContainers;
 
-            if (allowSectionsAsContainers) {
-                this.$logWarn(this.SECTIONS_AS_CONTAINERS);
-            }
-            return allowSectionsAsContainers;
+            // if (allowSectionsAsContainers) {
+            //     this.$logWarn(this.SECTIONS_AS_CONTAINERS);
+            // }
+            // MUST_DO: ModernAria: Implement allowSectionsAsContainers compiler setting
+            return false;
 
         },
 

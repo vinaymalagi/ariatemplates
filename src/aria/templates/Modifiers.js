@@ -18,6 +18,7 @@ import { escapeForHTML, stripAccents } from '../utils/String.js';
 import { forEach } from '../utils/Array.js';
 import { getClassRef } from '../core/class-registry.js';
 
+// MUST_CHECK: ModernAria: Implment a way to split and register modifiers on a per template basis like Angular does with Pipes
 
 // //////////////////////////////////////////////////////////////////////////////////////////
 // IMPORTANT: no modifier should assume `this === aria.templates.Modifiers` holds.
@@ -44,8 +45,10 @@ var regExSpecials, __modifiers = {
      * Initialization function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.String"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.String"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Use the <a
@@ -166,8 +169,10 @@ var regExSpecials, __modifiers = {
      * Initialisation function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.Date", "aria.utils.Type"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.Date", "aria.utils.Type"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Format a date with a given pattern
@@ -189,8 +194,10 @@ var regExSpecials, __modifiers = {
      * Initialisation function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.Date", "aria.utils.Type"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.Date", "aria.utils.Type"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Format a time with a given pattern
@@ -213,8 +220,10 @@ var regExSpecials, __modifiers = {
      * Initialisation function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Will highlight with &lt:strong&gt; tag the first
@@ -257,8 +266,10 @@ var regExSpecials, __modifiers = {
      * Initialisation function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Will highlight with &lt:strong&gt; tag the
@@ -285,8 +296,10 @@ var regExSpecials, __modifiers = {
      * Initialisation function called when the template is parsed
      * @param {aria.templates.ClassWriter} out
      */
+    // eslint-disable-next-line no-unused-vars
     init: function (out) {
-      out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
+      // MUST_CHECK: ModernAria: Refactor: Init to add dpendencies should not be needed, as the dependency kind of becomes part of the closure of this module file.
+      // out.addDependencies(["aria.utils.String", "aria.utils.Type"]);
     },
     /**
      * <span style="font-weight: bold">MODIFIER</span> <br/> Will highlight with &lt;strong&gt; tag the
@@ -357,6 +370,8 @@ var regExSpecials, __modifiers = {
  * descriptions.
  * @singleton
  */
+
+// MUST_CHECK: ModernAria: Refactor: Maybe does not need to be a singleton, can be an instance per template, and becomes a registry for modifiers for the current template.
 export const Modifiers = classDefinition({
   $classpath: "aria.templates.Modifiers",
   $singleton: true,

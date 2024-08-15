@@ -15,16 +15,20 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.GlobalStyle",
-    $dependencies : ["aria.widgets.environment.WidgetSettings","aria.widgets.AriaSkinInterface"],
-    $extends: "aria.widgets.WidgetStyle",
+    $dependencies : [
+      {importType: 'Default', modulePath: './environment/WidgetSettings.js', name: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'},
+      {importType: 'Default', modulePath: './AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
+      {importType: 'Named', modulePath: '../core/Browser.js', name: 'Browser', alias: 'ariaCoreBrowser', classpath: 'aria.core.Browser'}
+    ],
+    $extends: {importType: 'Default', modulePath: './WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'},
     $csslibs : {
-        text : "aria.widgets.TextStyle"
+      text : {importType: 'SideEffect', modulePath: './TextStyle.cml.js', classpath: 'aria.widgets.TextStyle'}
     }
 }}
 
 {macro main()}
-    {var general = aria.widgets.AriaSkinInterface.getGeneral()/}
-    {var widgetGeneral = aria.widgets.AriaSkinInterface.getWidgetGeneral()/}
+    {var general = ariaWidgetsAriaSkinInterface.getGeneral()/}
+    {var widgetGeneral = ariaWidgetsAriaSkinInterface.getWidgetGeneral()/}
 /* Note: all private classes start with 'x' - these classes must not be used in application pages as they can change when new features are implemented */
 
 .xLDI {
@@ -41,7 +45,7 @@
 }
 
 /*AT Widget wrapper DOMElm */
-{var widgetSettings = aria.widgets.environment.WidgetSettings.getWidgetSettings() /}
+{var widgetSettings = ariaWidgetsEnvironmentWidgetSettings.getWidgetSettings() /}
 .xWidget {
     position: relative;
     display: inline-block;
@@ -97,7 +101,7 @@
     position: relative;
 }
 
-{if aria.core.Browser.isIE7 }
+{if ariaCoreBrowser.isIE7 }
 .xFixedHeightFrame_w {
     vertical-align:top;
 }
@@ -107,7 +111,7 @@
 }
 {/if}
 
-{if aria.core.Browser.isIE10 || aria.core.Browser.isModernIE}
+{if ariaCoreBrowser.isIE10 || ariaCoreBrowser.isModernIE}
 .xTextInputInput::-ms-clear {
     display: none;
 }
@@ -116,7 +120,7 @@
 }
 {/if}
 
-{if aria.core.Browser.isSafari || aria.core.Browser.isChrome || aria.core.Browser.isOpera}
+{if ariaCoreBrowser.isSafari || ariaCoreBrowser.isChrome || ariaCoreBrowser.isOpera}
 *:focus {
     outline-width: 0;
 }

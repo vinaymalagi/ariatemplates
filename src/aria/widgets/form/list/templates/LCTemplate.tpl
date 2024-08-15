@@ -16,7 +16,7 @@
 // Default template LCResourceHandler
 {Template {
     $classpath : 'aria.widgets.form.list.templates.LCTemplate',
-    $extends : 'aria.widgets.form.list.templates.ListTemplate'
+    $extends : {importType: 'Default', modulePath: './ListTemplate.tpl.js', name: 'ariaWidgetsFormListTemplatesListTemplate', classpath: 'aria.widgets.form.list.templates.ListTemplate'}
 }}
 
     {macro renderItem(item, itemIdx)}

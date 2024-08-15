@@ -12,18 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsString = require("../utils/String");
-var ariaTemplatesParser = require("./Parser");
+import { classDefinition } from "../core/class-definition.js";
+import { indexOfNotEscaped } from "../utils/String.js";
+import { Parser as ariaTemplatesParser } from "./Parser.js";
 
 /**
  * Parser for CSS Template. A CSS template should be interpreted by the template engine to build a CSS Template class.
  * The difference with the HTML Template parser is that in this case it's necessary to escape any curly brackets that
  * does not belong to a dictionary of allowed Template statements.
  */
-module.exports = Aria.classDefinition({
+export const CSSParser = classDefinition({
     $classpath : "aria.templates.CSSParser",
     $extends : ariaTemplatesParser,
+    // MUST_CHECK: ModrernAria: Cannot be a singleton, as multiple files maybe processed in parallell.
     $singleton : true,
     $statics : {
         // ERROR MESSAGES:
@@ -64,15 +65,15 @@ module.exports = Aria.classDefinition({
          */
         __preprocess : function (dictionary, throwErrors) {
             // Everyting starts on the first {
-            var text = this.template, utilString = ariaUtilsString, currentPosition = 0, nextOpening = -1, nextClosing = -1, wholeText = [], nameExtractor = /^\{[\s\/]*?([\w]+)\b/, lastCopiedPosition = 0, textLength = text.length, statementLevel = -1, currentLevel = 0, lastOpenedLevel0 = -1;
+            var text = this.template, currentPosition = 0, nextOpening = -1, nextClosing = -1, wholeText = [], nameExtractor = /^\{[\s/]*?([\w]+)\b/, lastCopiedPosition = 0, textLength = text.length, statementLevel = -1, currentLevel = 0, lastOpenedLevel0 = -1;
 
             while (lastCopiedPosition < textLength) {
                 // Update the pointers
                 if (nextOpening < currentPosition) {
-                    nextOpening = utilString.indexOfNotEscaped(text, "{", currentPosition);
+                    nextOpening = indexOfNotEscaped(text, "{", currentPosition);
                 }
                 if (nextClosing < currentPosition) {
-                    nextClosing = utilString.indexOfNotEscaped(text, "}", currentPosition);
+                    nextClosing = indexOfNotEscaped(text, "}", currentPosition);
                 }
 
                 if (nextOpening > -1 && (nextClosing > nextOpening || nextClosing == -1)) {

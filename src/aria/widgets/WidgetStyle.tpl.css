@@ -15,8 +15,11 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.WidgetStyle",
-    $dependencies : ["aria.widgets.AriaSkinInterface", "aria.utils.Type"],
-    $hasScript: true
+    $dependencies : [
+      {importType: 'Default', modulePath: './AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
+      {importType: 'Named', modulePath: '../utils/Type.js', name: 'isNumber', classpath: 'aria.utils.Type'}
+    ],
+    $script: {importType: 'Default', modulePath: './WidgetStyleScript.js', name: 'ariaWidgetsWidgetStyleScriptScript', classpath: 'aria.widgets.WidgetStyleScript'}
 }}
 
     {var skinnableClassName="Widget"/}
@@ -27,7 +30,7 @@
     {/macro}
 
     {macro startLooping()}
-        {var skinClasses=aria.widgets.AriaSkinInterface.getSkinClasses(skinnableClassName)/}
+        {var skinClasses=ariaWidgetsAriaSkinInterface.getSkinClasses(skinnableClassName)/}
         {foreach skinClass in skinClasses}
             {var info={
                 skinClassName: skinClass_index,
@@ -39,7 +42,7 @@
     {/macro}
 
     {macro writeAllStates(info)}
-        {var states=aria.widgets.AriaSkinInterface.getWidgetStates(skinnableClassName)/}
+        {var states=ariaWidgetsAriaSkinInterface.getWidgetStates(skinnableClassName)/}
         {if states}
             {foreach state in states}
                 {var info={
@@ -68,7 +71,7 @@
         {checkDefault color=""/}
         {checkDefault imageurl=""/}
         {checkDefault otherparams=""/}
-        ${aria.widgets.AriaSkinInterface.backgroundMacro(color,imageurl,otherparams)}
+        ${ariaWidgetsAriaSkinInterface.backgroundMacro(color,imageurl,otherparams)}
     {/macro}
 
     {macro opacity(percent)}

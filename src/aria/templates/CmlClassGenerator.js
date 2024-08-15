@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesCSSParser = require("./CSSParser");
-var ariaTemplatesCSSClassGenerator = require("./CSSClassGenerator");
-var ariaTemplatesClassGenerator = require("./ClassGenerator");
+import { classDefinition } from "../core/class-definition.js";
+import { CSSParser as ariaTemplatesCSSParser } from "./CSSParser.js";
+import { CSSClassGenerator as ariaTemplatesCSSClassGenerator } from "./CSSClassGenerator.js";
+import { ClassGenerator as ariaTemplatesClassGenerator } from "./ClassGenerator.js";
 
 
 /**
  * Generate the class definition for a CSS Template library
  * @class aria.templates.CmlClassGenerator
  */
-module.exports = Aria.classDefinition({
+export const CmlClassGenerator = classDefinition({
     $classpath : 'aria.templates.CmlClassGenerator',
     $extends : ariaTemplatesClassGenerator,
     $singleton : true,
@@ -36,7 +36,7 @@ module.exports = Aria.classDefinition({
         this._parser = ariaTemplatesCSSParser;
 
         // Redefine the class used as the parent for templates which do not inherit from any other template
-        this._superClass = "aria.templates.CSSTemplate";
+        this._superClassImportSpec = { importType: 'Named', modulePath: 'ariatemplates/aria/templates/CSSTemplate.js', name: 'CSSTemplate', alias: 'ariaTemplatesCSSTemplate', classpath: 'aria.templates.CSSTemplate' };
 
         this._classType = "CML";
         this._rootStatement = "CSSLibrary";

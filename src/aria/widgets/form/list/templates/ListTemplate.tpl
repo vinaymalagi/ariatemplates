@@ -16,7 +16,7 @@
 // Default template for List Widget
 {Template {
     $classpath:'aria.widgets.form.list.templates.ListTemplate',
-    $hasScript:true
+    $script: {importType: 'Default', modulePath: './ListTemplateScript.js', name: 'ariaWidgetsFormListTemplatesListTemplateScript', classpath: 'aria.widgets.form.list.templates.ListTemplateScript'}
 }}
     {macro main()}
         // The Div is used to wrap the items with good looking border.

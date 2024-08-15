@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesTxtParser = require("./TxtParser");
-var ariaTemplatesClassGenerator = require("./ClassGenerator");
+import { classDefinition } from "../core/class-definition.js";
+import { TxtParser as ariaTemplatesTxtParser} from "./TxtParser.js";
+import {ClassGenerator as ariaTemplatesClassGenerator} from "./ClassGenerator.js";
 
 
 /**
@@ -23,7 +23,7 @@ var ariaTemplatesClassGenerator = require("./ClassGenerator");
  * @extends aria.templates.ClassGenerator
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export const TxtClassGenerator = classDefinition({
     $classpath : 'aria.templates.TxtClassGenerator',
     $extends : ariaTemplatesClassGenerator,
     $singleton : true,
@@ -38,10 +38,10 @@ module.exports = Aria.classDefinition({
 
         /**
          * Redefine the class used as the parent for templates which do not inherit from any other template
-         * @type String
+         * @type Object
          * @protected
          */
-        this._superClass = "aria.templates.TextTemplate";
+        this._superClassImportSpec = { importType: 'Named', modulePath: 'ariatemplates/aria/templates/TextTemplate.js', name: 'TextTemplate', alias: 'ariaTemplatesTextTemplate', classpath: 'aria.templates.TextTemplate' };
 
         /**
          * Set the classtype

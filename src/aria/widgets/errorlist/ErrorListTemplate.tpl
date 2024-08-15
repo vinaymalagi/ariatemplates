@@ -15,7 +15,7 @@
 
 {Template {
     $classpath:'aria.widgets.errorlist.ErrorListTemplate',
-    $hasScript: true
+    $script: {importType: 'Default', modulePath: './ErrorListTemplateScript.js', name: 'ariaWidgetsErrorlistErrorListTemplateScript', classpath: 'aria.widgets.errorlist.ErrorListTemplateScript'}
 }}
 
     {macro main()}

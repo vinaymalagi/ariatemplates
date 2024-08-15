@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsJson = require("../utils/Json");
-var ariaUtilsType = require("../utils/Type");
-var ariaWidgetLibsBaseWidget = require("./BaseWidget");
+import { emptyFn } from "../common/fixed-return-value-functions.js";
+import { classDefinition } from "../core/class-definition.js";
+import { getClassInstance } from "../core/class-registry.js";
+import { Json as ariaUtilsJson } from "../utils/Json";
+import { isString, isFunction } from "../utils/Type";
+import { BaseWidget as ariaWidgetLibsBaseWidget } from "./BaseWidget.js";
 
 
 /**
@@ -24,7 +26,7 @@ var ariaWidgetLibsBaseWidget = require("./BaseWidget");
  * in the data model the function '_notifyDataChange' is called. It also provides a method to transform bound values
  * to/from the widget.
  */
-module.exports = Aria.classDefinition({
+export default classDefinition({
     $classpath : "aria.widgetLibs.BindableWidget",
     $extends : ariaWidgetLibsBaseWidget,
     $statics : {
@@ -62,7 +64,7 @@ module.exports = Aria.classDefinition({
     $destructor : function () {
         var listeners = this._bindingListeners, jsonUtils = ariaUtilsJson;
         for (var property in listeners) {
-            if (listeners.hasOwnProperty(property)) {
+            if (Object.prototype.hasOwnProperty.call(listeners, property)) {
                 var bind = listeners[property];
                 jsonUtils.removeListener(bind.inside, bind.to, bind.cb);
             }
@@ -80,7 +82,7 @@ module.exports = Aria.classDefinition({
             var bindings = this._cfg.bind;
             if (bindings) {
                 for (var property in bindings) {
-                    if (bindings.hasOwnProperty(property)) {
+                    if (Object.prototype.hasOwnProperty.call(bindings, property)) {
                         this._registerSingleProperty(property);
                     }
                 }
@@ -108,7 +110,7 @@ module.exports = Aria.classDefinition({
 
                     var newValue = this._transform(bind.transform, bind.inside[bind.to], "toWidget");
                     this.setWidgetProperty(property, newValue);
-                } catch (ex) {
+                } catch {
                     this.$logError(this.INVALID_BEAN, [property, "bind"]);
                 }
             }
@@ -120,7 +122,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} args details about what changed
          * @param {String} propertyName key of the binding configuration that registered this callback
          */
-        _notifyDataChange : Aria.empty,
+        _notifyDataChange : emptyFn,
 
         /**
          * Set property for this widget. This is called by BindableWidget after a bind has been registered because
@@ -129,7 +131,7 @@ module.exports = Aria.classDefinition({
          * @param {String} propertyName in the configuration
          * @param {Object} newValue to set
          */
-        setWidgetProperty : Aria.empty,
+        setWidgetProperty : emptyFn,
 
         /**
          * Transforms a value from the widget value to the corresponding datamodel value using the specified transform.
@@ -145,17 +147,16 @@ module.exports = Aria.classDefinition({
             var retVal = value;
             if (transform) {
                 var created = false;
-                var typeUtils = ariaUtilsType;
 
                 // Instantiate the class if we refer to a class path
-                if (typeUtils.isString(transform) && transform.indexOf('.') != -1) {
-                    transform = Aria.getClassInstance(transform);
+                if (isString(transform) && transform.indexOf('.') != -1) {
+                    transform = getClassInstance(transform);
                     created = true;
                 }
 
                 if (transform[direction]) {
                     retVal = this.evalCallback(transform[direction], retVal);
-                } else if (typeUtils.isFunction(transform)) {
+                } else if (isFunction(transform)) {
                     retVal = this.evalCallback(transform, retVal);
                 }
                 if (created) {

@@ -12,13 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
 
+
+// MUST_CHECK: ModernAria: Refactor: Check possibilty to remove widgetLibs from the framework althogether and use $widgets instead of $wlibs to register widgets against the template/template context.
 
 /**
  * Base class for widget libraries.
  */
-module.exports = Aria.classDefinition({
+export const WidgetLib = classDefinition({
     $classpath : 'aria.widgetLibs.WidgetLib',
     $statics : {
         UNKWOWN_WIDGET : "Unknown widget name in the library.",
@@ -36,21 +39,25 @@ module.exports = Aria.classDefinition({
         /**
          * Return a list of dependencies which must be loaded before a widget can be used.
          * @param {String} widgetName the name of the widget - e.g. TextField
-         * @param {Boolean} includeLoaded [optional, default: false] if true, also include dependencies which are
-         * already loaded
+         * @param {Boolean} convertToSideEffectImportSpec [optional, default: false] if true, returns a side effect import spec for the widget, else the defined import spec.
          * @return {Array} array of classpaths which should be loaded so that the widget can be used. Must return null
          * if the widget does not exist. Return an empty array if the widget is already usable and includeLoaded is
          * false.
          */
-        getWidgetDependencies : function (widgetName, includeLoaded) {
-            var classpath = this.widgets[widgetName];
-            if (classpath == null) {
+        getWidgetDependencies : function (widgetName, convertToSideEffectImportSpec = false) {
+            const widgetSpec = this.widgets[widgetName];
+            if (!widgetSpec) {
                 return null;
+            } else {
+              if(convertToSideEffectImportSpec) {
+                return [{
+                  importType: "SideEffect",
+                  modulePath: widgetSpec.modulePath
+                }];
+              } else {
+                return [widgetSpec];
+              }
             }
-            if (includeLoaded || Aria.getClassRef(classpath) == null) {
-                return [classpath];
-            }
-            return [];
         },
 
         /**
@@ -61,14 +68,14 @@ module.exports = Aria.classDefinition({
          * @param {Number} lineNbr line number of the widget in the template
          */
         processWidgetMarkup : function (widgetName, out, cfg, lineNbr) {
-            var classpath = this.widgets[widgetName];
+            var classpath = this.widgets[widgetName].classpath;
             try {
                 if (classpath) {
                     // default object if cfg was null
                     if (!cfg) {
                         cfg = {};
                     }
-                    var widgetClass = Aria.getClassRef(classpath);
+                    var widgetClass = getClassRef(classpath);
                     var instance = new widgetClass(cfg, out.tplCtxt, lineNbr);
                     out.registerBehavior(instance);
                     instance.writeMarkup(out);
@@ -92,14 +99,14 @@ module.exports = Aria.classDefinition({
          * @param {Number} lineNbr line number of the widget in the template
          */
         processWidgetMarkupBegin : function (widgetName, out, cfg, lineNbr) {
-            var classpath = this.widgets[widgetName];
+            var classpath = this.widgets[widgetName].classpath;
             try {
                 if (classpath) {
                     // default object if cfg was null
                     if (!cfg) {
                         cfg = {};
                     }
-                    var widgetClass = Aria.getClassRef(classpath);
+                    var widgetClass = getClassRef(classpath);
                     var instance = new widgetClass(cfg, out.tplCtxt, lineNbr);
                     out.registerBehavior(instance);
                     instance.writeMarkupBegin(out);

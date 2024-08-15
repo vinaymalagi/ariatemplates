@@ -12,16 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesParser = require("./Parser");
+import { classDefinition } from "../core/class-definition.js";
+import { Parser as ariaTemplatesParser } from "./Parser.js";
 
 /**
  * Parser class for templates files. It converts a file written with the template syntax into a tree matching bean
  * definitions in <code>aria.templates.TreeBeans</code>
  */
-module.exports = Aria.classDefinition({
+export const TplParser = classDefinition({
     $classpath : "aria.templates.TplParser",
     $extends : ariaTemplatesParser,
+    // MUST_CHECK: ModrernAria: Cannot be a singleton, as multiple files maybe processed in parallell.
     $singleton : true,
     $prototype : {
         /**

@@ -12,15 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsIdManager = require("../utils/IdMgr");
-var ariaTemplatesCSSMgr = require("../templates/CSSMgr");
-var ariaUtilsArray = require("../utils/Array");
+import { classDefinition } from '../core/class-definition.js';
+import { IdMgr as ariaUtilsIdManager } from '../utils/IdMgr.js';
+import { CSSMgr as ariaTemplatesCSSMgr } from '../templates/CSSMgr.js';
+import { indexOf, removeAt } from '../utils/Array.js';
 
 
-(function () {
+
     var idMgr = null;
-    var arrayUtils = null;
 
     /**
      * Add template and line number information to the msgArgs array to be used for logs functions. Return the modified
@@ -43,16 +42,16 @@ var ariaUtilsArray = require("../utils/Array");
     /**
      * Base class that all widgets have to extend.
      */
-    module.exports = Aria.classDefinition({
+    export const BaseWidget = classDefinition({
         $classpath : "aria.widgetLibs.BaseWidget",
+        // MUST_DO: ModernAria: Refactor: onload should add values to $statics maybe, when converting to proper es class syntax.
         $onload : function () {
             idMgr = new ariaUtilsIdManager("w");
-            arrayUtils = ariaUtilsArray;
         },
+        // MUST_DO: ModernAria: Refactor: with esmodules onload will never get called. Figure out how to dispose properly.
         $onunload : function () {
             idMgr.$dispose();
             idMgr = null;
-            arrayUtils = null;
         },
         /**
          * Create an instance of the widget.
@@ -123,6 +122,7 @@ var ariaUtilsArray = require("../utils/Array");
              * method is intended to be overridden by sub-classes. The method in BaseWidget logs an error.
              * @param {aria.templates.MarkupWriter} out
              */
+            // eslint-disable-next-line no-unused-vars
             writeMarkup : function (out) {
                 this.$logError(this.WIDGET_CONTAINER_ONLY);
             },
@@ -133,6 +133,7 @@ var ariaUtilsArray = require("../utils/Array");
              * method in BaseWidget logs an error.
              * @param {aria.templates.MarkupWriter} out
              */
+            // eslint-disable-next-line no-unused-vars
             writeMarkupBegin : function (out) {
                 this.$logError(this.WIDGET_NOT_CONTAINER);
             },
@@ -207,6 +208,7 @@ var ariaUtilsArray = require("../utils/Array");
              * does nothing.
              * @param {aria.templates.MarkupWriter} out
              */
+            // eslint-disable-next-line no-unused-vars
             writeMarkupEnd : function (out) {},
 
             /**
@@ -238,13 +240,13 @@ var ariaUtilsArray = require("../utils/Array");
             _releaseDynamicId : function (id) {
                 var dynamicIds = this._dynamicIds;
                 if (dynamicIds) {
-                    var index = arrayUtils.indexOf(dynamicIds, id);
+                    var index = indexOf(dynamicIds, id);
                     if (index != -1) {
                         idMgr.releaseId(id);
                         if (dynamicIds.length == 1) {
                             this._dynamicIds = null;
                         } else {
-                            arrayUtils.removeAt(dynamicIds, index);
+                            removeAt(dynamicIds, index);
                         }
                     }
                 }
@@ -264,4 +266,3 @@ var ariaUtilsArray = require("../utils/Array");
             }
         }
     });
-})();

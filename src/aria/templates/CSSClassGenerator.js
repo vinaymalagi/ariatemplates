@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesCSSParser = require("./CSSParser");
-var ariaTemplatesClassGenerator = require("./ClassGenerator");
+import { classDefinition } from "../core/class-definition.js";
+import { CSSParser as ariaTemplatesCSSParser } from "./CSSParser.js";
+import { ClassGenerator as ariaTemplatesClassGenerator } from "./ClassGenerator.js";
 
 
 /**
@@ -22,7 +22,7 @@ var ariaTemplatesClassGenerator = require("./ClassGenerator");
  * @class aria.templates.CSSClassGenerator
  * @extends aria.templates.ClassGenerator
  */
-module.exports = Aria.classDefinition({
+export const CSSClassGenerator = classDefinition({
     $classpath : 'aria.templates.CSSClassGenerator',
     $extends : ariaTemplatesClassGenerator,
     $singleton : true,
@@ -36,7 +36,7 @@ module.exports = Aria.classDefinition({
         this._parser = ariaTemplatesCSSParser;
 
         // Redefine the class used as the parent for templates which do not inherit from any other template
-        this._superClass = "aria.templates.CSSTemplate";
+        this._superClassImportSpec = { importType: 'Named', modulePath: 'ariatemplates/aria/templates/CSSTemplate.js', name: 'CSSTemplate', alias: 'ariaTemplatesCSSTemplate', classpath: 'aria.templates.CSSTemplate' };
 
         this._classType = "CSS";
         this._rootStatement = "CSSTemplate";
@@ -52,7 +52,17 @@ module.exports = Aria.classDefinition({
         _writeClassInit : function (out) {
             // var tplParam = out.templateParam;
             out.enterBlock("classInit");
-            this._writeMapInheritance(out, "__$csslibs", out.templateParam.$csslibs, "{}");
+            const cssLibsSpec = out.templateParam.$csslibs;
+            let cssLibsSpecClassPath;
+            if (cssLibsSpec) {
+                cssLibsSpecClassPath = {};
+                for (const key in cssLibsSpec) {
+                    const libSpec = cssLibsSpec[key];
+                    const libClassPath = libSpec.classpath;
+                    cssLibsSpecClassPath[key] = libClassPath;
+                }
+            }
+            this._writeMapInheritance(out, "__$csslibs", cssLibsSpecClassPath, "{}");
             this._writeValueInheritance(out, "__$prefix", out.templateParam.$prefix, "true");
             out.leaveBlock();
             this.$ClassGenerator._writeClassInit.call(this, out);

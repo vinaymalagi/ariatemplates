@@ -16,7 +16,7 @@
 // Default template for List Widget
 {Template {
     $classpath:'aria.widgets.form.templates.TemplateMultiAuto',
-    $extends :"aria.widgets.form.templates.TemplateMultiSelect"
+    $extends: {importType: 'Default', modulePath: './TemplateMultiSelect.tpl.js', name: 'ariaWidgetsFormTemplatesTemplateMultiSelect', classpath: 'aria.widgets.form.templates.TemplateMultiSelect'}
 
 }}
     {macro main()}
