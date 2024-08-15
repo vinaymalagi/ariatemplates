@@ -7,12 +7,12 @@
 }}
   {macro main()}
     <div class="travelerForm">
-        <div class="formHelpMsg">Hello {foreach people inArray data.people} ${people.name} {/foreach}, this is Aria Templates!
+        <div class="formHelpMsg">Hello {foreach people inArray this.data.people} ${people.name} {/foreach}, this is Aria Templates!
 		<br/><br/>Click on a person to view its personal details:</div>
 
         {repeater {
             loopType: "array",
-            content: data.people,
+            content: this.data.people,
             type: "DIV",
             childSections : {
               id: "psection",

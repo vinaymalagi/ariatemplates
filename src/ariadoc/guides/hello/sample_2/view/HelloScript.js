@@ -1,7 +1,7 @@
 import { tplScriptDefinition } from '../../../../../aria/core/class-definition.js';
 import { Json as ariaUtilsJson } from '../../../../../aria/utils/Json.js';
 
-tplScriptDefinition({
+export default tplScriptDefinition({
   $classpath: 'ariadoc.guides.hello.sample_2.view.HelloScript',
   $constructor: function () { },
   $prototype: {

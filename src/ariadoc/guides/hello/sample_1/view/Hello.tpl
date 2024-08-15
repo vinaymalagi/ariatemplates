@@ -3,7 +3,7 @@
 }}
 
   {macro main()}
-    <h1>${data.msg}</h1>
+    <h1>${this.data.msg}</h1>
   {/macro}
 
 {/Template}
