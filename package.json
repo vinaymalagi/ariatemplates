@@ -14,32 +14,21 @@
     "attesterLauncherConfig": ""
   },
   "type": "module",
-  "main": "src/aria/node.js",
-  "scripts": {},
+  "scripts": {
+    "parseTemplates": "node ./template-compile-scripts/parse-template.js",
+    "launch-server": "http-server -p 8080 ./src"
+  },
   "dependencies": {
-    "at-noder-converter": "1.1.1",
-    "atpackager": "0.3.0",
-    "gzip-js": "0.3.2",
-    "noder-js": "1.6.2",
-    "zod": "^3.23.8",
-    "ua-parser-js": "^0.7.26"
+    "glob": "^11.0.0",
+    "ua-parser-js": "^0.7.33",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@stylistic/eslint-plugin": "^2.6.1",
-    "at-diff": "0.0.9",
-    "attester": "4.1.0",
     "eslint": "^9.8.0",
-    "express": "4.15.4",
     "globals": "^15.8.0",
-    "grunt": "1.0.1",
-    "grunt-contrib-jshint": "1.1.0",
-    "grunt-leading-indent": "0.2.0",
-    "grunt-verifylowercase": "0.2.0",
-    "madge": "^7.0.0",
-    "mocha": "3.5.2",
-    "playwright": "1.14.1",
-    "pug": "2.0.0-rc.4",
-    "robot-server": "0.0.4"
+    "http-server": "^14.1.1",
+    "madge": "^7.0.0"
   }
 }
