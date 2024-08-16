@@ -18,7 +18,7 @@
     $classpath:'aria.widgets.form.templates.TemplateMultiSelect',
     $script: {importType: 'Default', modulePath: './TemplateMultiSelectScript.js', name: 'AriaWidgetsFormTemplatesTemplateMultiSelectScript', classpath: 'aria.widgets.form.templates.TemplateMultiSelectScript'},
     $res:{
-      footerRes : 'aria.resources.multiselect.FooterRes'
+      footerRes : {importType: 'Default', modulePath: '../resources/multiselect/FooterRes.js', name: 'ariaResourcesMultiselectFooterRes', classpath: 'aria.resources.multiselect.FooterRes'}
     }
 }}
     {macro main()}

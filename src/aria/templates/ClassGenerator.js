@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 import { classDefinition } from "../core/class-definition.js";
-import { getLogicalPath } from "../core/framework-bootstrap.js";
 import { ariaEval } from "../core/js-eval.js";
 import { ClassWriter as ariaTemplatesClassWriter } from "./ClassWriter.js";
 import "./TreeBeans.js";
@@ -481,21 +480,26 @@ export const ClassGenerator = classDefinition({
      * @param {Object|String} res
      */
     _getResourceDependency: function (out, res) {
-      if (typeof res == "string") {
-        var logicalPath = getLogicalPath(res);
-        var serverRes = /([^/]*)\/Res$/.exec(logicalPath);
-        return 'require("ariatemplates/$resources").' + (serverRes ? "module(" + out.stringify(serverRes[1]) + "," : "file(")
-          + out.stringify(logicalPath) + ")";
+      // if (typeof res == "string") {
+      //   var logicalPath = getLogicalPath(res);
+      //   var serverRes = /([^/]*)\/Res$/.exec(logicalPath);
+      //   return 'require("ariatemplates/$resources").' + (serverRes ? "module(" + out.stringify(serverRes[1]) + "," : "file(")
+      //     + out.stringify(logicalPath) + ")";
+      // }
+      if(res.importType && res.modulePath) {
+        // Is a static resource import
+        return getUsageAliasFromNamedOrDefaultImportSpec(res);
       }
-      if (typeof res == "object") {
-        var tplParam = out.templateParam;
-        var params = ["", getLogicalPath(res.provider), tplParam.$classpath, res.onLoad || "",
-          res.handler || ""].concat(res.resources || []);
-        for (var i = 0, l = params.length; i < l; i++) {
-          params[i] = out.stringify(params[i]);
-        }
-        return 'require("ariatemplates/$resourcesProviders").fetch(' + params.join(",") + ')';
-      }
+      // MUST_DO: ModernAria: Implement Resource provider configuration
+      // if (typeof res == "object") {
+      //   var tplParam = out.templateParam;
+      //   var params = ["", getLogicalPath(res.provider), tplParam.$classpath, res.onLoad || "",
+      //     res.handler || ""].concat(res.resources || []);
+      //   for (var i = 0, l = params.length; i < l; i++) {
+      //     params[i] = out.stringify(params[i]);
+      //   }
+      //   return 'require("ariatemplates/$resourcesProviders").fetch(' + params.join(",") + ')';
+      // }
     },
 
     /**
@@ -509,17 +513,17 @@ export const ClassGenerator = classDefinition({
       var res = tplParam.$res;
       if (res) {
         // MUST_DO: ModernAria: Implement Resource imports and definitions
-        // out.writeln("$resources: {");
-        // out.increaseIndent();
-        // let first = true;
-        // for (const key in res) {
-        //   if (Object.prototype.hasOwnProperty.call(res, key)) {
-        //     out.writeln(first ? "" : ",", out.stringify(key), ": ", this._getResourceDependency(out, res[key]));
-        //     first = false;
-        //   }
-        // }
-        // out.decreaseIndent();
-        // out.writeln("},");
+        out.writeln("$resources: {");
+        out.increaseIndent();
+        let first = true;
+        for (const key in res) {
+          if (Object.prototype.hasOwnProperty.call(res, key)) {
+            out.writeln(first ? "" : ",", out.stringify(key), ": ", this._getResourceDependency(out, res[key]));
+            first = false;
+          }
+        }
+        out.decreaseIndent();
+        out.writeln("},");
       }
       var css = tplParam.$css;
 
