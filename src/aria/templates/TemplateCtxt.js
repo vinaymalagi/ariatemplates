@@ -1559,8 +1559,7 @@ export const TemplateCtxt = classDefinition({
                 return;
             }
             var tplWidget = div.__widget;
-            // MUST_DO_BEFORE_RUN: ModernAria: Implement load template either in core or in templates, enusre no cyclic dependency.
-            Aria.loadTemplate(tmpCfg, function (args) {
+            ariaCoreTplClassLoader.loadTemplate(tmpCfg, function (args) {
                 // remap widget content
                 if (args.success && tplWidget) {
                     var tplCtxt = args.tplCtxt;

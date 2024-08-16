@@ -16,7 +16,7 @@ import { classDefinition } from "../core/class-definition.js";
 import { Section as ariaTemplatesSection } from "./Section.js";
 import { isArray, isFunction, isObject } from "../utils/Type.js";
 import { clone } from "../utils/Array.js";
-import { UtilsJson } from "../utils/Json.js";
+import { Json as UtilsJson } from "../utils/Json.js";
 import { IdMgr } from "../utils/IdMgr.js";
 import { RefreshManager } from "./RefreshManager.js";
 import { isInstanceOf } from "../core/core-utils/Type.js";

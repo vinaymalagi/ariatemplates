@@ -20,9 +20,6 @@ import { FRAMEWORK_GLOBALS, minSizeMode } from '../core/framework-bootstrap.js';
 import { copyObject } from '../core/definition-utils.js';
 import { DUPLICATE_CLASSNAME, RESOURCES_HANDLE_CONFLICT, TEXT_TEMPLATE_HANDLE_CONFLICT } from '../core/error-messages.js';
 import { emptyFn } from '../common/fixed-return-value-functions.js';
-import './CSSMgr.js';
-import './GlobalStyle.tpl.css.js';
-import './TemplateCtxt.js';
 
     /**
      * Display an error in the template container and call the callback notifying the error.

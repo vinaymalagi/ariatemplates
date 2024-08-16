@@ -285,7 +285,7 @@ export const ClassWriter = classDefinition({
             this._dependencies.set(modulePath, moduleItem);
           }
 
-          if (dependency.importType === "sideEffect") {
+          if (dependency.importType === "SideEffect") {
             moduleItem.importAsSideEffect = true;
           } else if (dependency.importType === "Named") {
             const name = dependency.name;

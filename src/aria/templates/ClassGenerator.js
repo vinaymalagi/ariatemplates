@@ -625,7 +625,7 @@ export const ClassGenerator = classDefinition({
         const importScriptPrototypeAlias = 'ariaTemplatesImportScriptPrototype';
         out.addDependency({
           importType: 'Named',
-          modulePath: 'ariatemplates/aria/templates/import-script-proptotype.js',
+          modulePath: 'ariatemplates/aria/templates/import-script-prototype.js',
           name: 'importScriptPrototype',
           alias: importScriptPrototypeAlias
         });
