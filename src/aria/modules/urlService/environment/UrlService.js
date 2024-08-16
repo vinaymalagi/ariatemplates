@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
-require("./UrlServiceCfgBeans");
-var ariaCoreEnvironmentEnvironmentBase = require("../../../core/environment/EnvironmentBase");
-var ariaUtilsJson = require("../../../utils/Json");
+import { classDefinition } from "../../../core/class-definition.js";
+import "./UrlServiceCfgBeans.js";
+import { EnvironmentBase as ariaCoreEnvironmentEnvironmentBase } from "../../../core/environment/EnvironmentBase.js";
+import { Json as ariaUtilsJson } from "../../../utils/Json.js";
 
 
-module.exports = Aria.classDefinition({
+export const UrlService = classDefinition({
     $classpath : "aria.modules.urlService.environment.UrlService",
     $extends : ariaCoreEnvironmentEnvironmentBase,
     $singleton : true,

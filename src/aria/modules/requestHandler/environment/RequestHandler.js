@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
-require("./RequestHandlerCfgBeans");
-var ariaCoreEnvironmentEnvironmentBase = require("../../../core/environment/EnvironmentBase");
-var ariaUtilsJson = require("../../../utils/Json");
+import { classDefinition } from "../../../core/class-definition.js";
+import "./RequestHandlerCfgBeans.js";
+import { EnvironmentBase as ariaCoreEnvironmentEnvironmentBase } from "../../../core/environment/EnvironmentBase.js";
+import { Json as ariaUtilsJson } from "../../../utils/Json.js";
 
 
 /**
@@ -24,7 +24,7 @@ var ariaUtilsJson = require("../../../utils/Json");
  * @extends aria.core.environment.EnvironmentBase
  * @singleton
  */
-module.exports = Aria.classDefinition({
+export const RequestHandler = classDefinition({
     $classpath : "aria.modules.requestHandler.environment.RequestHandler",
     $singleton : true,
     $extends : ariaCoreEnvironmentEnvironmentBase,

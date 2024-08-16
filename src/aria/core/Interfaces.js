@@ -158,7 +158,7 @@ function normalizeItfMemberFunction(res) {
     res.$callbackParam = undefined;
   }
 
-  if (res.$callbackParam && isNumber(res.$callbackParam)) {
+  if (res.$callbackParam && !isNumber(res.$callbackParam)) {
     isValid = false;
     $logError('For interface member of type Function "$callbackParam" should be a number', undefined, undefined, CLASSPATH_FOR_LOGGING);
   }
@@ -167,7 +167,7 @@ function normalizeItfMemberFunction(res) {
 
 function normalizeItfMemberObject(res) {
   let isValid = true;
-  if (res.$type === 'Object') {
+  if (res.$type !== 'Object') {
     isValid = false;
   }
   return isValid;

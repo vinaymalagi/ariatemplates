@@ -12,15 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
-var ariaCoreJsonTypes = require("../../../core/JsonTypes");
-
+import { beanDefinitions } from "../../../core/bean-definitions.js";
+import { JsonTypesBeans as ariaCoreJsonTypes } from "../../../core/JsonTypes.js";
 
 /**
  * Bean definitions that are either common to multiple areas of the framework, or are needed before dependencies are
  * loaded by the framework.
  */
-module.exports = Aria.beanDefinitions({
+export const UrlServiceCfgBeans = beanDefinitions({
     $package : "aria.modules.urlService.environment.UrlServiceCfgBeans",
     $description : "A definition of the JSON beans used to set the environment settings.",
     $namespaces : {

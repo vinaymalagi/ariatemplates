@@ -12,14 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaModulesUrlServiceIUrlService = require("./IUrlService");
+import { classDefinition } from "../../core/class-definition.js";
+import { IUrlService as ariaModulesUrlServiceIUrlService } from "./IUrlService.js";
 
 
-/**
- * Default implementation for the IUrlService.
- */
-module.exports = Aria.classDefinition({
+export const PatternURLCreationImpl = classDefinition({
     $classpath : "aria.modules.urlService.PatternURLCreationImpl",
     $implements : [ariaModulesUrlServiceIUrlService],
     $constructor : function (actionUrlPattern, i18nUrlPattern) {

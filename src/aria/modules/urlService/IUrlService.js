@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-
+/* eslint-disable no-unused-vars */
+import { interfaceDefinition } from "../../core/interface-definition.js";
 
 /**
  * Interface exposed from the Request Manager to the application. It is used by the request manager to create a cutom
  * URL
  * @class aria.modules.urlService.IUrlService
  */
-module.exports = Aria.interfaceDefinition({
+export const IUrlService = interfaceDefinition({
     $classpath : 'aria.modules.urlService.IUrlService',
     $interface : {
         /**

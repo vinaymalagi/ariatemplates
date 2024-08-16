@@ -12,16 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaModulesQueuingSimpleSessionQueuing = require("./queuing/SimpleSessionQueuing");
-require("./RequestBeans");
-var ariaModulesUrlServiceEnvironmentUrlService = require("./urlService/environment/UrlService");
-var ariaModulesRequestHandlerEnvironmentRequestHandler = require("./requestHandler/environment/RequestHandler");
-var ariaUtilsType = require("../utils/Type");
-var ariaCoreIO = require("../core/IO");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var ariaCoreAppEnvironment = require("../core/AppEnvironment");
-var ariaUtilsJson = require("../utils/Json");
+import { classDefinition } from "../core/class-definition.js";
+import { SimpleSessionQueuing as ariaModulesQueuingSimpleSessionQueuing } from "./queuing/SimpleSessionQueuing.js";
+import "./RequestBeans.js";
+import { UrlService as ariaModulesUrlServiceEnvironmentUrlService } from "./urlService/environment/UrlService.js";
+import { RequestHandler as ariaModulesRequestHandlerEnvironmentRequestHandler } from "./requestHandler/environment/RequestHandler.js";
+import { isString, isObject } from "../utils/Type.js";
+import { IO } from "../core/IO.js";
+import { getClassRef, getClassInstance } from "../core/class-registry.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
+import { AppEnvironment as ariaCoreAppEnvironment } from "../core/AppEnvironment.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
 
 /**
  * The request Manager class handles the functional requests and manage the URL transport arguments (session id, etc).
@@ -29,7 +30,7 @@ var ariaUtilsJson = require("../utils/Json");
  * receives its data as if it had called IO directly. Note that the URL service of the application environment must be
  * correctly specified.
  */
-module.exports = Aria.classDefinition({
+export const RequestMgr = classDefinition({
     $classpath : "aria.modules.RequestMgr",
     $singleton : true,
     $events : {
@@ -248,7 +249,7 @@ module.exports = Aria.classDefinition({
                     json : requestObject,
                     beanName : "aria.modules.RequestBeans.RequestObject"
                 }, true);
-            } catch (ex) {
+            } catch {
                 // The request object doesn't match the bean
                 this.$logError(this.INVALID_REQUEST_OBJECT, null, requestObject);
                 return this.DISCARD_STATUS;
@@ -324,14 +325,16 @@ module.exports = Aria.classDefinition({
                 requestHandler : requestObject.requestHandler,
                 syncFlag : false
             };
-            Aria.load({
-                classes : dependencies,
-                oncomplete : {
-                    fn : this._onDependenciesReady,
-                    scope : this,
-                    args : args
-                }
-            });
+            // MUST_DO: ModernAria: Check how to load the dependencies
+            console.error('have to load dependencies in RequestMgr.js. Solve for', dependencies);
+            // Aria.load({
+            //     classes : dependencies,
+            //     oncomplete : {
+            //         fn : this._onDependenciesReady,
+            //         scope : this,
+            //         args : args
+            //     }
+            // });
 
             // check if the request has been executed synchronously
             if (!args.syncFlag && requestObject.async === false) {
@@ -422,7 +425,7 @@ module.exports = Aria.classDefinition({
             if (handler.expectedResponseType) {
                 requestObject.expectedResponseType = handler.expectedResponseType;
             }
-            ariaCoreIO.asyncRequest(requestObject);
+            IO.asyncRequest(requestObject);
         },
 
         /**
@@ -561,7 +564,6 @@ module.exports = Aria.classDefinition({
          * @return {String} the url
          */
         createRequestDetails : function (requestObject, session) {
-            var typeUtils = ariaUtilsType;
             var urlService = requestObject.urlService;
             if (!urlService) {
                 // If no service is set , it takes from app environment
@@ -575,10 +577,10 @@ module.exports = Aria.classDefinition({
             }
 
             // Replace dots by forward slashes in the moduleName passed to actual URL creator
-            var moduleName = requestObject.moduleName.replace(/\./g, '\/');
+            var moduleName = requestObject.moduleName.replace(/\./g, '/');
 
             var url;
-            if (typeUtils.isString(requestObject.actionName)) { // We accept also empty strings.
+            if (isString(requestObject.actionName)) { // We accept also empty strings.
                 // If in 'action name' mode
 
                 /* The actionName from the request object can contain url parameters, this has to handled separately and not
@@ -599,11 +601,11 @@ module.exports = Aria.classDefinition({
                 return null;
             }
 
-            if (!url || (typeUtils.isObject(url) && !url.url)) {
+            if (!url || (isObject(url) && !url.url)) {
                 this.$logError(this.INVALID_BASEURL, [url]);
                 return null;
             }
-            if (typeUtils.isString(url)) {
+            if (isString(url)) {
                 // if raw string returned, convert it in structured request here
                 url = {
                     url : url
@@ -641,21 +643,24 @@ module.exports = Aria.classDefinition({
          * @param {aria.core.CfgBeans:Callback} callback Callback called when the full path is ready
          * @return {String} the url
          */
+        // eslint-disable-next-line no-unused-vars
         createI18nUrl : function (moduleName, locale, callback) {
             var urlServiceCfg = ariaModulesUrlServiceEnvironmentUrlService.getUrlServiceCfg();
 
-            Aria.load({
-                classes : [urlServiceCfg.implementation],
-                oncomplete : {
-                    fn : this.__onI18nReady,
-                    scope : this,
-                    args : {
-                        moduleName : moduleName,
-                        locale : locale,
-                        callback : callback
-                    }
-                }
-            });
+            // MUST_DO: ModernAria: Check how to load the dependencies
+            console.error('have to load dependencies in RequestMgr.js. Solve for', urlServiceCfg);
+            // Aria.load({
+            //     classes : [urlServiceCfg.implementation],
+            //     oncomplete : {
+            //         fn : this.__onI18nReady,
+            //         scope : this,
+            //         args : {
+            //             moduleName : moduleName,
+            //             locale : locale,
+            //             callback : callback
+            //         }
+            //     }
+            // });
         },
 
         /**
@@ -780,7 +785,7 @@ module.exports = Aria.classDefinition({
         __getUrlService : function () {
             if (!this._urlService) {
                 var cfg = ariaModulesUrlServiceEnvironmentUrlService.getUrlServiceCfg(), actionUrlPattern = cfg.args[0], i18nUrlPattern = cfg.args[1];
-                var ClassRef = Aria.getClassRef(cfg.implementation);
+                var ClassRef = getClassRef(cfg.implementation);
                 this._urlService = new (ClassRef)(actionUrlPattern, i18nUrlPattern);
             }
             return this._urlService;
@@ -794,7 +799,7 @@ module.exports = Aria.classDefinition({
         __getRequestHandler : function () {
             if (!this._requestHandler) {
                 var cfg = ariaModulesRequestHandlerEnvironmentRequestHandler.getRequestHandlerCfg();
-                this._requestHandler = Aria.getClassInstance(cfg.implementation, cfg.args);
+                this._requestHandler = getClassInstance(cfg.implementation, cfg.args);
             }
             return this._requestHandler;
         },

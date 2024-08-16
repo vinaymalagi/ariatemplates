@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /*
  * Copyright 2012 Amadeus s.a.s.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
+import { interfaceDefinition } from "../../core/interface-definition.js";
 
 
 /**
  * Interface exposed from the Request Manager to the application. It is used by the request manager handler the response
  * of the request
  */
-module.exports = Aria.interfaceDefinition({
+export const IRequestHandler = interfaceDefinition({
     $classpath : "aria.modules.requestHandler.IRequestHandler",
     $interface : {
         /**

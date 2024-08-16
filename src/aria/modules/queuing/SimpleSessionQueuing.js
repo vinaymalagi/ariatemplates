@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
+import { classDefinition } from "../../core/class-definition.js";
+import { getClassRef } from "../../core/class-registry.js";
 
 
 /**
  * Simple Session Queuing per session for standalone mode
  */
-module.exports = Aria.classDefinition({
+export const SimpleSessionQueuing = classDefinition({
     $classpath : "aria.modules.queuing.SimpleSessionQueuing",
     // TODO break the dependency passing a callback to the push
     // Note that this class has references to aria.modules.RequestMgr
@@ -49,7 +50,7 @@ module.exports = Aria.classDefinition({
     $destructor : function () {
         this._idSessionMap = null;
         for (var key in this._sessionQueues) {
-            if (this._sessionQueues.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(this._sessionQueues, key)) {
                 delete this._sessionQueues[key];
             }
         }
@@ -80,17 +81,17 @@ module.exports = Aria.classDefinition({
                     jsonData : jsonData,
                     cb : cb
                 });
-                return aria.modules.RequestMgr.QUEUE_STATUS;
+                return getClassRef('aria.modules.RequestMgr').QUEUE_STATUS;
             } else {
                 // The queue is empty, send the request
                 var requestId = this._sendRequest(requestObject, jsonData, cb);
-                if (requestId === aria.modules.RequestMgr.ERROR_STATUS) {
+                if (requestId === getClassRef('aria.modules.RequestMgr').ERROR_STATUS) {
                     return requestId;
                 } else if (requestObject.async !== false) {
                     // This request is ongoing
                     this._idSessionMap[requestId] = sessionId;
                     queue.push(requestId);
-                    return aria.modules.RequestMgr.EXECUTE_STATUS;
+                    return getClassRef('aria.modules.RequestMgr').EXECUTE_STATUS;
                 }
             }
         },
@@ -116,7 +117,7 @@ module.exports = Aria.classDefinition({
                 while (queue.length > 0) {
                     next = queue[0];
                     nextId = this._sendRequest(next.requestObject, next.jsonData, next.cb);
-                    if (nextId === aria.modules.RequestMgr.ERROR_STATUS) {
+                    if (nextId === getClassRef('aria.modules.RequestMgr').ERROR_STATUS) {
                         queue.splice(0, 1);
                     } else {
                         this._idSessionMap[nextId] = sessionId;
@@ -136,7 +137,8 @@ module.exports = Aria.classDefinition({
          * @return {Integer} request id
          */
         _sendRequest : function (requestObject, jsonData, cb) {
-            return aria.modules.RequestMgr.sendJsonRequest(requestObject, jsonData, cb);
+            // MUST_FIX: ModernAria: Circular dependency between RequestMgr and SimpleSessionQueuing
+            return getClassRef('aria.modules.RequestMgr').sendJsonRequest(requestObject, jsonData, cb);
         }
     }
 });

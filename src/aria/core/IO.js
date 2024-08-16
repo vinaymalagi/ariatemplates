@@ -12,9 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("../utils/Type");
-var ariaUtilsJson = require("../utils/Json");
+import { contains } from "../utils/Array.js";
+import { isHTMLElement } from "../utils/html-helpers.js";
+import { JsonSerializer } from "../utils/json/JsonSerializer.js";
+import { isString } from "../utils/Type.js";
+import { classDefinition } from "./class-definition.js";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+import { getClassRef } from "./class-registry.js";
+import { FRAMEWORK_GLOBALS, $frameworkWindow } from "./framework-bootstrap.js";
+import { Timer } from "./Timer.js";
+import { substitute } from "../utils/String.js";
 
 /**
  * Connection manager class. Provides a way to make requests for different URI (file, XHR, XDR) and keeps a list of all
@@ -23,7 +30,7 @@ var ariaUtilsJson = require("../utils/Json");
  * @dependencies ["aria.utils.Type", "aria.utils.Json", "aria.utils.json.JsonSerializer", "aria.core.Timer",
  * "aria.utils.Array", "aria.utils.String"]
  */
-module.exports = Aria.classDefinition({
+export const IO = classDefinition({
     $classpath : "aria.core.IO",
     $singleton : true,
     $events : {
@@ -134,7 +141,7 @@ module.exports = Aria.classDefinition({
          * @type RegExp
          * @protected
          */
-        this._uriScheme = /^([\w\+\.\-]+:)(?:\/\/)?([^\/]*)/;
+        this._uriScheme = /^([\w+.-]+:)(?:\/\/)?([^/]*)/;
 
         /**
          * Regular expression to extract the URI scheme that should be handled as a local request
@@ -206,14 +213,14 @@ module.exports = Aria.classDefinition({
          * @type aria.utils.json.JsonSerializer
          * @private
          */
-        this.__serializer = new (require("../utils/json/JsonSerializer"))();
+        this.__serializer = new JsonSerializer();
     },
 
     $destructor : function () {
         // Clear any pending timeout
         var timeout;
         for (timeout in this._timeOut) {
-            if (this._timeOut.hasOwnProperty(timeout)) {
+            if (Object.prototype.hasOwnProperty.call(this._timeOut, timeout)) {
                 clearTimeout(this._timeOut[timeout]);
             }
         }
@@ -281,8 +288,9 @@ module.exports = Aria.classDefinition({
             this.pendingRequests[req.id] = req;
 
             // IOFiltersMgr is not a mandatory feature, if it's not there, let's just go to the next phase
-            if (aria.core.IOFiltersMgr) {
-                aria.core.IOFiltersMgr.callFiltersOnRequest(req, {
+            const ioFiltersMgr = getClassRef('aria.core.IOFiltersMgr');
+            if (ioFiltersMgr) {
+              ioFiltersMgr.callFiltersOnRequest(req, {
                     fn : this._afterRequestFilters,
                     scope : this,
                     args : req
@@ -325,10 +333,10 @@ module.exports = Aria.classDefinition({
          */
         asyncFormSubmit : function (request) {
             var form;
-            if (ariaUtilsType.isHTMLElement(request.form)) {
+            if (isHTMLElement(request.form)) {
                 form = request.form;
-            } else if (ariaUtilsType.isString(request.formId)) {
-                form = Aria.$window.document.getElementById(request.formId);
+            } else if (isString(request.formId)) {
+                form = FRAMEWORK_GLOBALS.$window.document.getElementById(request.formId);
             }
 
             if (!form) {
@@ -382,7 +390,7 @@ module.exports = Aria.classDefinition({
             } catch (ex) {
                 // There was an error in this method - let's create a callback to notify
                 // the caller in the same way as for other errors
-                (require("./Timer")).addCallback({
+                Timer.addCallback({
                     fn : this._handleResponse,
                     scope : this,
                     delay : 10,
@@ -425,28 +433,28 @@ module.exports = Aria.classDefinition({
                 req.method = req.method.toUpperCase();
             }
 
-            if (!(require("../utils/Array")).contains(reqMethods, req.method)) {
+            if (!contains(reqMethods, req.method)) {
                 return this.$logWarn("The request method %1 is invalid", [req.method]);
             }
 
             var headers = {};
             // First take the default IO headers
-            for (var key in this.headers) {
-                if (this.headers.hasOwnProperty(key)) {
+            for (const key in this.headers) {
+                if (Object.prototype.hasOwnProperty.call(this.headers, key)) {
                     headers[key] = this.headers[key];
                 }
             }
             // Then add POST/PUT-specific headers
             if (req.method === "POST" || req.method === "PUT") {
-                for (var key in this.postHeaders) {
-                    if (this.postHeaders.hasOwnProperty(key)) {
+                for (const key in this.postHeaders) {
+                    if (Object.prototype.hasOwnProperty.call(this.postHeaders, key)) {
                         headers[key] = this.postHeaders[key];
                     }
                 }
             }
             // Then the headers from the request object
             for (var key in req.headers) {
-                if (req.headers.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(req.headers, key)) {
                     headers[key] = req.headers[key];
                 }
             }
@@ -463,15 +471,15 @@ module.exports = Aria.classDefinition({
             var transport;
             if (request.jsonp) {
                 transport = this.__jsonp;
-            } else if (ariaUtilsType.isHTMLElement(request.form)) {
+            } else if (isHTMLElement(request.form)) {
                 transport = this.__iframe;
             } else {
-                transport = this._getTransport(request.url, Aria.$frameworkWindow
-                        ? Aria.$frameworkWindow.location
+                transport = this._getTransport(request.url, $frameworkWindow
+                        ? $frameworkWindow.location
                         : null);
             }
 
-            var instance = Aria.getClassRef(transport);
+            var instance = getClassRef(transport);
             var args = {
                 req : request,
                 transport : {
@@ -481,14 +489,16 @@ module.exports = Aria.classDefinition({
             };
 
             if (!instance) {
-                Aria.load({
-                    classes : [transport],
-                    oncomplete : {
-                        fn : this._asyncRequest,
-                        args : args,
-                        scope : this
-                    }
-                });
+                // MUST_DO: ModernAria: Check how to load the dependencies
+                console.error('have to load dependencies in RequestMgr.js. Solve for', transport);
+                // Aria.load({
+                //     classes : [transport],
+                //     oncomplete : {
+                //         fn : this._asyncRequest,
+                //         args : args,
+                //         scope : this
+                //     }
+                // });
             } else {
                 this._asyncRequest(args);
             }
@@ -541,7 +551,7 @@ module.exports = Aria.classDefinition({
             var request = arg.req;
             var reqId = request.id;
             // var method = request.method;
-            var transport = arg.transport.instance || Aria.getClassRef(arg.transport.classpath);
+            var transport = arg.transport.instance || getClassRef(arg.transport.classpath);
 
             var transportCallback = {
                 fn : this._handleResponse,
@@ -592,9 +602,9 @@ module.exports = Aria.classDefinition({
             });
 
             delete this.pendingRequests[request.id];
-
-            if (aria.core.IOFiltersMgr) {
-                aria.core.IOFiltersMgr.callFiltersOnResponse(request, {
+            const ioFiltersMgr = getClassRef('aria.core.IOFiltersMgr');
+            if (ioFiltersMgr) {
+              ioFiltersMgr.callFiltersOnResponse(request, {
                     fn : this._afterResponseFilters,
                     scope : this,
                     args : request
@@ -627,7 +637,7 @@ module.exports = Aria.classDefinition({
                 if (response.responseText && expectedResponseType === "json") {
                     try {
                         response.responseJSON = this.__serializer.parse(response.responseText);
-                    } catch (ex) {
+                    } catch {
                         this.$logWarn(this.JSON_PARSING_ERROR, [request.url, response.responseText]);
                     }
                 }
@@ -749,17 +759,19 @@ module.exports = Aria.classDefinition({
          * @param {Number} timeout Timer in milliseconds
          * @param {aria.core.CfgBeans:Callback} callback Should be already normalized
          */
+        // eslint-disable-next-line no-unused-vars
         setTimeout : function (id, timeout, callback) {
             if (timeout > 0) {
                 this._timeOut[id] = setTimeout(function () {
                     // You won't believe this, but sometimes IE forgets to remove the timeout even if
                     // we explicitely called a clearTimeout. Double check that the timeout is valid
-                    if ((module.exports)._timeOut[id]) {
-                        (module.exports).abort({
-                            redId : id,
-                            getStatus : callback
-                        }, null, true);
-                    }
+                    // MUST_DO: ModernAria: How do we handle this clearing of timeout
+                    // if ((module.exports)._timeOut[id]) {
+                    //     (module.exports).abort({
+                    //         redId : id,
+                    //         getStatus : callback
+                    //     }, null, true);
+                    // }
                 }, timeout);
             }
         },
@@ -884,7 +896,7 @@ module.exports = Aria.classDefinition({
             if (expectedResponseType == "text") {
                 if (!response.responseText && response.responseJSON != null) {
                     // convert JSON to text
-                    if (ariaUtilsType.isString(response.responseJSON)) {
+                    if (isString(response.responseJSON)) {
                         // this case is important for JSON-P services which return a simple string
                         // we simply use that string as text
                         // (could be useful to load templates through JSON-P, for example)
@@ -897,7 +909,7 @@ module.exports = Aria.classDefinition({
             } else if (expectedResponseType == "json") {
                 if (response.responseJSON == null && response.responseText != null) {
                     // convert text to JSON
-                    var errorMsg = (require("../utils/String")).substitute(this.JSON_PARSING_ERROR, [response.url,
+                    var errorMsg = substitute(this.JSON_PARSING_ERROR, [response.url,
                             response.responseText]);
                     if (response.responseText === "") {
                         var undef;

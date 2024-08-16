@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaModulesRequestHandlerIRequestHandler = require("./IRequestHandler");
-var ariaModulesRequestHandlerRequestHandler = require("./RequestHandler");
-var ariaUtilsJson = require("../../utils/Json");
+import { classDefinition } from "../../core/class-definition.js";
+import { IRequestHandler as ariaModulesRequestHandlerIRequestHandler } from "./IRequestHandler.js";
+import { RequestHandler as ariaModulesRequestHandlerRequestHandler } from "./RequestHandler";
+import { Json as ariaUtilsJson } from "../../utils/Json";
 
 
 /**
  * JSON handler, that handles JSON as well as a JavaScript object retrieved in responseJSON
  */
-module.exports = Aria.classDefinition({
+export const JSONRequestHandler = classDefinition({
     $classpath : "aria.modules.requestHandler.JSONRequestHandler",
     $extends : ariaModulesRequestHandlerRequestHandler,
     $implements : [ariaModulesRequestHandlerIRequestHandler],

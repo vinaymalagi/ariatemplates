@@ -12,17 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaModulesRequestHandlerIRequestHandler = require("./IRequestHandler");
-var ariaModulesRequestHandlerEnvironmentRequestHandler = require("./environment/RequestHandler");
-var ariaUtilsJson = require("../../utils/Json");
-var ariaCoreAppEnvironment = require("../../core/AppEnvironment");
-
+import { classDefinition } from "../../core/class-definition.js";
+import { IRequestHandler as ariaModulesRequestHandlerIRequestHandler } from "./IRequestHandler.js";
+import { RequestHandler as ariaModulesRequestHandlerEnvironmentRequestHandler } from "./environment/RequestHandler.js";
+import { Json as ariaUtilsJson } from "../../utils/Json.js";
+import { AppEnvironment as ariaCoreAppEnvironment } from "../../core/AppEnvironment.js";
 
 /**
  * Base class for request handler, that handles HTTP errors
  */
-module.exports = Aria.classDefinition({
+export const RequestHandler = classDefinition({
     $classpath : "aria.modules.requestHandler.RequestHandler",
     $implements : [ariaModulesRequestHandlerIRequestHandler],
     $statics : {

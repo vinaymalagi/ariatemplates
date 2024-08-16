@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 import { classDefinition } from "../core/class-definition.js";
-import { getClassRef as _getClassRef } from "../core/class-registry.js";
-const { getClassRef } = _getClassRef;
+import { getClassRef } from "../core/class-registry.js";
 import "./CfgBeans.js";
 import { ObjectLoading as ariaTemplatesObjectLoading } from "./ObjectLoading.js";
 // ---------------------------

@@ -160,7 +160,7 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
                 }); // TODO: add an error ID
                 return;
             }
-            classes.push(import('./ModuleCtrlFactory')/*, moduleCtrl.classpath*/);
+            classes.push(import('./ModuleCtrlFactory.js')/*, moduleCtrl.classpath*/);
             // classes.push("aria.templates.ModuleCtrlFactory", moduleCtrl.classpath);
         }
         // MUST_CHECK: ModernAria: Does CSS loader do anything else apart from compiling CSS template to class and loading it?
