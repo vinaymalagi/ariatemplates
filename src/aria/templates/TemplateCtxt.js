@@ -1502,7 +1502,7 @@ export const TemplateCtxt = classDefinition({
             var tmpCfg = this._getReloadCfg();
             var isUsingModuleData = reloading && (this.moduleCtrl.getData() == tmpCfg.data);
             // MUST_DO_BEFORE_RUN: ModernAria: Implement dispose template either in core or in templates, enusre no cyclic dependency.
-            Aria.disposeTemplate(tmpCfg.div); // dispose the old template
+            ariaCoreTplClassLoader.disposeTemplate(tmpCfg.div); // dispose the old template
             if (reloading) {
                 var oSelf = this;
                 reloading.$on({
@@ -1609,7 +1609,7 @@ export const TemplateCtxt = classDefinition({
             tmpCfg.reload = true;
             tmpCfg.reloadByPassCache = true;
             // MUST_DO_BEFORE_RUN: ModernAria: Implement load template either in core or in templates, enusre no cyclic dependency.
-            var disposed = Aria.disposeTemplate(tmpCfg.div); // dispose the old template
+            var disposed = ariaCoreTplClassLoader.disposeTemplate(tmpCfg.div); // dispose the old template
             if (!disposed) {
                 this.$logError("Could not reload template: " + tmpCfg.classpath);
             } else {
