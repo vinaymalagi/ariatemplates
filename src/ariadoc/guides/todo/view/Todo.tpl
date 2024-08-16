@@ -15,7 +15,7 @@
 
 	        {repeater {
 	            id: "tasklist",
-	            content: data.tasks,
+	            content: this.data.tasks,
 	            type: "ul",
 	            childSections: {
 	                id: "task",
@@ -45,7 +45,7 @@
             attributes: {
                 classList: ["todo-"+type]
             },
-            bindRefreshTo: [ {to:"tasks", inside:data} ],
+            bindRefreshTo: [ {to:"tasks", inside:this.data} ],
             macro: {
             	name: "listControlContent",
             	args: [type]
@@ -71,17 +71,17 @@
     {/macro}
 
     {macro listControlContent(type)}
-        {if (data.tasks.length>0)}
+        {if (this.data.tasks.length>0)}
             {var t=this.moduleCtrl.tasksLeft()/}
 
             {if (type=="markall")}
                 <label>
-                    <input type="checkbox" {id "markAll"/} {if (t==0)}checked="true"{/if} {on click markAll/} />Mark all as completed
+                    <input type="checkbox" {id "markAll"/} {if (t==0)}checked="true"{/if} {on click this.markAll/} />Mark all as completed
                 </label>
 
             {elseif (type=="status")/}
                 <strong>${t}</strong> ${t>1 ? 'tasks':'task'} left.
-                {var c=data.tasks.length-t/}
+                {var c=this.data.tasks.length-t/}
                 {if (c>0)}
                     <a class="todo-clear" {on click {fn:"clearTasks", scope:this}/}>
                         Clear ${c} completed ${c>1 ? 'tasks':'task'}

@@ -556,13 +556,10 @@ export function getInterface(object, itf, itfWrapper) {
     itfConstructor = itf;
     classpath = itf.interfaceDefinition.$classpath;
   } else if (isString(itf)) {
-    $logError(`getInterface: Expect the interface constructor not the classpath ${classpath}`);
-    return null;
+    // $logError(`getInterface: Expect the interface constructor not the classpath ${classpath}`);
+    // return null;
     // interface given by its classpath (constructor retrieved later if needed)
-    // classpath = itf;
-  }
-  if (!itfConstructor) {
-    return null;
+    classpath = itf;
   }
   var interfaces = object.__$interfaces;
   var res;
@@ -583,14 +580,14 @@ export function getInterface(object, itf, itfWrapper) {
     $logError(INTERFACE_NOT_SUPPORTED, [classpath, object.$classpath], undefined, CLASSPATH_FOR_LOGGING);
     return null;
   }
-  // Moved up to a higher line as we expect the interface constructor as the 'itf' parameter.
-  // if (!itfConstructor) {
-  //   itfConstructor = getClassRef(classpath);
-  //   if (!itfConstructor) {
-  //     // error is already logged in Aria.getClassRef
-  //     return null;
-  //   }
-  // }
+
+  if (!itfConstructor) {
+    itfConstructor = getClassRef(classpath);
+    if (!itfConstructor) {
+      // error is already logged in Aria.getClassRef
+      return null;
+    }
+  }
   if (!interfaces) {
     interfaces = {};
     object.__$interfaces = interfaces;
