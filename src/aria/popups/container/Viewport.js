@@ -12,18 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var DomUtils = require("../../utils/Dom");
-var Browser = require("../../core/Browser");
+import { classDefinition } from '../../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../../core/framework-bootstrap.js';
+import { UtilsDom as DomUtils } from "../../utils/Dom.js";
+import { Browser } from "../../core/Browser.js";
+import { IPopupContainer } from "./IPopupContainer.js";
 
-/**
- * Implementation of the IPopupContainer interface to use the viewport (document.body)
- * as a popup container.
- */
-module.exports = Aria.classDefinition({
+export const Viewport = classDefinition({
     $classpath : "aria.popups.container.Viewport",
     $singleton : true,
-    $implements : [require("./IPopupContainer")],
+    $implements : [IPopupContainer],
     $prototype : {
         /**
          * Returns the DOM element of the container, to which the popup DOM element
@@ -31,7 +29,7 @@ module.exports = Aria.classDefinition({
          * @return {HTMLElement}
          */
         getContainerElt : function () {
-            return Aria.$window.document.body;
+            return FRAMEWORK_GLOBALS.$window.document.body;
         },
 
         /**

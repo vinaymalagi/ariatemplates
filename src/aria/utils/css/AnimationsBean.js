@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaCoreJsonTypes = require("../../core/JsonTypes");
+import { beanDefinitions } from "../../core/bean-definitions.js";
+import { JsonTypesBeans as ariaCoreJsonTypes } from "../../core/JsonTypes.js";
 
 
-module.exports = Aria.beanDefinitions({
+export const AnimationsBean = beanDefinitions({
     $package : "aria.utils.css.AnimationsBean",
     $description : "Definition of parameters used by Animations class",
     $namespaces : {

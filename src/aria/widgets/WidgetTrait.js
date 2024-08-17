@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaWidgetsFormInputValidationHandler = require("./form/InputValidationHandler");
+import { classDefinition } from "../core/class-definition.js";
+import { InputValidationHandler as ariaWidgetsFormInputValidationHandler } from "./form/InputValidationHandler.js";
 
 
 /**
@@ -21,7 +21,7 @@ var ariaWidgetsFormInputValidationHandler = require("./form/InputValidationHandl
  * include other widget types in the future. The purpose of this class is not to be created directly, but to allow its
  * prototype to be imported.
  */
-module.exports = Aria.classDefinition({
+export const WidgetTrait = classDefinition({
     $classpath : "aria.widgets.WidgetTrait",
     $constructor : function () {
         // The purpose of this class is to provide a prototype to be imported, not to be created directly.

@@ -30,6 +30,7 @@ import { dashedToCamel } from './String.js';
 /**
  * This class contains utilities to manipulate the DOM.
  */
+// TODO: ModernAria: Rename to just Dom instead of UtilsDom, will help with barrel exports later.
 export const UtilsDom = classDefinition({
     $classpath : "aria.utils.Dom",
     $singleton : true,

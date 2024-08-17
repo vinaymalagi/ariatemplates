@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonTypes = require("../core/JsonTypes");
-var ariaUtilsCssAnimationsBean = require("../utils/css/AnimationsBean");
+import { beanDefinitions } from "../core/bean-definitions.js";
+import { JsonTypesBeans as ariaCoreJsonTypes } from "../core/JsonTypes.js";
+import { AnimationsBean as ariaUtilsCssAnimationsBean } from "../utils/css/AnimationsBean.js";
 
 
 /**
  * Configuration Beans for aria.popups.Popup
  */
-module.exports = Aria.beanDefinitions({
+export const Beans = beanDefinitions({
     $package : "aria.popups.Beans",
     $description : "Definition of the JSON beans used to set application variables",
     $namespaces : {

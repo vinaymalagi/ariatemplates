@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaPopupsPopup = require("../../popups/Popup");
-var ariaWidgetsContainerDiv = require("../container/Div");
-var ariaTemplatesLayout = require("../../templates/Layout");
+import { classDefinition } from "../../core/class-definition.js";
+import { Popup as ariaPopupsPopup } from "../../popups/Popup.js";
+import { Div as ariaWidgetsContainerDiv } from "../container/Div.js";
+import { Layout as ariaTemplatesLayout } from "../../templates/Layout.js";
 
 
 /**
  * Validation Class for all Input widgets.
  */
-module.exports = Aria.classDefinition({
+export const InputValidationHandler = classDefinition({
     $classpath : "aria.widgets.form.InputValidationHandler",
     $constructor : function (widget) {
         this._widget = widget;
@@ -180,7 +180,7 @@ module.exports = Aria.classDefinition({
             var errorTipPosition = this._WidgetCfg.errorTipPosition;
             var preferredPositions = [this._preferredPositions[errorTipPosition]];
             for (var i in this._preferredPositions) {
-                if (this._preferredPositions.hasOwnProperty(i) && errorTipPosition != i) {
+                if (Object.prototype.hasOwnProperty.call(this._preferredPositions, i) && errorTipPosition != i) {
                     preferredPositions.push(this._preferredPositions[i]);
                 }
             }
@@ -191,6 +191,7 @@ module.exports = Aria.classDefinition({
          * Raised after the popup is closed.
          * @param {Object} evt
          */
+        // eslint-disable-next-line no-unused-vars
         _afterValidationClose : function (evt) {
             this._validationPopup.$dispose();
             // Note that we must not call this._div.$dispose() here
@@ -239,6 +240,7 @@ module.exports = Aria.classDefinition({
          * Raised when the viewport is resized. Needed to fix the position of the popup after the resize.
          * @param {Object} evt
          */
+        // eslint-disable-next-line no-unused-vars
         _onViewportResized : function (evt) {
             // Added for PTR 05374683: popup is misplaced after window resize
             this._closeValidation();

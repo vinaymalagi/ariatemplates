@@ -12,27 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaPopupsPopupManager = require("./PopupManager");
-require("./Beans");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaUtilsString = require("../utils/String");
-var ariaUtilsSize = require("../utils/Size");
-var ariaUtilsEvent = require("../utils/Event");
-var ariaUtilsDelegate = require("../utils/Delegate");
-var ariaUtilsCssAnimations = require("../utils/css/Animations");
-var ariaUtilsArray = require("../utils/Array");
-var ariaCoreBrowser = require("../core/Browser");
-var ariaCoreTimer = require("../core/Timer");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var ViewportPopupContainer = require("./container/Viewport");
-var environment = require("../core/environment/Environment");
-var ModalNavigationInterceptor = require('../utils/DomNavigationManager').ModalNavigationInterceptor;
+import { classDefinition } from "../core/class-definition.js";
+import { PopupManager as ariaPopupsPopupManager } from "./PopupManager.js";
+import "./Beans.js";
+import { UtilsDom as ariaUtilsDom } from "../utils/Dom.js";
+import { escapeForHTML } from "../utils/String.js";
+import { getSize } from "../utils/Size.js";
+import { UtilsEvent as ariaUtilsEvent } from "../utils/Event.js";
+import { Delegate as ariaUtilsDelegate } from "../utils/Delegate.js";
+import { Animations as ariaUtilsCssAnimations } from "../utils/css/Animations.js";
+import { contains } from "../utils/Array.js";
+import { Browser as ariaCoreBrowser } from "../core/Browser.js";
+import { Timer as ariaCoreTimer } from "../core/Timer.js";
+import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
+import { Viewport as ViewportPopupContainer } from "./container/Viewport.js";
+import { Environment as environment } from "../core/environment/Environment.js";
+import { ModalNavigationInterceptor } from '../utils/DomNavigationManager.js';
+import { FRAMEWORK_GLOBALS } from "../core/framework-bootstrap.js";
 
 /**
  * Popup instance
  */
-module.exports = Aria.classDefinition({
+export const Popup = classDefinition({
     $classpath : "aria.popups.Popup",
     $events : {
         onBeforeClose : {
@@ -187,7 +188,7 @@ module.exports = Aria.classDefinition({
          * Document where the popup is displayed.
          * @type HTMLElement
          */
-        this._document = Aria.$window.document;
+        this._document = FRAMEWORK_GLOBALS.$window.document;
 
         var self = this;
         this._modalNavigationInterceptor = ModalNavigationInterceptor(function() {
@@ -335,13 +336,13 @@ module.exports = Aria.classDefinition({
             if (cfg.waiAria) {
                 var role = cfg.role;
                 if (role) {
-                    role = ariaUtilsString.escapeForHTML(role, {attr: true});
+                    role = escapeForHTML(role, {attr: true});
                     html.push(' role="' + role + '"');
                 }
 
                 var labelId = cfg.labelId;
                 if (labelId) {
-                    labelId = ariaUtilsString.escapeForHTML(labelId, {attr: true});
+                    labelId = escapeForHTML(labelId, {attr: true});
                     html.push(' aria-labelledby="' + labelId + '"');
                 }
             }
@@ -489,7 +490,7 @@ module.exports = Aria.classDefinition({
         _getPosition : function (size) {
             var position, isInViewSet;
             if (this.conf.maximized) {
-                var offset = this.conf.offset;
+                const offset = this.conf.offset;
                 var containerScroll = this.popupContainer.getContainerScroll();
                 position = {
                     top : containerScroll.scrollTop - offset.top,
@@ -498,7 +499,7 @@ module.exports = Aria.classDefinition({
             } else if (this.conf.center) {
                 // apply the offset (both left and right, and also top and bottom)
                 // before centering the whole thing in the container
-                var offset = this.conf.offset;
+                const offset = this.conf.offset;
                 var newSize = {
                     width : size.width + offset.left + offset.right,
                     height : size.height + offset.top + offset.bottom
@@ -680,7 +681,7 @@ module.exports = Aria.classDefinition({
 
             for (var i = 0, l = keys.length; i < l; i++) {
                 var key = keys[i];
-                if (!ariaUtilsArray.contains(this.ANCHOR_KEYS, key)) {
+                if (!contains(this.ANCHOR_KEYS, key)) {
                     return false;
                 }
             }
@@ -1071,7 +1072,7 @@ module.exports = Aria.classDefinition({
          * @param {HTMLElement} element Element which will be used as a reference to position the popup
          */
         setReference : function (element) {
-            var size = ariaUtilsSize.getSize(element), domUtil = ariaUtilsDom;
+            var size = getSize(element), domUtil = ariaUtilsDom;
             domUtil.scrollIntoView(element);
             var position = this.popupContainer.calculatePosition(element);
 
@@ -1171,7 +1172,7 @@ module.exports = Aria.classDefinition({
         _startAnimation : function (animationName, animationCfg, isOut) {
 
             var partsArray = animationName.split(' ');
-            var animationName = partsArray[0];
+            animationName = partsArray[0];
             animationCfg.reverse = false;
 
             if (partsArray[1] === "right" || partsArray[1] === "out" || partsArray[1] === "reverse") {

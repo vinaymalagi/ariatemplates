@@ -45,6 +45,7 @@ var CLEANCB = 6;
 /**
  * Utilities for handling Dom event listeners
  */
+// TODO: ModernAria: Rename to just Event instead of UtilsEvent. Will be Useful for barrel exports later.
 export const UtilsEvent = classDefinition({
   $classpath: "aria.utils.Event",
   $singleton: true,

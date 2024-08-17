@@ -12,13 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("ariatemplates/Aria");
+import { interfaceDefinition } from "../../core/interface-definition.js";
 
-/**
- * Interface used by the Popup class and the @aria:Dialog widget to interact with
- * the popup container.
- */
-module.exports = Aria.interfaceDefinition({
+export const IPopupContainer = interfaceDefinition({
     $classpath : "aria.popups.container.IPopupContainer",
     $interface : {
         /**
@@ -53,6 +49,7 @@ module.exports = Aria.interfaceDefinition({
          * @param {String} new overflow value
          * @return {String} old overflow value
          */
+        // eslint-disable-next-line no-unused-vars
         changeContainerOverflow : function (newValue) {},
 
         /**
@@ -60,6 +57,7 @@ module.exports = Aria.interfaceDefinition({
          * @param {HTMLElement} domElt element whose position will be returned
          * @return {aria.utils.DomBeans:Position}
          */
+        // eslint-disable-next-line no-unused-vars
         calculatePosition : function (domElt) {},
 
         /**
@@ -82,6 +80,7 @@ module.exports = Aria.interfaceDefinition({
          * @param {Object} base The base element used to account for scrolling offsets
          * @return {Boolean} True if the given position+size couple can fit in the current viewport
          */
+        // eslint-disable-next-line no-unused-vars
         isInside : function (position, size, base) {},
 
         /**
@@ -93,6 +92,7 @@ module.exports = Aria.interfaceDefinition({
          * @param {Object} base The base element used to account for scrolling offsets
          * @return {aria.utils.DomBeans:Position}
          */
+        // eslint-disable-next-line no-unused-vars
         fitInside : function (position, size, base) {},
 
         /**
@@ -101,6 +101,7 @@ module.exports = Aria.interfaceDefinition({
          * @param {Object} base The base element used to account for scrolling offsets
          * @return {aria.utils.DomBeans:Position} position of the element when centered in the container
          */
+        // eslint-disable-next-line no-unused-vars
         centerInside : function (size, base) {}
     }
 });
