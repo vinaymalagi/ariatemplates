@@ -488,6 +488,7 @@ export const ClassGenerator = classDefinition({
       // }
       if(res.importType && res.modulePath) {
         // Is a static resource import
+        out.addDependency(res);
         return getUsageAliasFromNamedOrDefaultImportSpec(res);
       }
       // MUST_DO: ModernAria: Implement Resource provider configuration

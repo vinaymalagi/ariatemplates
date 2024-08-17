@@ -59,7 +59,7 @@ export function convertInternalImportToRelativePath(importedModuleFile, sourceFi
 
   const importedModuleFilePath = importedModuleFile.replace(/^ariatemplates\//,'').split('/').join('/');
 
-  const resolvedSource = resolve(sourceFile);
+  const resolvedSource = resolve(rootDir + '/' + sourceFile);
   const resolvedImportedPath = resolve( rootDir + importedModuleFilePath);
   const sourceDir = dirname(resolvedSource);
 

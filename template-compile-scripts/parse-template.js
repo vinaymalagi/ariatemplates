@@ -45,13 +45,13 @@ if (tplFiles.length > 0) {
       errorContext: {
           "file_classpath" : sourceFile
       },
-      sourceFilePath: sourceFileAbsolutePath,
+      sourceFilePath: sourceFile,
     };
     try {
       const outputContent = await processTemplateContent(content, TplClassGenerator, classGeneratorOptions);
       const outputFileName = `${sourcesRootDir}/${sourceFile}.js`;
       fs.writeFileSync(outputFileName, outputContent, 'utf-8');
-      console.log(`--- Template '${sourceFile}' compiled to javascript: ${outputFileName} ---`);
+      console.log(`--- Template '${sourceFile}' compiled to javascript class: ${outputFileName} ---`);
     } catch (error) {
       console.error(error);
     }
@@ -83,7 +83,7 @@ if (tplCssFiles.length > 0) {
       const outputContent = await processTemplateContent(content, ClassGenerator, classGeneratorOptions);
       const outputFileName = `${sourcesRootDir}/${sourceFile}.js`;
       fs.writeFileSync(outputFileName, outputContent, 'utf-8');
-      console.log(`--- Template '${sourceFile}' compiled to javascript: ${outputFileName} ---`);
+      console.log(`--- Template '${sourceFile}' compiled to javascript class: ${outputFileName} ---`);
     } catch (error) {
       console.error(error);
     }
