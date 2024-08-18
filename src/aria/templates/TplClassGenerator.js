@@ -127,17 +127,6 @@ export const TplClassGenerator = classDefinition({
         this.$ClassGenerator._processTemplateContent.call(this, args);
       }
       return;
-      // }
-      // MUST_FIX: ModernAria: Fix widget libs auto loading
-      // Aria.load({
-      //     classes : classes,
-      //     oncomplete : {
-      //         // call the parent method asynchronously
-      //         fn : this.$ClassGenerator._processTemplateContent,
-      //         scope : this,
-      //         args : args
-      //     }
-      // });
     }
   }
 });

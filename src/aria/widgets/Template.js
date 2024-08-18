@@ -12,20 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaTemplatesTemplateTrait = require("../templates/TemplateTrait");
-var ariaTemplatesTemplateCtxt = require("../templates/TemplateCtxt");
-var ariaUtilsDom = require("../utils/Dom");
-require("../templates/CfgBeans");
-var ariaCoreEnvironmentCustomizations = require("../core/environment/Customizations");
-var ariaWidgetsContainerContainer = require("./container/Container");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
+import { classDefinition } from '../core/class-definition.js';
+import { TemplateTrait as ariaTemplatesTemplateTrait } from '../templates/TemplateTrait.js';
+import { TemplateCtxt as ariaTemplatesTemplateCtxt } from '../templates/TemplateCtxt.js';
+import { UtilsDom as ariaUtilsDom } from '../utils/Dom.js';
+import '../templates/CfgBeans.js';
+// NOT_IMPLEMENTABLE: ModernAria: Customizations cannot be implemented with current mechanism as module loading is handled by the browser
+// var ariaCoreEnvironmentCustomizations = require('../core/environment/Customizations.js');
+import { Container as ariaWidgetsContainerContainer } from './container/Container.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 
 
-/**
- * Widget used to load sub-templates.
- */
-module.exports = Aria.classDefinition({
+export const Template = classDefinition({
     $classpath : "aria.widgets.Template",
     $extends : ariaWidgetsContainerContainer,
     $events : {
@@ -33,8 +31,9 @@ module.exports = Aria.classDefinition({
             description : "Raised when the template content is fully displayed."
         }
     },
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
-        aria.widgets.Template.superclass.constructor.apply(this, arguments);
+        Template.superclass.constructor.apply(this, arguments);
 
         if (cfg.width != -1) {
             // horizontal scrollbars
@@ -77,7 +76,9 @@ module.exports = Aria.classDefinition({
          * @type aria.templates.CfgBeans:InitTemplateCfg
          */
         this._tplcfg = {
-            classpath : ariaCoreEnvironmentCustomizations.getTemplateCP(cfg.defaultTemplate),
+            // NOT_IMPLEMENTABLE: ModernAria: Customizations cannot be implemented with current mechanism as module loading is handled by the browser
+            // classpath : ariaCoreEnvironmentCustomizations.getTemplateCP(cfg.defaultTemplate),
+            classpath: cfg.defaultTemplate, // MUST_CHECK: ModernAria: Can defaultTemplate be a Reference to a class? OR does it have to be a classpath string??
             args : cfg.args,
             id : this._domId,
             originalId : this.getId()
@@ -113,13 +114,13 @@ module.exports = Aria.classDefinition({
         }
         this.tplLoadCallback = null;
         this._deleteTplcfg();
-        aria.widgets.Template.superclass.$destructor.call(this);
+        Template.superclass.$destructor.call(this);
     },
     $prototype : {
         $init : function (p) {
             var src = ariaTemplatesTemplateTrait.prototype;
             for (var key in src) {
-                if (src.hasOwnProperty(key) && !p.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(src, key) && !Object.prototype.hasOwnProperty.call(p, key)) {
                     // copy methods which are not already on this object (this avoids copying $classpath and
                     // $destructor)
                     p[key] = src[key];
@@ -234,7 +235,8 @@ module.exports = Aria.classDefinition({
             this.subTplCtxt = tplCtxt;
             tplCtxt.parent = this._context;
 
-            var res = tplCtxt.initTemplate(tplcfg);
+            // MUST_CHECK: ModernAria: VAR_REDECLARE_OVERWRITE: OverWrites the 'res' passed as parameter, can we rename this safely??
+            res = tplCtxt.initTemplate(tplcfg);
 
             if (res) {
                 tplCtxt.dataReady(); // data successfully loaded: signal to template through TemplateContext
@@ -282,7 +284,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _init : function () {
-            aria.widgets.Template.superclass._init.call(this);
+            Template.superclass._init.call(this);
 
             var tplDiv = ariaUtilsDom.getDomElementChild(this._domElt, 0);
             this._subTplDiv = tplDiv;
@@ -322,15 +324,25 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _widgetMarkup : function (out) {
-            var tplcfg = this._tplcfg;
-            Aria.load({
-                templates : [tplcfg.classpath],
-                classes : (this._needCreatingModuleCtrl ? [this._cfg.moduleCtrl.classpath] : null),
-                oncomplete : {
-                    scope : this,
-                    fn : this._onModuleCtrlLoad
-                }
-            });
+            console.error('ModernAria: Aria.load call point, check if it works without the Aria.load call');
+            // eslint-disable-next-line no-debugger
+            debugger;
+            // --------------------------------------------------
+            // MUST_CHECK: ModernAria: Aria.load: Aria.load should not be needed with EsModule. Double Confirm
+
+            // var tplcfg = this._tplcfg;
+            // Aria.load({
+            //     templates : [tplcfg.classpath],
+            //     classes : (this._needCreatingModuleCtrl ? [this._cfg.moduleCtrl.classpath] : null),
+            //     oncomplete : {
+            //         scope : this,
+            //         fn : this._onModuleCtrlLoad
+            //     }
+            // });
+            // Directly call the callback
+            // MUST_CHECK: ModernAria: Aria.load: Does the direct call to _onModuleCtrlLoad cause issues?
+            this._onModuleCtrlLoad();
+            // --------------------------------------------------
             var tplCtxt = this.subTplCtxt, markup;
             if (tplCtxt) {
                 // the template has already been loaded, get the classname before processing the markup !important

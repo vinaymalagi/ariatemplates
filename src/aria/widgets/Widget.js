@@ -12,33 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-require("./CfgBeans");
-var ariaUtilsJson = require("../utils/Json");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaUtilsDelegate = require("../utils/Delegate");
-var ariaUtilsObject = require("../utils/Object");
-var ariaUtilsAccessibility = require("../utils/Accessibility");
-var ariaWidgetsAriaSkinInterface = require("./AriaSkinInterface");
-var ariaTemplatesRefreshManager = require("../templates/RefreshManager");
-var ariaUtilsString = require("../utils/String");
-var ariaWidgetsGlobalStyle = require("./GlobalStyle.tpl.css");
-var ariaWidgetLibsBindableWidget = require("../widgetLibs/BindableWidget");
-var ariaCoreTplClassLoader = require("../core/TplClassLoader");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-var environment = require("../core/environment/Environment");
-var ariaWidgetsEnvironmentWidgetSettings = require("./environment/WidgetSettings");
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import './CfgBeans.js';
+import { Json as ariaUtilsJson } from '../utils/Json.js';
+import { UtilsDom as ariaUtilsDom } from '../utils/Dom.js';
+import { Delegate as ariaUtilsDelegate } from '../utils/Delegate.js';
+import { assign } from '../utils/Object.js';
+import { readText } from '../utils/Accessibility.js';
+import { AriaSkinInterface as ariaWidgetsAriaSkinInterface } from './AriaSkinInterface.js';
+import { RefreshManager as ariaTemplatesRefreshManager } from '../templates/RefreshManager.js';
+import { escapeHTMLAttr } from '../utils/String.js';
+import ariaWidgetsGlobalStyle from './GlobalStyle.tpl.css.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { BindableWidget as ariaWidgetLibsBindableWidget } from '../widgetLibs/BindableWidget.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../core/TplClassLoader.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
+import { Environment as environment } from '../core/environment/Environment.js';
+import { WidgetSettings as ariaWidgetsEnvironmentWidgetSettings } from './environment/WidgetSettings.js';
 
 /**
  * Base Widget class from which all widgets must derive
  */
-module.exports = Aria.classDefinition({
+export const Widget = classDefinition({
     $classpath : "aria.widgets.Widget",
     $extends : ariaWidgetLibsBindableWidget,
     $css : [ariaWidgetsGlobalStyle],
     $onload : function () {
         // check for skin existence
-        if (!aria.widgets.AriaSkin) {
+        if (!getClassRef('aria.widgets.AriaSkin')) {
             this.$JsObject.$logError.call(this, this.SKIN_NOT_READY);
         }
     },
@@ -163,7 +165,7 @@ module.exports = Aria.classDefinition({
         var id = cfg.id;
         var domId;
         if (id && id.indexOf('+') > -1) {
-            if (Aria.testMode) {
+            if (FRAMEWORK_GLOBALS.testMode) {
                 domId = this._context.$getAutoId(id);
             }
             // From the application's point of view, an id with a '+' inside it is equivalent to no id at all.
@@ -192,8 +194,7 @@ module.exports = Aria.classDefinition({
     },
     $statics : {
         // ERROR MESSAGES:
-        SKIN_NOT_READY : "CRITICAL! There is no skin available, widgets can not be used.\nCheck that the skin is properly loaded in a script tag that looks like this:\n<script src=\"/aria/css/atskin-"
-                + Aria.version + ".js\" ></script>",
+        SKIN_NOT_READY : "CRITICAL! There is no skin available, widgets can not be used.\nCheck that the skin is properly loaded in a script tag that looks like this:\n<script src=\"/aria/css/atskin-{AriaVersion}.js\" ></script>",
         WIDGET_NOT_FOUND : "%1Following %3 widget was not found in DOM: %2",
         WIDGET_TOOLTIP_NOT_FOUND : "%1Tooltip with id '%2', for widget %3 was not found in template '%4'.",
         WIDGET_BINDING_ERROR : "%1Binding failed in widget: \tInside:%2\tTo:%3",
@@ -242,7 +243,7 @@ module.exports = Aria.classDefinition({
             var widgetDefaults = allDefaults[widgetName];
             if (widgetDefaults) {
                 for (var property in widgetDefaults) {
-                    if (widgetDefaults.hasOwnProperty(property) && !cfg.hasOwnProperty(property)) {
+                    if (Object.prototype.hasOwnProperty.call(widgetDefaults, property) && !Object.prototype.hasOwnProperty.call(cfg, property)) {
                         cfg[property] = widgetDefaults[property];
                     }
                 }
@@ -256,7 +257,7 @@ module.exports = Aria.classDefinition({
         _initBindings : function (bindings) {
             var bnd, inside, to, bindValue, transform;
             for (var bindedProperty in bindings) {
-                if (bindings.hasOwnProperty(bindedProperty)) {
+                if (Object.prototype.hasOwnProperty.call(bindings, bindedProperty)) {
                     bnd = bindings[bindedProperty];
                     inside = bnd.inside;
                     to = bnd.to;
@@ -430,7 +431,7 @@ module.exports = Aria.classDefinition({
                 out.write('margin:' + this._defaultMargin + 'px;" ');
             }
             if (cfg.tooltip && !this._customTooltipMgt) {
-                out.write('title="' + ariaUtilsString.escapeHTMLAttr(cfg.tooltip) + '" ');
+                out.write('title="' + escapeHTMLAttr(cfg.tooltip) + '" ');
             }
             if (cfg.tabIndex != null && !this._customTabIndexProvided && !cfg.disabled) {
                 var tabIndex = this._calculateTabIndex();
@@ -462,6 +463,7 @@ module.exports = Aria.classDefinition({
          * @protected
          * @param {aria.templates.MarkupWriter} out
          */
+        // eslint-disable-next-line no-unused-vars
         _widgetMarkup : function (out) {},
 
         /**
@@ -469,6 +471,7 @@ module.exports = Aria.classDefinition({
          * @protected
          * @param {aria.templates.MarkupWriter} out
          */
+        // eslint-disable-next-line no-unused-vars
         _widgetMarkupBegin : function (out) {},
 
         /**
@@ -476,6 +479,7 @@ module.exports = Aria.classDefinition({
          * @protected
          * @param {aria.templates.MarkupWriter} out
          */
+        // eslint-disable-next-line no-unused-vars
         _widgetMarkupEnd : function (out) {},
 
         /**
@@ -729,7 +733,7 @@ module.exports = Aria.classDefinition({
 
             // call for changes
             for (var changed in refreshMap) {
-                if (refreshMap.hasOwnProperty(changed)) {
+                if (Object.prototype.hasOwnProperty.call(refreshMap, changed)) {
                     this.setWidgetProperty(changed, refreshMap[changed]);
                 }
             }
@@ -745,6 +749,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} oldValue the old property value. If transformation is used, refers to widget value and not
          * data model value.
          */
+        // eslint-disable-next-line no-unused-vars
         _onBoundPropertyChange : function (propertyName, newValue, oldValue) {
             var domElt = this.getDom();
             if (propertyName == 'tooltip' && !this._customTooltipMgt) {
@@ -853,10 +858,10 @@ module.exports = Aria.classDefinition({
          */
         waiReadText : function (text, options) {
             if (this._cfg && this._cfg.waiAria && text) {
-                var finalOptions = ariaUtilsObject.assign({}, {
+                var finalOptions = assign({}, {
                     parent: this.getDom()
                 }, options || {});
-                ariaUtilsAccessibility.readText(text, finalOptions);
+                readText(text, finalOptions);
             }
         }
     }

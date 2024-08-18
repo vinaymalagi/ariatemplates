@@ -19,6 +19,10 @@ import "./CfgBeans.js";
 import { JsonValidator as ariaCoreJsonValidator } from "../core/JsonValidator.js";
 
 
+/**
+ * Handle keyboard navigation and shortcut for a given section.
+ * @class aria.templates.NavigationManager
+ */
 export const NavigationManager = classDefinition({
     $classpath : "aria.templates.NavigationManager",
     $singleton : true,

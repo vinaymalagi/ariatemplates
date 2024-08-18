@@ -12,14 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsString = require("./String");
+import { classDefinition } from '../core/class-definition.js';
+import { isJsReservedWord } from './js-name-checks.js';
+import { stringify } from './String.js';
 
 
 /**
  * Utility to build a function.
  */
-module.exports = Aria.classDefinition({
+export const FunctionWriter = classDefinition({
     $classpath : "aria.utils.FunctionWriter",
     /**
      * Create a function writer.
@@ -83,7 +84,7 @@ module.exports = Aria.classDefinition({
     $prototype : {
         $init : function (proto) {
             // shortcut:
-            proto.stringify = ariaUtilsString.stringify;
+            proto.stringify = stringify;
         },
 
         /**
@@ -124,7 +125,7 @@ module.exports = Aria.classDefinition({
          * @param {String} varName Variable name returned by createTempVariable.
          */
         releaseTempVariable : function (varName) {
-            if (this._usedTempVariables.hasOwnProperty(varName)) {
+            if (Object.prototype.hasOwnProperty.call(this._usedTempVariables, varName)) {
                 delete this._usedTempVariables[varName];
                 this._unusedTempVariables.push(varName);
             } else {
@@ -138,7 +139,7 @@ module.exports = Aria.classDefinition({
          * @return {Boolean}
          */
         isRegularVarName : function (expression) {
-            return this.REGULARNAME_REGEXP.test(expression) && !Aria.isJsReservedWord(expression);
+            return this.REGULARNAME_REGEXP.test(expression) && !isJsReservedWord(expression);
         },
 
         /**

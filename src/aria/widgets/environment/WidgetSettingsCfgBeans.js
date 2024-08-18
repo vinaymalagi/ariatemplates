@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaCoreJsonTypes = require("../../core/JsonTypes");
-var ariaUtilsDragdropDragDropBean = require("../../utils/dragdrop/DragDropBean");
-var ariaWidgetsCfgBeans = require("../CfgBeans");
+import { beanDefinitions } from '../../core/bean-definitions.js';
+import { JsonTypesBeans as ariaCoreJsonTypes } from '../../core/JsonTypes.js';
+import { DragDropBean as ariaUtilsDragdropDragDropBean } from '../../utils/dragdrop/DragDropBean.js';
+import { WidgetsCfgBeans as ariaWidgetsCfgBeans } from '../CfgBeans.js';
 
 
 /**
  * Bean definition containing default settings for the Widget Settings environment.
  */
-module.exports = Aria.beanDefinitions({
+export const WidgetSettingsCfgBeans = beanDefinitions({
     $package : "aria.widgets.environment.WidgetSettingsCfgBeans",
     $namespaces : {
         "json" : ariaCoreJsonTypes,

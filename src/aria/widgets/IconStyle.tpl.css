@@ -17,7 +17,7 @@
     $classpath : "aria.widgets.IconStyle",
     $extends : {importType: 'Default', modulePath: './WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'},
     $dependencies : [
-      {importType: 'Default', modulePath: './environment/WidgetSettings.js', name: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'}
+      {importType: 'Named', modulePath: './environment/WidgetSettings.js', name: 'WidgetSettings', alias: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'}
     ]
 }}
     {var skinnableClassName="Icon"/}

@@ -489,8 +489,13 @@ export const IO = classDefinition({
             };
 
             if (!instance) {
-                // MUST_DO: ModernAria: Check how to load the dependencies
-                console.error('have to load dependencies in RequestMgr.js. Solve for', transport);
+                // --------------------------------------------------------------------------------------------------
+                // MUST_DO: ModernAria: Aria.load: Aria.load in its current form will not be available in ModernAria. contd...
+                // MUST_DO: ModernAria: Aria.load: For IO.js, the transport classes are dynamically loaded based on request type. See __getTransport and updateTransports methods for context. contd...
+                // MUST_DO: ModernAria: Aria.load: One possible soltion is instead of classpaths the transports can be functions, which have dynamic import calls. But needs to be evaluated and also if there are better alternalives.
+                console.error(`ModernAria: Aria.load: Aria.load in its current form will not be available in ModernAria. Have to load dynamic dependencies in IO.js. Solve for ${transport}, and others as identified from __getTransport and updateTransports methods.`);
+                // eslint-disable-next-line no-debugger
+                debugger;
                 // Aria.load({
                 //     classes : [transport],
                 //     oncomplete : {
@@ -499,6 +504,7 @@ export const IO = classDefinition({
                 //         scope : this
                 //     }
                 // });
+                // --------------------------------------------------------------------------------------------------
             } else {
                 this._asyncRequest(args);
             }

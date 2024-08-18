@@ -46,7 +46,12 @@ export const FRAMEWORK_GLOBALS = {
    * List of root templates
    * Items added/removed by aria.templates.TemplatesCtxtManager
    */
-  rootTemplates: []
+  rootTemplates: [],
+
+  /**
+   * Whether running in test mode
+   */
+  testMode: ARIA_OVERRIDE_LAUNCH_SETTINGS.testMode === true,
 };
 
 /**
@@ -57,8 +62,27 @@ export const FRAMEWORK_GLOBALS = {
 export const minSizeMode = ARIA_OVERRIDE_LAUNCH_SETTINGS.minSizeMode === true;
 
 console.log(`Import Meta URL: ${import.meta.url}`);
+
+function getRootFolderPath() {
+  if (import.meta && import.meta.url) {
+
+    const url = new URL(import.meta.url);
+
+    const pathParts = url.pathname.split('/');
+    pathParts.pop(); // Remove the JS part
+    const ariaStartRegex = /^(ariatemplates\/)?aria(\/core?)$/;
+    const path = pathParts.join('/').replace(ariaStartRegex, '') + '/';
+
+
+    return url.origin + '/' + path;
+  } else if ($frameworkWindow) {
+    $frameworkWindow.location.origin + '/';
+  }
+  return undefined;
+}
 // MUST_DO: ModernAria: Root folder path Using
-export const rootFolderPath = ARIA_OVERRIDE_LAUNCH_SETTINGS.rootFolderPath || ($frameworkWindow && $frameworkWindow.location.protocol + "//" + $frameworkWindow.location.host + "/") || undefined;
+export const rootFolderPath = ARIA_OVERRIDE_LAUNCH_SETTINGS.rootFolderPath || getRootFolderPath();
+
 
 
 
@@ -167,9 +191,10 @@ export const $logError = function (msg, msgArgs, err, callerClasspath) {
 };
 
 export const resolveUrl = function(path) {
-  // MUST_DO: ModernAria: Root folder path setup, along with bootstrap framework configs
-  const currentURL = $frameworkWindow.location;
-  const rootFolderPath = currentURL.protocol + "//" + currentURL.host + "/";
+  if (/^\w+:\/\/.+/.test(path)) {
+    return path;
+}
+  // MUST_CHECK: ModernAria: DownloadMgr: If resolveUrl of DownloadMgr with urlMap and rootMap setup is needed.
   return rootFolderPath + path;
 };
 

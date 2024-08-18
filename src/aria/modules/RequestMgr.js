@@ -325,8 +325,12 @@ export const RequestMgr = classDefinition({
                 requestHandler : requestObject.requestHandler,
                 syncFlag : false
             };
-            // MUST_DO: ModernAria: Check how to load the dependencies
-            console.error('have to load dependencies in RequestMgr.js. Solve for', dependencies);
+            // --------------------------------------------------------------------------------------------------
+            // MUST_DO: ModernAria: Aria.load: Aria.load in its current form will not be available in ModernAria. contd...
+            // MUST_DO: ModernAria: Aria.load: For RequesMgr.js, there are classpaths configured in UrlServiceCfgBeans.js and RequestHandlerCfgBeans.js. contd...
+            // MUST_DO: ModernAria: Aria.load: One possible soltion is instead of classpaths CfgBeans values can be functions, which have dynamic import calls. But needs to be evaluated and also if there are better alternalives.
+            console.error(`ModernAria: Aria.load: Aria.load in its current form will not be available in ModernAria. Have to load dynamic dependencies in RequestMgr.js. Solve for ${dependencies.join(', ')} , coming from urlService/environment/UrlService.js (UrlServiceCfgBeans) and requestHandler/environment/RequestHandler.js (RequestHandlerCfgBeans).`);
+            console.error('ModernAria: Aria.load: Have to load dependencies in RequestMgr.js. Solve for', dependencies);
             // Aria.load({
             //     classes : dependencies,
             //     oncomplete : {
@@ -335,12 +339,15 @@ export const RequestMgr = classDefinition({
             //         args : args
             //     }
             // });
+            // MUST_CHECK: ModernAria: For now calling _ondDependenciesReady directly. Check Behavior
+            this._onDependenciesReady.call(this, args);
+            // --------------------------------------------------------------------------------------------------
+
 
             // check if the request has been executed synchronously
             if (!args.syncFlag && requestObject.async === false) {
                 this.$logError(this.DEPENDENCIES_BROKE_SYNC, [dependencies]);
             }
-
             return id;
         },
 

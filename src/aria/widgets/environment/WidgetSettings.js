@@ -23,7 +23,7 @@ import { EnvironmentBase as ariaCoreEnvironmentEnvironmentBase } from "../../cor
  * @extends aria.core.environment.EnvironmentBase
  * @singleton
  */
-export default classDefinition({
+export const WidgetSettings = classDefinition({
     $classpath : "aria.widgets.environment.WidgetSettings",
     $extends : ariaCoreEnvironmentEnvironmentBase,
     $singleton : true,

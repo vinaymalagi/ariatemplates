@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
+import { tplScriptDefinition } from '../core/class-definition.js';
 
 
-module.exports = Aria.tplScriptDefinition({
+export const WidgetStyleScript = tplScriptDefinition({
     $classpath : 'aria.widgets.WidgetStyleScript',
     $prototype : {
         macro_writeStateOfFrame : function (info) {

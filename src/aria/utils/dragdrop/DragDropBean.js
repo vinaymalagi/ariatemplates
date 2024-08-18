@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaCoreJsonTypes = require("../../core/JsonTypes");
+import { beanDefinitions } from '../../core/bean-definitions.js';
+import { JsonTypesBeans as ariaCoreJsonTypes } from '../../core/JsonTypes.js';
 
 
-module.exports = Aria.beanDefinitions({
+export const DragDropBean = beanDefinitions({
     $package : "aria.utils.dragdrop.DragDropBean",
     $description : "Definition of parameters used by Drag/Drop classes",
     $namespaces : {

@@ -21,6 +21,8 @@ import { copyObject } from '../core/definition-utils.js';
 import { DUPLICATE_CLASSNAME, RESOURCES_HANDLE_CONFLICT, TEXT_TEMPLATE_HANDLE_CONFLICT } from '../core/error-messages.js';
 import { emptyFn } from '../common/fixed-return-value-functions.js';
 
+// TODO ModernAria: get rid of the 'getClassRef' calls and use direct imports where possible.
+
     /**
      * Display an error in the template container and call the callback notifying the error.
      * @param {Object} args
@@ -160,8 +162,19 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
                 }); // TODO: add an error ID
                 return;
             }
+
+            // -----------------------------------------------------------------
+            // MUST_CHECK: ModernAria: Aria.load: Do we need dynamic loading for ModuleCtrl.classpath??
+
+            if(typeof moduleCtrl.classpath === 'string') {
+              console.warn(`ModernAria: Aria.load: Aria.load will not be available in its current form in ModernAria. Can this not be statically determined using direct import to the moduleCtrl class and using the class reference to pass to loadTemplate?`);
+              if(!getClassRef(moduleCtrl.classpath)) {
+                console.error(`ModernAria: Aria.load: moduleCtrl.classpath is a string. moduleCtrl: ${moduleCtrl.classpath} is not available. Can the controller reference istself be passed as classpath (use import to the moduleCtrl and use the imported reference when calling loadTemplate)? If not, a solution will have to found.`);
+              }
+            }
             classes.push(import('./ModuleCtrlFactory.js')/*, moduleCtrl.classpath*/);
             // classes.push("aria.templates.ModuleCtrlFactory", moduleCtrl.classpath);
+            // -----------------------------------------------------------------
         }
         // MUST_CHECK: ModernAria: Does CSS loader do anything else apart from compiling CSS template to class and loading it?
         // var cssToReload = ['aria.templates.GlobalStyle'];
@@ -374,6 +387,7 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
              * errors inside some widgets or sub-templates.
              */
             loadTemplate : function (cfg, cb) {
+                // NOT_IMPLEMENTABLE: ModernAria: Can Customizations be implemented in ModernAria? With ESmodules since module loading is handled by the browser can we still do something about it?
                 // var appE = Aria.getClassRef("aria.core.environment.Customizations");
                 // if (appE && appE.isCustomized() && !appE.descriptorLoaded()) {
                 //     // the application is customized but the descriptor hasn't been loaded yet: register to the event
@@ -414,6 +428,7 @@ import { emptyFn } from '../common/fixed-return-value-functions.js';
                 // resume normal template loading
                 // PROFILING // this.prototype.$startMeasure("Tpl display", cfg.classpath);
 
+                // TODO: ModernAria: Do these modules need to be dynamically loaded? loadTemplate when called always expects these modules??
                 Promise.all([
                   import('./Layout.js'),
                   import('./CfgBeans.js'),

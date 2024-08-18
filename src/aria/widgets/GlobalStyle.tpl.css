@@ -16,8 +16,8 @@
 {CSSTemplate {
     $classpath : "aria.widgets.GlobalStyle",
     $dependencies : [
-      {importType: 'Default', modulePath: './environment/WidgetSettings.js', name: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'},
-      {importType: 'Default', modulePath: './AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
+      {importType: 'Named', modulePath: './environment/WidgetSettings.js', name: 'WidgetSettings', alias: 'ariaWidgetsEnvironmentWidgetSettings', classpath: 'aria.widgets.environment.WidgetSettings'},
+      {importType: 'Named', modulePath: './AriaSkinInterface.js', name: 'AriaSkinInterface', alias: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
       {importType: 'Named', modulePath: '../core/Browser.js', name: 'Browser', alias: 'ariaCoreBrowser', classpath: 'aria.core.Browser'}
     ],
     $extends: {importType: 'Default', modulePath: './WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'},

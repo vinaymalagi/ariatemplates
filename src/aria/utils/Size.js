@@ -101,6 +101,8 @@ export function getFreeSize(element) {
  * </pre>
  *
  * @return {{width: number, height: number} | null} new width and height if one of them have changed
+ *
+ * TODO: ModernAria: TYPO: Fix typo in name Contrains -> Constraints???
  */
 export function setContrains(element, widthConf, heightConf) {
   // PROFILING // var profilingId = this.$startMeasure("setContrains");

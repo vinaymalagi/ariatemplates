@@ -17,7 +17,7 @@
     $classpath : "aria.widgets.WidgetStyle",
     $dependencies : [
       {importType: 'Default', modulePath: './AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
-      {importType: 'Named', modulePath: '../utils/Type.js', name: 'isNumber', classpath: 'aria.utils.Type'}
+      {importType: 'Named', modulePath: '../utils/Type.js', name: 'isNumber', alias: 'ariaUtilsTypeIsNumber', classpath: 'aria.utils.Type'}
     ],
     $script: {importType: 'Default', modulePath: './WidgetStyleScript.js', name: 'ariaWidgetsWidgetStyleScriptScript', classpath: 'aria.widgets.WidgetStyleScript'}
 }}
@@ -30,7 +30,7 @@
     {/macro}
 
     {macro startLooping()}
-        {var skinClasses=ariaWidgetsAriaSkinInterface.getSkinClasses(skinnableClassName)/}
+        {var skinClasses=ariaWidgetsAriaSkinInterface.getSkinClasses(this.skinnableClassName)/}
         {foreach skinClass in skinClasses}
             {var info={
                 skinClassName: skinClass_index,
@@ -42,7 +42,7 @@
     {/macro}
 
     {macro writeAllStates(info)}
-        {var states=ariaWidgetsAriaSkinInterface.getWidgetStates(skinnableClassName)/}
+        {var states=ariaWidgetsAriaSkinInterface.getWidgetStates(this.skinnableClassName)/}
         {if states}
             {foreach state in states}
                 {var info={
@@ -51,7 +51,7 @@
                     stateName: state_index,
                     state: info.skinClass.states[state_index]
                 }/}
-                {if useFrame}
+                {if this.useFrame}
                     {call writeStateOfFrame(info)/}
                 {/if}
                 {call writeState(info)/}
@@ -109,7 +109,7 @@
             color: ${state.color};
             {if verticalAlignApplied}
                 vertical-align: ${state.verticalAlign};
-                line-height: ${state.innerHeight + (aria.utils.Type.isNumber(state.innerHeight) ? "px" : "")};
+                line-height: ${state.innerHeight + (ariaUtilsTypeIsNumber(state.innerHeight) ? "px" : "")};
             {/if}
         }
         {if fontStyle}

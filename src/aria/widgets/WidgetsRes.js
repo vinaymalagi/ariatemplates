@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import { resourcesDefinition } from '../core/resources-definition.js';
 /**
  * @class aria.widgets.WidgetsRes Error messages which can be displayed to the user.
  */
-Aria.resourcesDefinition({
+export const WidgetRes = resourcesDefinition({
     $classpath : 'aria.widgets.WidgetsRes',
     $resources : {
         errors : {

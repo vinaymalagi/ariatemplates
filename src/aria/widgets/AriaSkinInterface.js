@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-require("./AriaSkinBeans");
-var ariaWidgetsAriaSkinNormalization = require("./AriaSkinNormalization");
-var ariaCoreDownloadMgr = require("../core/DownloadMgr");
-var ariaUtilsCSSLoader = require("../utils/CSSLoader");
-var ariaUtilsString = require("../utils/String");
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
+import './AriaSkinBeans.js';
+import { AriaSkinNormalization as ariaWidgetsAriaSkinNormalization } from './AriaSkinNormalization.js';
+import { resolveUrl, FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { CSSLoader as ariaUtilsCSSLoader } from '../utils/CSSLoader.js';
+import { endsWith } from '../utils/String.js';
 
 
 /**
  * A class that provides an interface to the AriaSkin object that comes from the skinning system.
  */
-module.exports = Aria.classDefinition({
+export const AriaSkinInterface = classDefinition({
     $classpath : "aria.widgets.AriaSkinInterface",
     $singleton : true,
     $onload : function () {
         // check for skin existency
-        if (aria.widgets.AriaSkin) {
-            var general = aria.widgets.AriaSkinInterface.getGeneral();
+        const ariaWidgetsSkin = getClassRef('aria.widgets.AriaSkin');
+        if (ariaWidgetsSkin) {
+            var general = getClassRef('aria.widgets.AriaSkinInterface').getGeneral();
             if (general.externalCSS.length > 0) {
                 for (var i = 0; i < general.externalCSS.length; i++) {
                     general.externalCSS[i] = general.imagesRoot + general.externalCSS[i];
@@ -57,7 +59,7 @@ module.exports = Aria.classDefinition({
          * Normalizes the whole current skin, if not already done.
          */
         normalizeSkin : function () {
-            ariaWidgetsAriaSkinNormalization.normalizeSkin(aria.widgets.AriaSkin.skinObject);
+            ariaWidgetsAriaSkinNormalization.normalizeSkin(getClassRef('aria.widgets.AriaSkin').skinObject);
         },
 
         /**
@@ -110,12 +112,13 @@ module.exports = Aria.classDefinition({
          * @return {Object}
          */
         getSkinClasses : function (widgetName) {
-            var widgetSkinObj = aria.widgets.AriaSkin.skinObject[widgetName];
+          const ariaSkin = getClassRef('aria.widgets.AriaSkin');
+            var widgetSkinObj = ariaSkin.skinObject[widgetName];
             if (!widgetSkinObj || !widgetSkinObj['aria:skinNormalized']) {
                 var newValue = ariaWidgetsAriaSkinNormalization.normalizeWidget(widgetName, widgetSkinObj);
                 if (newValue && newValue != widgetSkinObj) {
                     widgetSkinObj = newValue;
-                    aria.widgets.AriaSkin.skinObject[widgetName] = newValue;
+                    ariaSkin.skinObject[widgetName] = newValue;
                 }
             }
             return widgetSkinObj;
@@ -143,11 +146,12 @@ module.exports = Aria.classDefinition({
          * @param {String} beanType
          */
         _normalizeAndGetGeneral : function (skinObjProp, beanType) {
-            var general = aria.widgets.AriaSkin.skinObject[skinObjProp];
+            const ariaSkin = getClassRef('aria.widgets.AriaSkin');
+            var general = ariaSkin.skinObject[skinObjProp];
             if (!general || !general['aria:skinNormalized']) {
                 var newValue = ariaWidgetsAriaSkinNormalization.normalizeGeneral(general, beanType);
                 if (general != newValue) {
-                    aria.widgets.AriaSkin.skinObject[skinObjProp] = general = newValue;
+                  ariaSkin.skinObject[skinObjProp] = general = newValue;
                 }
             }
             return general;
@@ -192,7 +196,8 @@ module.exports = Aria.classDefinition({
          * @return {String} Name of the skin, Default atdefskin
          */
         getSkinName : function () {
-            return aria.widgets.AriaSkin.skinName || "atdefskin";
+            const ariaSkin = getClassRef('aria.widgets.AriaSkin');
+            return ariaSkin.skinName || "atdefskin";
         },
 
         /**
@@ -231,22 +236,22 @@ module.exports = Aria.classDefinition({
             // Preloading images as soon as the application is loaded fixes PTRs 06016424 and 05968998.
             var images = {};
             if (!skinObject) {
-                skinObject = aria.widgets.AriaSkin.skinObject;
+                skinObject = getClassRef('aria.widgets.AriaSkin').skinObject;
             }
             if (skinObject) {
                 for (var widget in skinObject) {
                     var widgetSkinClasses = skinObject[widget];
-                    if (widgetSkinClasses && skinObject.hasOwnProperty(widget) && widget != "general") {
+                    if (widgetSkinClasses && Object.prototype.hasOwnProperty.call(skinObject, widget) && widget != "general") {
                         for (var skinClassName in widgetSkinClasses) {
                             var skinClass = widgetSkinClasses[skinClassName];
-                            if (skinClass && widgetSkinClasses.hasOwnProperty(skinClassName)) {
+                            if (skinClass && Object.prototype.hasOwnProperty.call(widgetSkinClasses, skinClassName)) {
                                 this._extractSkinImages(skinClass, images);
                                 this._extractSkinImages(skinClass.frame, images);
                                 var statesMap = this.getWidgetStates(widget);
                                 var statesObject = skinClass.states;
                                 if (statesObject && statesMap) {
                                     for (var stateName in statesObject) {
-                                        if (statesMap.hasOwnProperty(stateName)) {
+                                        if (Object.prototype.hasOwnProperty.call(statesMap, stateName)) {
                                             var state = statesObject[stateName];
                                             if (state) {
                                                 this._extractSkinImages(state, images);
@@ -262,11 +267,11 @@ module.exports = Aria.classDefinition({
             }
             var markup = [];
             for (var curImage in images) {
-                if (images.hasOwnProperty(curImage)) {
+                if (Object.prototype.hasOwnProperty.call(images, curImage)) {
                     markup.push('<span style="background-image:url(', this.getSkinImageFullUrl(curImage), ');">&nbsp;</span>');
                 }
             }
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             var element = document.createElement('div');
             if (document.body) {
                 document.body.appendChild(element);
@@ -286,7 +291,10 @@ module.exports = Aria.classDefinition({
          * @return {String} full URL (taking into account Aria.rootFolderPath and the general.imagesRoot skin property)
          */
         getSkinImageFullUrl : function (imageUrl) {
-            return ariaCoreDownloadMgr.resolveURL(this.getGeneral().imagesRoot + imageUrl, true);
+            // MUST_CHECK: ModernAria: DownloadMgr: is resolveURL of DownloadMgr with urlMap and rootMap setup is needed. How to handle this?
+            console.error(`About to call Unhandled DownloadManager.resolveURL with URL/Path: ${imageUrl}. Currently implemented Framework ResolveUrl, just prepends rootFolderPath to the source path. How to handle this, Do we need to use download manager?`);
+            // return ariaCoreDownloadMgr.resolveURL(this.getGeneral().imagesRoot + imageUrl, true);
+            return resolveUrl(this.getGeneral().imagesRoot + imageUrl);
         },
 
         /**
@@ -306,7 +314,7 @@ module.exports = Aria.classDefinition({
                 var imageFullUrl = /^(data|https?):/i.test(imageurl) ? imageurl : this.getSkinImageFullUrl(imageurl);
                 fullUrl = "url(" + imageFullUrl + ") ";
 
-                if (ariaUtilsString.endsWith(imageurl, ".png")) {
+                if (endsWith(imageurl, ".png")) {
                     gifUrl = imageFullUrl.substring(0, imageFullUrl.length - 4) + ".gif";
                 } else {
                     gifUrl = imageFullUrl;

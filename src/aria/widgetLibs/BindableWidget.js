@@ -26,7 +26,7 @@ import { BaseWidget as ariaWidgetLibsBaseWidget } from "./BaseWidget.js";
  * in the data model the function '_notifyDataChange' is called. It also provides a method to transform bound values
  * to/from the widget.
  */
-export default classDefinition({
+export const BindableWidget = classDefinition({
     $classpath : "aria.widgetLibs.BindableWidget",
     $extends : ariaWidgetLibsBaseWidget,
     $statics : {

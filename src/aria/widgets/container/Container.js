@@ -12,11 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsSize = require("../../utils/Size");
-var ariaUtilsMath = require("../../utils/Math");
-var ariaWidgetsWidget = require("../Widget");
-var ariaCoreTplClassLoader = require("../../core/TplClassLoader");
+import { classDefinition } from '../../core/class-definition.js';
+import { setContrains } from '../../utils/Size.js';
+import { normalize } from '../../utils/Math.js';
+import { getClassRef } from '../../core/class-registry.js';
+import { emptyFn } from '../../common/fixed-return-value-functions.js';
+import { Widget as ariaWidgetsWidget } from '../Widget.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../../core/TplClassLoader.js';
 
 
 /**
@@ -24,7 +26,7 @@ var ariaCoreTplClassLoader = require("../../core/TplClassLoader");
  * @class aria.widgets.container.Container
  * @extends aria.widgets.Widget
  */
-module.exports = Aria.classDefinition({
+export const Container = classDefinition({
     $classpath : "aria.widgets.container.Container",
     $extends : ariaWidgetsWidget,
     /**
@@ -32,6 +34,7 @@ module.exports = Aria.classDefinition({
      * @param {aria.widgets.CfgBeans:ContainerCfg} cfg the widget configuration
      * @param {aria.templates.TemplateCtxt} ctxt template context
      */
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
         this.$Widget.constructor.apply(this, arguments);
 
@@ -71,6 +74,7 @@ module.exports = Aria.classDefinition({
          * Raised when the content of the container has changed (through partial refresh)
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _dom_oncontentchange : function (domEvent) {
             // does not propagate, event delegation already does this
             if (this.__initWhileContentChange !== true) {
@@ -88,6 +92,7 @@ module.exports = Aria.classDefinition({
          * @protected
          * @override
          */
+        // eslint-disable-next-line no-unused-vars
         _onBoundPropertyChange : function (propertyName, newValue, oldValue) {
             if (propertyName === "height" || propertyName === "width") {
                 this._updateSize();
@@ -126,8 +131,8 @@ module.exports = Aria.classDefinition({
                     // when maximized from start, widthMaximized will be empty initially, but it'll be adjusted later
                     var width = cfg.widthMaximized || cfg.width;
                     var height = cfg.heightMaximized || cfg.height;
-                    var constrainedWidth = ariaUtilsMath.normalize(width, widthConf.min, widthConf.max);
-                    var constrainedHeight = ariaUtilsMath.normalize(height, heightConf.min, heightConf.max);
+                    var constrainedWidth = normalize(width, widthConf.min, widthConf.max);
+                    var constrainedHeight = normalize(height, heightConf.min, heightConf.max);
 
                     domElt.style.width = width > -1 ? constrainedWidth + "px" : "";
                     domElt.style.height = height > -1 ? constrainedHeight + "px" : "";
@@ -138,12 +143,13 @@ module.exports = Aria.classDefinition({
                     }
                 }
 
-                var changed = ariaUtilsSize.setContrains(domElt, widthConf, heightConf);
+                var changed = setContrains(domElt, widthConf, heightConf);
                 if (changed && this._frame) {
                     this._frame.resize(changed.width, changed.height);
                     // throws a onchange event on parent
                     if (domElt.parentNode && propagate) {
-                        aria.utils.Delegate.delegate(aria.DomEvent.getFakeEvent('contentchange', domElt.parentNode));
+                        // MUST_CHECK: ModernAria: USELESS_CLASSREF: do the Delegate and DomEvent need to be accessed using getClassRef, an Import should work???
+                        getClassRef('aria.utils.Delegate').delegate(getClassRef('aria.DomEvent').getFakeEvent('contentchange', domElt.parentNode));
                     }
                 }
                 this._changedContainerSize = changed;
@@ -182,7 +188,7 @@ module.exports = Aria.classDefinition({
          * @param {aria.templates.MarkupWriter} out the writer Object to use to output markup
          * @protected
          */
-        _widgetMarkupBegin : Aria.empty,
+        _widgetMarkupBegin : emptyFn,
 
         /**
          * The main entry point into the Div end markup. Here we check whether it is a Div, defined in the AriaSkin
@@ -190,7 +196,7 @@ module.exports = Aria.classDefinition({
          * @param {aria.templates.MarkupWriter} out the writer Object to use to output markup
          * @protected
          */
-        _widgetMarkupEnd : Aria.empty
+        _widgetMarkupEnd : emptyFn
 
     }
 });

@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsIdManager = require("./IdMgr");
-var ariaUtilsType = require("./Type");
-var ariaUtilsObject = require("./Object");
-var ariaCoreDownloadMgr = require("../core/DownloadMgr");
+import { classDefinition } from '../core/class-definition.js';
+import { IdMgr as ariaUtilsIdManager } from './IdMgr.js';
+import { isString } from './Type.js';
+import { keys } from './Object.js';
+import { FRAMEWORK_GLOBALS, resolveUrl } from '../core/framework-bootstrap.js';
 
 
 /**
  * Utility to load external CSS files. Do NOT use it for loading CSS Templates
  */
-module.exports = Aria.classDefinition({
+export const CSSLoader = classDefinition({
     $classpath : "aria.utils.CSSLoader",
     $singleton : true,
     $statics : {
@@ -71,7 +71,7 @@ module.exports = Aria.classDefinition({
          */
         add : function (sources, media) {
             media = media || this.DEFAULT_MEDIA;
-            if (ariaUtilsType.isString(sources)) {
+            if (isString(sources)) {
                 sources = [sources];
             }
             var source, storeId, tagArray = [];
@@ -101,7 +101,7 @@ module.exports = Aria.classDefinition({
          */
         remove : function (sources, media) {
             media = media || this.DEFAULT_MEDIA;
-            if (ariaUtilsType.isString(sources)) {
+            if (isString(sources)) {
                 sources = [sources];
             }
             var source, storeId;
@@ -138,7 +138,7 @@ module.exports = Aria.classDefinition({
          * Unload all the CSS previously added
          */
         removeAll : function () {
-            var storeIds = ariaUtilsObject.keys(this._store);
+            var storeIds = keys(this._store);
             for (var i = 0, length = storeIds.length; i < length; i++) {
                 this._remove(storeIds[i], true);
             }
@@ -153,7 +153,7 @@ module.exports = Aria.classDefinition({
          * @private
          */
         _addLinkTag : function (source, media, id) {
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             var head = document.getElementsByTagName("head")[0];
             var tag = document.createElement("link");
 
@@ -161,7 +161,10 @@ module.exports = Aria.classDefinition({
             tag.type = "text/css";
             tag.media = media;
             tag.rel = "stylesheet";
-            tag.href = ariaCoreDownloadMgr.resolveURL(source);
+            // MUST_CHECK: ModernAria: DownloadMgr: is resolveURL of DownloadMgr with urlMap and rootMap setup is needed. How to handle this?
+            console.error(`About to call Unhandled DownloadManager.resolveURL with URL/Path: ${source}. Currently implemented Framework ResolveUrl, just prepends rootFolderPath to the source path. How to handle this, Do we need to use download manager?`);
+            // tag.href = ariaCoreDownloadMgr.resolveURL(source);
+            tag.href = resolveUrl(source);
 
             head.appendChild(tag);
             tag = head.lastChild;

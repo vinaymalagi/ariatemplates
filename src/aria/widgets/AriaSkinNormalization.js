@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-require("./AriaSkinBeans");
-var ariaUtilsInheritanceNormalization = require("../utils/InheritanceNormalization");
-var ariaUtilsFunctionWriter = require("../utils/FunctionWriter");
-var ariaUtilsFunction = require("../utils/Function");
-var ariaCoreLog = require("../core/Log");
+import { classDefinition } from '../core/class-definition.js';
+import { getBean, check, normalize } from '../core/JsonValidator.js';
+import './AriaSkinBeans.js';
+import { InheritanceNormalization as ariaUtilsInheritanceNormalization } from '../utils/InheritanceNormalization.js';
+import { FunctionWriter as ariaUtilsFunctionWriter } from '../utils/FunctionWriter.js';
+import { bind } from '../utils/Function.js';
+import { FRAMEWORK_GLOBALS, FRAMEWORK_LOGGER } from '../core/framework-bootstrap.js';
 
 
 /**
  * Skin normalization utility.
  */
-module.exports = Aria.classDefinition({
+export const AriaSkinNormalization = classDefinition({
     $classpath : 'aria.widgets.AriaSkinNormalization',
     $singleton : true,
     $constructor : function () {
@@ -51,8 +51,8 @@ module.exports = Aria.classDefinition({
 
         // Prototype used by all normalizers
         var normalizerPrototype = {
-            normFrame : ariaUtilsFunction.bind(this._normFrame, this),
-            checkFrameState : ariaUtilsFunction.bind(this._checkFrameState, this)
+            normFrame : bind(this._normFrame, this),
+            checkFrameState : bind(this._checkFrameState, this)
         };
         this._createNormalizerObject.prototype = normalizerPrototype;
     },
@@ -144,7 +144,7 @@ module.exports = Aria.classDefinition({
             }
             skinFrame.frameType = frameType;
             frameNormalizers.normFrameSkinClass(skin, std);
-            if (Aria.debug) {
+            if (FRAMEWORK_GLOBALS.debug) {
                 var res = this._check(skinFrame, 'aria.widgets.AriaSkinBeans.' + frameType + 'FrameCfg');
                 if (!res.result) {
                     this.$logWarn(this.FRAME_NORMALIZATION_ERROR, [widgetName, skinClassName,
@@ -181,7 +181,7 @@ module.exports = Aria.classDefinition({
         _getFrameNormalizers : function (widgetName, skinClassName, frameType) {
             var res = this._frameNormalizers[frameType];
             if (res == null) {
-                var frameBeanDef = ariaCoreJsonValidator.getBean('aria.widgets.AriaSkinBeans.' + frameType
+                var frameBeanDef = getBean('aria.widgets.AriaSkinBeans.' + frameType
                         + 'FrameCfg');
                 if (frameBeanDef == null) {
                     this.$logError(this.INVALID_FRAME_TYPE, [widgetName, skinClassName, frameType]);
@@ -206,7 +206,7 @@ module.exports = Aria.classDefinition({
                 return;
             }
             for (var widget in skinObject) {
-                if (skinObject.hasOwnProperty(widget) && widget != "general" && widget != "widgets") {
+                if (Object.prototype.hasOwnProperty.call(skinObject, widget) && widget != "general" && widget != "widgets") {
                     skinObject[widget] = this.normalizeWidget(widget, skinObject[widget]);
                 }
             }
@@ -228,6 +228,7 @@ module.exports = Aria.classDefinition({
         _createSkinClassNormalizer : function (widgetName, beanDef) {
             if (widgetName == "Icon") {
                 // no inheritance, use usual normalization
+                // eslint-disable-next-line no-unused-vars
                 return function (skinClassName, skin, std) {
                     beanDef.$fastNorm(skin);
                 };
@@ -256,7 +257,7 @@ module.exports = Aria.classDefinition({
                 var stdStatesVar = writer.createTempVariable("std.states||{}");
                 var out = writer.out;
                 for (var curState in states) {
-                    if (states.hasOwnProperty(curState) && curState != "normal") {
+                    if (Object.prototype.hasOwnProperty.call(states, curState) && curState != "normal") {
                         var dotState = writer.getDotProperty(curState);
                         writer.writeEnsureObjectExists(skinStatesVar + dotState);
                         out.push("this.normState(", skinStatesVar, dotState, ",", stdStatesVar, dotState, ",", skinStatesVar, ".normal,", stdStatesVar, ".normal);");
@@ -312,7 +313,7 @@ module.exports = Aria.classDefinition({
          * @return {Function}
          */
         _createFrameStateNormalizer : function (frameType, beanName) {
-            var beanDef = ariaCoreJsonValidator.getBean(beanName);
+            var beanDef = getBean(beanName);
             var writer = new ariaUtilsFunctionWriter(["skinClassName", "stateName", "state", "stdState", "normal",
                     "stdNormal"]);
             writer.writeEnsureObjectExists("state.frame");
@@ -330,11 +331,11 @@ module.exports = Aria.classDefinition({
             // remove properties from the direct object in case they are present
             var properties = beanDef.$properties;
             for (var propName in properties) {
-                if (properties.hasOwnProperty(propName)) {
+                if (Object.prototype.hasOwnProperty.call(properties, propName)) {
                     writer.out.push("delete state", writer.getDotProperty(propName), ";");
                 }
             }
-            if (Aria.debug) {
+            if (FRAMEWORK_GLOBALS.debug) {
                 writer.out.push("this.checkFrameState(this.widgetName,skinClassName,stateName,state.frame,", writer.stringify(beanName), ");");
             }
             var res = writer.createFunction();
@@ -362,7 +363,7 @@ module.exports = Aria.classDefinition({
             // remove properties from the direct object in case they are present
             var properties = beanDef.$properties;
             for (var propName in properties) {
-                if (properties.hasOwnProperty(propName)) {
+                if (Object.prototype.hasOwnProperty.call(properties, propName)) {
                     out.push("delete skin", writer.getDotProperty(propName), ";");
                 }
             }
@@ -381,7 +382,7 @@ module.exports = Aria.classDefinition({
         _getWidgetNormalizer : function (widgetName) {
             var res = this._widgetNormalizers[widgetName];
             if (!res) {
-                var beanDef = ariaCoreJsonValidator.getBean('aria.widgets.AriaSkinBeans.' + widgetName + 'Cfg');
+                var beanDef = getBean('aria.widgets.AriaSkinBeans.' + widgetName + 'Cfg');
                 res = new this._createNormalizerObject();
                 res.widgetName = widgetName;
                 res.normSkinClass = this._createSkinClassNormalizer(widgetName, beanDef);
@@ -400,7 +401,7 @@ module.exports = Aria.classDefinition({
          * @return {Object}
          */
         normalizeWidget : function (widgetName, widgetSkinObj) {
-            if (!this.skinnableClasses.hasOwnProperty(widgetName)) {
+            if (!Object.prototype.hasOwnProperty.call(this.skinnableClasses, widgetName)) {
                 this.$logError(this.INVALID_SKINNABLE_CLASS, [widgetName]);
                 return null;
             }
@@ -416,20 +417,19 @@ module.exports = Aria.classDefinition({
                 widgetSkinObj.std = std;
             }
             var result = true;
-            var logs = ariaCoreLog;
             var msgs = [];
             var checkRes;
             // Note that the order of this process is very important (std must be normalized at the end only)
             for (var skinClassName in widgetSkinObj) {
-                if (widgetSkinObj.hasOwnProperty(skinClassName) && skinClassName != "std") {
+                if (Object.prototype.hasOwnProperty.call(widgetSkinObj, skinClassName) && skinClassName != "std") {
                     var skinClass = widgetSkinObj[skinClassName];
                     widgetNormalizer.normSkinClass(skinClassName, skinClass, std);
                     checkRes = this._check(skinClass, beanName);
                     if (!checkRes.result) {
                         result = false;
                     }
-                    if (logs && checkRes.message) {
-                        msgs.push(logs.prepareLoggedMessage("In skin class %1:\n %2", [skinClassName,
+                    if (FRAMEWORK_LOGGER && checkRes.message) {
+                        msgs.push(FRAMEWORK_LOGGER.prepareLoggedMessage("In skin class %1:\n %2", [skinClassName,
                                 checkRes.message.replace(/\n/g, "\n ")]));
                     }
                 }
@@ -439,8 +439,8 @@ module.exports = Aria.classDefinition({
             if (!checkRes.result) {
                 result = false;
             }
-            if (logs && checkRes.message) {
-                msgs.push(logs.prepareLoggedMessage("In skin class %1:\n %2", ["std",
+            if (FRAMEWORK_LOGGER && checkRes.message) {
+                msgs.push(FRAMEWORK_LOGGER.prepareLoggedMessage("In skin class %1:\n %2", ["std",
                         checkRes.message.replace(/\n/g, "\n ")]));
             }
             if (!result) {
@@ -461,13 +461,12 @@ module.exports = Aria.classDefinition({
             var message;
             var errors = e.errors;
             // PTR 05038013: aria.core.Log may not be available
-            var logs = ariaCoreLog;
-            if (errors && errors.length > 0 && logs) {
+            if (errors && errors.length > 0 && FRAMEWORK_LOGGER) {
                 var msgs = [];
                 var error;
                 for (var index = 0, len = errors.length; index < len; index += 1) {
                     error = errors[index];
-                    msgs[index] = logs.prepareLoggedMessage(error.msgId, error.msgArgs);
+                    msgs[index] = FRAMEWORK_LOGGER.prepareLoggedMessage(error.msgId, error.msgArgs);
                 }
                 message = msgs.join('\n');
             }
@@ -488,7 +487,7 @@ module.exports = Aria.classDefinition({
         _check : function (object, beanName) {
             try {
                 return {
-                    result : ariaCoreJsonValidator.check(object, beanName, true),
+                    result : check(object, beanName, true),
                     message : null
                 };
             } catch (e) {
@@ -506,7 +505,7 @@ module.exports = Aria.classDefinition({
         _normalize : function (param) {
             try {
                 return {
-                    result : ariaCoreJsonValidator.normalize(param, true),
+                    result : normalize(param, true),
                     message : null
                 };
             } catch (e) {

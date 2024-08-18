@@ -12,21 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsString = require("../utils/String");
-var subst = ariaUtilsString.substitute;
-var ariaWidgetsIconStyle = require("./IconStyle.tpl.css");
-var ariaWidgetsWidget = require("./Widget");
-var ariaCoreTplClassLoader = require("../core/TplClassLoader");
-var ariaTemplatesNavigationManager = require('../templates/NavigationManager');
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import { substitute, escapeForHTML } from '../utils/String.js';
+import ariaWidgetsIconStyle from './IconStyle.tpl.css.js';
+import { Widget as ariaWidgetsWidget } from './Widget.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../core/TplClassLoader.js';
+import { NavigationManager as ariaTemplatesNavigationManager } from '../templates/NavigationManager.js';
+
 
 /**
  * Aria Icon Widget
  */
-module.exports = Aria.classDefinition({
+export const Icon = classDefinition({
     $classpath : "aria.widgets.Icon",
     $extends : ariaWidgetsWidget,
     $css : [ariaWidgetsIconStyle],
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
 
         this.$Widget.constructor.apply(this, arguments);
@@ -97,15 +99,15 @@ module.exports = Aria.classDefinition({
 
             function addAttribute(key, value) {
                 value = '' + value;
-                value = ariaUtilsString.escapeForHTML(value, {attr: true});
+                value = escapeForHTML(value, {attr: true});
                 attributes.push(key + '="' + value + '"');
 
-                attributes.push(subst('%1="%2"', key, value));
+                attributes.push(substitute('%1="%2"', key, value));
             }
 
             // delegationMarkup ------------------------------------------------
 
-            var delegateManager = aria.utils.Delegate;
+            var delegateManager = getClassRef('aria.utils.Delegate');
             var delegateId = this._delegateId;
 
             if (!delegateId) {
@@ -130,7 +132,8 @@ module.exports = Aria.classDefinition({
                 var skinclass = parts[0];
                 var contentKey = parts[1];
 
-                var classes = aria.widgets.AriaSkinInterface.getSkinObject("Icon", skinclass, true).content[contentKey];
+                // MUST_CHECK: ModernAria: USELESS_CLASSREF: does the AriaSkinInterface need to be accessed using getClassRef, an Import should work???
+                var classes = getClassRef('aria.widgets.AriaSkinInterface').getSkinObject("Icon", skinclass, true).content[contentKey];
 
                 addAttribute('class', ['xWidget'].concat(classes).join(' '));
             } else {
@@ -217,7 +220,8 @@ module.exports = Aria.classDefinition({
                 this.$logError(this.ICON_BADLY_FORMATTED, [icon]);
                 return null;
             } else {
-                var iconInfo = aria.widgets.AriaSkinInterface.getIcon(iconParts[0], iconParts[1]);
+                // MUST_CHECK: ModernAria: USELESS_CLASSREF: does the AriaSkinInterface need to be accessed using getClassRef, an Import should work???
+                var iconInfo = getClassRef('aria.widgets.AriaSkinInterface').getIcon(iconParts[0], iconParts[1]);
                 if (!iconInfo) {
                     this.$logError(this.ICON_NOT_FOUND, [icon]);
                     return null;
@@ -291,7 +295,8 @@ module.exports = Aria.classDefinition({
             if (cfg) {
                 var domEvtWrapper;
                 if (domEvent) {
-                    domEvtWrapper = new aria.templates.DomEventWrapper(domEvent);
+                    // MUST_CHECK: ModernAria: USELESS_CLASSREF: does the DomEventWrapper need to be accessed using getClassRef, an Import should work???
+                    domEvtWrapper = new (getClassRef('aria.templates.DomEventWrapper'))(domEvent);
                 }
                 var returnValue = this.evalCallback(cfg.onclick, domEvtWrapper);
                 if (domEvtWrapper) {

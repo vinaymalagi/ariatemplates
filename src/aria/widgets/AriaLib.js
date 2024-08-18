@@ -18,6 +18,7 @@ import { WidgetLib as ariaWidgetLibsWidgetLib } from '../widgetLibs/WidgetLib.js
 /**
  * Widget library provided by the Aria Templates framework.
  */
+// TODO: ModernAria: Use named export 'AriaLib' instead of default export. Useful for barrel exports / documentation and IDE intellisense.
 export default classDefinition({
   $classpath: "aria.widgets.AriaLib",
   $singleton: true,

@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
-var ariaCoreJsonTypes = require("../../../core/JsonTypes");
+import { beanDefinitions } from '../../../core/bean-definitions.js';
+import { JsonTypesBeans as ariaCoreJsonTypes } from '../../../core/JsonTypes.js';
 
 
 /**
  * Beans used for the data model of the list module controller.
  * @class aria.widgets.form.list.CfgBeans
  */
-module.exports = Aria.beanDefinitions({
+export const ListCfgBeans = beanDefinitions({
     $package : "aria.widgets.form.list.CfgBeans",
     $description : "Beans used for the data model of the list module controller.",
     $namespaces : {

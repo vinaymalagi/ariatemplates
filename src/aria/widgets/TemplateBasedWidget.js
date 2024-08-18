@@ -12,15 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaWidgetsTemplate = require("./Template");
-var ariaWidgetsContainerContainer = require("./container/Container");
+import { classDefinition } from '../core/class-definition.js';
+import { getClassRef } from '../core/class-registry.js';
+import ariaWidgetsTemplate from './Template.js';
+import ariaWidgetsContainerContainer from './container/Container.js';
 
 
 /**
  * Abstract widget which enables an easy implementation of any template-based widget.
  */
-module.exports = Aria.classDefinition({
+export const TemplateBasedWidget = classDefinition({
     $classpath : "aria.widgets.TemplateBasedWidget",
     $extends : ariaWidgetsContainerContainer,
     $events : {
@@ -39,7 +40,7 @@ module.exports = Aria.classDefinition({
             this._tplWidget.$dispose();
             this._tplWidget = null;
         }
-        aria.widgets.TemplateBasedWidget.superclass.$destructor.call(this);
+        TemplateBasedWidget.superclass.$destructor.call(this);
     },
     $prototype : {
         /**
@@ -61,7 +62,7 @@ module.exports = Aria.classDefinition({
 
                 for (var i = 0, len = this.__inherithCfg.length; i < len; i += 1) {
                     var property = this.__inherithCfg[i];
-                    if (!tplCfg.hasOwnProperty(property)) {
+                    if (!Object.prototype.hasOwnProperty.call(tplCfg, property)) {
                         tplCfg[property] = cfg[property];
                     }
                 }
@@ -91,6 +92,7 @@ module.exports = Aria.classDefinition({
          * This function must be overridden.
          * @param {Object} evt
          */
+        // eslint-disable-next-line no-unused-vars
         _onModuleEvent : function (evt) {
             // Override me!
         },
@@ -132,11 +134,12 @@ module.exports = Aria.classDefinition({
         writeMarkup : function (out) {
 
             if (!this._cfgOk) {
-                return aria.widgets.TemplateBasedWidget.superclass.writeMarkup.call(this, out);
+                return TemplateBasedWidget.superclass.writeMarkup.call(this, out);
             }
 
             // Prepare delegation id before to have it linked with this widget
-            this._tplWidget._delegateId = aria.utils.Delegate.add({
+            // MUST_CHECK: ModernAria: USELESS_CLASSREF: does the Delegate accessed using getClassRef, an Import should work???
+            this._tplWidget._delegateId = getClassRef('aria.utils.Delegate').add({
                 fn : this.delegate,
                 scope : this
             });

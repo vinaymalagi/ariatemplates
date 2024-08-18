@@ -12,15 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonValidator = require("../core/JsonValidator");
-require("./FunctionWriter");
+import { classDefinition } from '../core/class-definition.js';
+import { getBean } from '../core/JsonValidator.js';
 
 
 /**
  * Utility to create inheritance normalization functions.
  */
-module.exports = Aria.classDefinition({
+export const InheritanceNormalization = classDefinition({
     $classpath : 'aria.utils.InheritanceNormalization',
     $singleton : true,
     $prototype : {
@@ -56,7 +55,7 @@ module.exports = Aria.classDefinition({
             var out = writer.out;
             var varToNormalize = args.varToNormalize;
             var parentVars = args.parentVars;
-            var beanDef = args.beanDef || ariaCoreJsonValidator.getBean(args.beanName);
+            var beanDef = args.beanDef || getBean(args.beanName);
             var typeName = beanDef['aria:baseType'].typeName;
             var isObject = (typeName == "Object");
 
@@ -70,15 +69,15 @@ module.exports = Aria.classDefinition({
                     emptyObjectVar = writer.createTempVariable("{}");
                 }
                 var orEmptyObjectVar = '||' + emptyObjectVar;
-                for (var i = 0, l = parentVars.length; i < l; i++) {
+                for (let i = 0, l = parentVars.length; i < l; i++) {
                     parentObjectVars[i] = writer.createTempVariable(parentVars[i] + orEmptyObjectVar);
                 }
                 var properties = beanDef.$properties;
                 for (var propName in properties) {
-                    if (properties.hasOwnProperty(propName)) {
+                    if (Object.prototype.hasOwnProperty.call(properties, propName)) {
                         var dotPropName = writer.getDotProperty(propName);
                         var newParentVars = [];
-                        for (var i = 0, l = parentObjectVars.length; i < l; i++) {
+                        for (let i = 0, l = parentObjectVars.length; i < l; i++) {
                             newParentVars[i] = parentObjectVars[i] + dotPropName;
                         }
                         this.writeInheritanceNormalization({
@@ -91,7 +90,7 @@ module.exports = Aria.classDefinition({
                         });
                     }
                 }
-                for (var i = 0, l = parentObjectVars.length; i < l; i++) {
+                for (let i = 0, l = parentObjectVars.length; i < l; i++) {
                     writer.releaseTempVariable(parentObjectVars[i]);
                 }
                 writer.releaseShortcut(varToNormalize);
@@ -105,7 +104,7 @@ module.exports = Aria.classDefinition({
                     if (possibleValues.length == 1) {
                         out.push(varToNormalize, '=', possibleValues[0], ';');
                     } else {
-                        for (var i = 0, l = possibleValues.length - 1; i < l; i++) {
+                        for (let i = 0, l = possibleValues.length - 1; i < l; i++) {
                             var curValue = possibleValues[i];
                             if (i > 0) {
                                 out.push("} else ");

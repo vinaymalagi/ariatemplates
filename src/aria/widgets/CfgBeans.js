@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaCoreJsonTypes = require("../core/JsonTypes");
-var ariaTemplatesCfgBeans = require("../templates/CfgBeans");
-var ariaCoreEnvironmentEnvironmentBaseCfgBeans = require("../core/environment/EnvironmentBaseCfgBeans");
-var ariaWidgetsFormListCfgBeans = require("./form/list/CfgBeans");
-var ariaUtilsDragdropDragDropBean = require("../utils/dragdrop/DragDropBean");
-var ariaWidgetLibsCommonBeans = require("../widgetLibs/CommonBeans");
+import { beanDefinitions } from '../core/bean-definitions.js';
+import { JsonTypesBeans as ariaCoreJsonTypes } from '../core/JsonTypes.js';
+import { TemplatesCfgBeans as ariaTemplatesCfgBeans } from '../templates/CfgBeans.js';
+import { EnvironmentBaseCfgBeans as ariaCoreEnvironmentEnvironmentBaseCfgBeans } from '../core/environment/EnvironmentBaseCfgBeans.js';
+import { ListCfgBeans as ariaWidgetsFormListCfgBeans } from './form/list/CfgBeans.js';
+import { DragDropBean as ariaUtilsDragdropDragDropBean } from '../utils/dragdrop/DragDropBean.js';
+import { CommonBeans as ariaWidgetLibsCommonBeans } from '../widgetLibs/CommonBeans.js';
 
-module.exports = Aria.beanDefinitions({
+export const WidgetsCfgBeans = beanDefinitions({
     $package : "aria.widgets.CfgBeans",
     $description : "Definition of the JSON beans used by the aria widgets library",
     $namespaces : {
