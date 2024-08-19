@@ -16,10 +16,10 @@
 {CSSTemplate {
     $classpath : "aria.widgets.WidgetStyle",
     $dependencies : [
-      {importType: 'Default', modulePath: './AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
+      {importType: 'Named', modulePath: './AriaSkinInterface.js', name: 'AriaSkinInterface', alias: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'},
       {importType: 'Named', modulePath: '../utils/Type.js', name: 'isNumber', alias: 'ariaUtilsTypeIsNumber', classpath: 'aria.utils.Type'}
     ],
-    $script: {importType: 'Default', modulePath: './WidgetStyleScript.js', name: 'ariaWidgetsWidgetStyleScriptScript', classpath: 'aria.widgets.WidgetStyleScript'}
+    $script: {importType: 'Named', modulePath: './WidgetStyleScript.js', name: 'WidgetStyleScript', alias: 'ariaWidgetsWidgetStyleScriptScript', classpath: 'aria.widgets.WidgetStyleScript'}
 }}
 
     {var skinnableClassName="Widget"/}
@@ -92,7 +92,7 @@
         {var refTop=(sprHeight+sprSpacing)*sprIndex/}
         {var spcLeft=state.spcLeft/}
         {var spcRight=sprWidth-spcLeft/}
-        {var prefix=cssPrefix(info)/}
+        {var prefix=this.cssPrefix(info)/}
         {var verticalAlignApplied = state.verticalAlign && state.innerHeight /}
         .${prefix}bkgA {
             {call background("transparent",state.spriteURL,"no-repeat scroll 0 0")/}
@@ -152,7 +152,7 @@
         {var state=info.state.frame/}
         {var fontStyle=state.font/}
         {var padTop=state.paddingTop/}
-        {var prefix=cssPrefix(info)/}
+        {var prefix=this.cssPrefix(info)/}
         .${prefix}frame  {
             {if state.frameHeight}
                 height: ${state.frameHeight}px;
@@ -207,7 +207,7 @@
         {var spcTop=state.spcTop/}
         {var spcRight=sprWidth-spcLeft/}
         {var spcBottom=sprHeight-spcTop/}
-        {var prefix=cssPrefix(info)/}
+        {var prefix=this.cssPrefix(info)/}
 
         .${prefix}bkgA {
             {call background("transparent",state.spriteURL,"no-repeat scroll 0 0")/}

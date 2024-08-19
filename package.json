@@ -16,7 +16,8 @@
   "type": "module",
   "scripts": {
     "parseTemplates": "node ./template-compile-scripts/parse-template.js",
-    "launch-server": "http-server -p 8080 ./src"
+    "launch-server": "http-server -p 8080 ./src",
+    "circular-dependency-check": "madge --circular "
   },
   "dependencies": {
     "glob": "^11.0.0",

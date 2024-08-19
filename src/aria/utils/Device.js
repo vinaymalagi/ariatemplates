@@ -12,19 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsArray = require("../utils/Array");
-var ariaCoreBrowser = require("../core/Browser");
-var UserAgent = require("../core/useragent/UserAgent");
-var ariaUtilsEvent = require("./Event");
-var ariaUtilsDom = require("./Dom");
+import { classDefinition } from '../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { contains, forEach } from '../utils/Array.js';
+import { Browser as ariaCoreBrowser } from '../core/Browser.js';
+import { UserAgent } from '../core/useragent/UserAgent.js';
+import { UtilsEvent as ariaUtilsEvent } from './Event.js';
+import { UtilsDom as ariaUtilsDom } from './Dom.js';
 /* BACKWARD-COMPATIBILITY-BEGIN (GitHub #1397) */
-var ariaUtilsType = require("../utils/Type");
-/* BACKWARD-COMPATIBILITY-END (GitHub #1397) */
+import { isString } from '../utils/Type.js';
 
 
-
-module.exports = Aria.classDefinition({
+export const Device = classDefinition({
     $classpath : "aria.utils.Device",
     $singleton : true,
     $events : {
@@ -112,11 +111,10 @@ module.exports = Aria.classDefinition({
         ];
 
         var deprecatedProperties = [];
-        var isString = ariaUtilsType.isString;
-        ariaUtilsArray.forEach(properties, function(property) {
+        forEach(properties, function(property) {
             // ------------------------------------------------ property factory
 
-            if (ariaUtilsType.isString(property)) {
+            if (isString(property)) {
                 property = {name: property};
             }
 
@@ -149,6 +147,7 @@ module.exports = Aria.classDefinition({
 
                 var underlyingContainer = underlying.container;
                 if (underlyingContainer == null) {
+                    // eslint-disable-next-line no-invalid-this
                     underlyingContainer = this;
                 }
                 underlying.container = underlyingContainer;
@@ -192,6 +191,7 @@ module.exports = Aria.classDefinition({
                 loggingMessage = type == "attribute" ? "DEPRECATED_REMOVED_PROPERTY" : "DEPRECATED_REMOVED_METHOD";
             }
 
+            // eslint-disable-next-line no-invalid-this
             property.loggingMessage = this[loggingMessage];
             property.loggingMessageArguments = loggingMessageArguments;
 
@@ -221,7 +221,7 @@ module.exports = Aria.classDefinition({
         __deprecateProperties : function() {
             var supportsPropertyDescriptors = ariaCoreBrowser.supportsPropertyDescriptors();
 
-            ariaUtilsArray.forEach(this._deprecatedProperties, function(property) {
+            forEach(this._deprecatedProperties, function(property) {
                 // ----------------------------------------------- destructuring
 
                 var name = property.name;
@@ -232,12 +232,15 @@ module.exports = Aria.classDefinition({
 
                 // -------------------------------------------------- processing
 
+                // eslint-disable-next-line no-invalid-this
                 var self = this;
 
                 if (type == "attribute" && supportsPropertyDescriptors) {
                     var prefixedName = "_" + name;
+                    // eslint-disable-next-line no-invalid-this
                     this[prefixedName] = this[name];
 
+                    // eslint-disable-next-line no-invalid-this
                     Object.defineProperty(this, name, {
                         get : function () {
                             self.$logWarn(loggingMessage, loggingMessageArguments);
@@ -249,6 +252,7 @@ module.exports = Aria.classDefinition({
                         }
                     });
                 } else if (type == "method") {
+                    // eslint-disable-next-line no-invalid-this
                     this[name] = function() {
                         self.$logWarn(loggingMessage, loggingMessageArguments);
                         return underlying.apply(self, arguments);
@@ -262,13 +266,14 @@ module.exports = Aria.classDefinition({
          */
         __ensureDeprecatedProperties : function() {
             if (!ariaCoreBrowser.supportsPropertyDescriptors()) {
-                ariaUtilsArray.forEach(this._deprecatedProperties, function(property) {
+                forEach(this._deprecatedProperties, function(property) {
                     var type = property.type;
 
                     if (type == "attribute") {
                         var name = property.name;
                         var prefixedName = "_" + name;
 
+                        // eslint-disable-next-line no-invalid-this
                         this[name] = this[prefixedName];
                     }
                 }, this);
@@ -472,11 +477,11 @@ module.exports = Aria.classDefinition({
             var isTouch = false;
 
             if (ariaCoreBrowser.isBlackBerry) {
-                if (!ariaUtilsArray.contains([9670, 9100, 9105, 9360, 9350, 9330, 9320, 9310, 9300, 9220, 9780, 9700, 9650], +this.model())) {
+                if (!contains([9670, 9100, 9105, 9360, 9350, 9330, 9320, 9310, 9300, 9220, 9780, 9700, 9650], +this.model())) {
                     isTouch = true;
                 }
             } else {
-                var window = Aria.$window;
+                var window = FRAMEWORK_GLOBALS.$window;
 
                 if (('ontouchstart' in window) || window.DocumentTouch && window.document instanceof window.DocumentTouch) {
                     isTouch = true;
@@ -492,7 +497,7 @@ module.exports = Aria.classDefinition({
          * @override
          */
         $on : function () {
-            ariaUtilsEvent.addListener(Aria.$window, "resize", {
+            ariaUtilsEvent.addListener(FRAMEWORK_GLOBALS.$window, "resize", {
                 fn : this._onResize,
                 scope : this
             });

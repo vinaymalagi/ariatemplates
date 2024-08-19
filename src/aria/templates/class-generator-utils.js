@@ -49,7 +49,7 @@ export function convertToSideEffectImportSpec(importSpec) {
  */
 export function convertInternalImportToRelativePath(importedModuleFile, sourceFile, rootDir) {
   // console.log('-------------------------------------------------------');
-  // console.log(`SourceFile: ${sourceFile}, import: ${importedModuleFile}`);
+  // console.log(`SourceFile: ${sourceFile}, import: ${importedModuleFile}, rootDir: ${rootDir}`);
 
   rootDir = rootDir ? rootDir + '/' : '';
 

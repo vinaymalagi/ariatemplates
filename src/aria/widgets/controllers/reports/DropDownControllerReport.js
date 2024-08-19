@@ -12,16 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
-var ariaWidgetsControllersReportsControllerReport = require("./ControllerReport");
-
+import { classDefinition } from '../../../Aria.js';
+import { ControllerReport as ariaWidgetsControllersReportsControllerReport } from './ControllerReport.js';
 
 /**
  * Report emitted by a controller on a check for a controller that support dropdown
  * @class aria.widgets.controllers.reports.DropDownControllerReport
  * @extends aria.widgets.controllers.reports.ControllerReport
  */
-module.exports = Aria.classDefinition({
+export const DropDownControllerReport = classDefinition({
     $classpath : 'aria.widgets.controllers.reports.DropDownControllerReport',
     $extends : ariaWidgetsControllersReportsControllerReport,
     $constructor : function () {

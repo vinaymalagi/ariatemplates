@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaDomEvent = require("../../DomEvent");
-var ariaWidgetsControllersReportsDropDownControllerReport = require("./reports/DropDownControllerReport");
-var ariaWidgetsControllersTextDataController = require("./TextDataController");
+import { classDefinition } from '../../core/class-definition.js';
+import { AriaDomEvent as ariaDomEvent } from '../../DomEvent.js';
+import { DropDownControllerReport as ariaWidgetsControllersReportsDropDownControllerReport } from './reports/DropDownControllerReport.js';
+import { TextDataController as ariaWidgetsControllersTextDataController } from './TextDataController.js';
 
 
 /**
  * Controller for the a widget with a dropdown that contains a list.
  */
-module.exports = Aria.classDefinition({
+export const DropDownListController = classDefinition({
     $classpath : "aria.widgets.controllers.DropDownListController",
     $extends : ariaWidgetsControllersTextDataController,
 
@@ -166,7 +166,7 @@ module.exports = Aria.classDefinition({
                         }
                         report = this.checkDropdownValue(dataModel.value);
                     } else {
-                        var report = new ariaWidgetsControllersReportsDropDownControllerReport();
+                        report = new ariaWidgetsControllersReportsDropDownControllerReport();
                     }
                     report.displayDropDown = false; // close the dropdown
                     if (keyCode != domEvent.KC_TAB) {
@@ -231,6 +231,7 @@ module.exports = Aria.classDefinition({
          * @param {Integer} caretPos
          * @return {aria.widgets.controllers.reports.ControllerReport}
          */
+        // eslint-disable-next-line no-unused-vars
         _checkInputKey : function (charCode, keyCode, currentText, caretPosStart, caretPosEnd) {
             var report = new ariaWidgetsControllersReportsDropDownControllerReport();
             report.ok = true;

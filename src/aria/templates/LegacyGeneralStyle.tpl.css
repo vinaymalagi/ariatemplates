@@ -16,7 +16,7 @@
 {CSSTemplate {
     $classpath : "aria.templates.LegacyGeneralStyle",
     $dependencies : [
-      {importType: 'Default', modulePath: '../widgets/AriaSkinInterface.js', name: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'}
+      {importType: 'Named', modulePath: '../widgets/AriaSkinInterface.js', name: 'AriaSkinInterface', alias: 'ariaWidgetsAriaSkinInterface', classpath: 'aria.widgets.AriaSkinInterface'}
     ],
     $csslibs : {
       text : {importType: 'SideEffect', modulePath: '../widgets/TextStyle.cml.js', classpath: 'aria.widgets.TextStyle'}

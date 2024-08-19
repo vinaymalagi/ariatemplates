@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsControllersReportsControllerReport = require("./reports/ControllerReport");
-var ariaUtilsType = require("../../utils/Type");
-var ariaWidgetsWidgetsRes = require("../../$resources").file(__dirname, "../WidgetsRes");
-var ariaWidgetsSettings = require("../environment/WidgetSettings");
-
-
+import { classDefinition } from '../../core/class-definition.js';
+import { ControllerReport as ariaWidgetsControllersReportsControllerReport } from './reports/ControllerReport.js';
+import { isNumber, isString } from '../../utils/Type.js';
+// var ariaWidgetsWidgetsRes = require('../../$resources.js').file(__dirname, "../WidgetsRes");
+import { WidgetRes as ariaWidgetsWidgetsRes } from '../WidgetsRes.js';
+import { WidgetSettings as getWidgetSettings } from '../environment/WidgetSettings.js';
+import { AriaDomEvent } from '../../DomEvent.js';
 
 
 /**
  * Base class for any data controller associated to Text Input objects
  */
-module.exports = Aria.classDefinition({
+export const TextDataController = classDefinition({
     $classpath : "aria.widgets.controllers.TextDataController",
     $resources : {
         res : ariaWidgetsWidgetsRes
@@ -59,6 +59,7 @@ module.exports = Aria.classDefinition({
          * @param {Integer} caretPos
          * @return {aria.widgets.controllers.reports.ControllerReport}
          */
+        // eslint-disable-next-line no-unused-vars
         checkKeyStroke : function (charCode, keyCode, currentValue, caretPos) {
             return new ariaWidgetsControllersReportsControllerReport();
         },
@@ -70,7 +71,7 @@ module.exports = Aria.classDefinition({
          */
         checkText : function (text) {
             var report = new ariaWidgetsControllersReportsControllerReport();
-            if (ariaUtilsType.isString(text) || ariaUtilsType.isNumber(text)) {
+            if (isString(text) || isNumber(text)) {
                 // allow values that can be easily displayed in the textfield
                 report.value = text;
                 report.ok = true;
@@ -210,9 +211,9 @@ module.exports = Aria.classDefinition({
             var s1 = '', s2 = '';
             // backspace and del behave the same when there is a selection
             if (caretPosStart != caretPosEnd) {
-                keyCode = aria.DomEvent.KC_DELETE;
+                keyCode = AriaDomEvent.KC_DELETE;
             }
-            if (keyCode == aria.DomEvent.KC_DELETE) {
+            if (keyCode == AriaDomEvent.KC_DELETE) {
                 // delete key
                 if (caretPosStart != caretPosEnd) {
                     s1 = curVal.slice(0, caretPosStart);
@@ -308,7 +309,7 @@ module.exports = Aria.classDefinition({
             // global ----------------------------------------------------------
 
             if (errorMessage == null) {
-                var allMessages = ariaWidgetsSettings.getWidgetSettings()["defaultErrorMessages"];
+                var allMessages = getWidgetSettings()["defaultErrorMessages"];
                 if (allMessages != null) {
                     var widgetMessages = allMessages[widgetName];
                     if (widgetMessages != null) {

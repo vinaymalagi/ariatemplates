@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsEllipsis = require("../utils/Ellipsis");
-var ariaUtilsDom = require("../utils/Dom");
-var ariaUtilsString = require("../utils/String");
-var ariaWidgetsWidget = require("./Widget");
-var ariaUtilsType = require("../utils/Type");
+import { classDefinition } from '../core/class-definition.js';
+import { Ellipsis as ariaUtilsEllipsis } from '../utils/Ellipsis.js';
+import { UtilsDom as ariaUtilsDom } from '../utils/Dom.js';
+import { escapeHTML } from '../utils/String.js';
+import { Widget as ariaWidgetsWidget } from './Widget.js';
+import { isString } from '../utils/Type.js';
 
 
 /**
@@ -25,7 +25,7 @@ var ariaUtilsType = require("../utils/Type");
  * @class aria.widgets.Text Class definition for the Text widget.
  * @extends aria.widgets.Widget
  */
-module.exports = Aria.classDefinition({
+export const Text = classDefinition({
     $classpath : "aria.widgets.Text",
     $extends : ariaWidgetsWidget,
     /**
@@ -33,10 +33,11 @@ module.exports = Aria.classDefinition({
      * @param {aria.widgets.CfgBeans:Text} cfg the widget configuration
      * @param {aria.templates.TemplateCtxt} ctxt template context
      */
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
         this.$Widget.constructor.apply(this, arguments);
 
-        if (ariaUtilsType.isString(cfg.ellipsis)) {
+        if (isString(cfg.ellipsis)) {
             this._activateEllipsis = true;
             this._directInit = true;
         }
@@ -92,7 +93,7 @@ module.exports = Aria.classDefinition({
                 textContent = '';
             }
             this.textContent = textContent;
-            out.write('<span class="createdEllipisElement">' + ariaUtilsString.escapeHTML(this.textContent)
+            out.write('<span class="createdEllipisElement">' + escapeHTML(this.textContent)
                     + "</span>");
         },
 
@@ -120,7 +121,6 @@ module.exports = Aria.classDefinition({
             }
             var dom = this.getDom();
             if (dom) {
-                var stringUtils = ariaUtilsString;
                 this.textContent = textContent;
 
                 dom.style.display = "inline-block";
@@ -130,7 +130,7 @@ module.exports = Aria.classDefinition({
 
                 var textWidth, ellipsisElement = ariaUtilsDom.getDomElementChild(dom, 0);
                 if (!ellipsisElement) {
-                    dom.innerHTML = '<span class="createdEllipisElement">' + stringUtils.escapeHTML(this.textContent)
+                    dom.innerHTML = '<span class="createdEllipisElement">' + escapeHTML(this.textContent)
                             + '</span>';
                     ellipsisElement = ariaUtilsDom.getDomElementChild(dom, 0);
                 }
@@ -143,7 +143,7 @@ module.exports = Aria.classDefinition({
                     if (!this._ellipsis.ellipsesNeeded) {
                         // No ellipsis was done so remove the <span> and put the full text into the text widget itself
                         dom.removeChild(ellipsisElement);
-                        dom.innerHTML = stringUtils.escapeHTML(textContent);
+                        dom.innerHTML = escapeHTML(textContent);
                     }
                 }
 
@@ -157,6 +157,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} newValue the new value
          * @param {Object} oldValue the old property value
          */
+        // eslint-disable-next-line no-unused-vars
         _onBoundPropertyChange : function (propertyName, newValue, oldValue) {
             var dom = this.getDom();
             if (propertyName == 'text' && newValue !== null) {
@@ -166,7 +167,7 @@ module.exports = Aria.classDefinition({
                 } else {
                     // String cast
                     newValue = '' + newValue;
-                    dom.getElementsByTagName("span")[0].innerHTML = ariaUtilsString.escapeHTML(newValue);
+                    dom.getElementsByTagName("span")[0].innerHTML = escapeHTML(newValue);
                     this.textContent = newValue;
                 }
             }

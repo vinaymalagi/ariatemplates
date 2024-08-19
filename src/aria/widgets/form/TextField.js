@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsControllersTextDataController = require("../controllers/TextDataController");
-var ariaWidgetsFormTextInput = require("./TextInput");
+import { classDefinition } from '../../core/class-definition.js';
+import { TextDataController as ariaWidgetsControllersTextDataController } from '../controllers/TextDataController.js';
+import { TextInput as ariaWidgetsFormTextInput } from './TextInput.js';
 
 
 /**
  * @class aria.widgets.form.TextField TextField widget
  * @extends aria.widgets.form.TextInput
  */
-module.exports = Aria.classDefinition({
+export const TextField = classDefinition({
     $classpath : 'aria.widgets.form.TextField',
     $extends : ariaWidgetsFormTextInput,
     /**

@@ -68,13 +68,13 @@ function getRootFolderPath() {
 
     const url = new URL(import.meta.url);
 
-    const pathParts = url.pathname.split('/');
+    const pathParts = url.pathname.split('/').filter((part) => part !== '');
     pathParts.pop(); // Remove the JS part
-    const ariaStartRegex = /^(ariatemplates\/)?aria(\/core?)$/;
+    const ariaStartRegex = /^(ariatemplates\/)?aria(templates)?(\/core?)$/;
     const path = pathParts.join('/').replace(ariaStartRegex, '') + '/';
 
 
-    return url.origin + '/' + path;
+    return url.origin + '/' + (path === '/' ? '' : path);
   } else if ($frameworkWindow) {
     $frameworkWindow.location.origin + '/';
   }
@@ -218,3 +218,15 @@ export const getLogicalPath = function (classpath, extension, resolve) {
   // }
   return res;
 };
+
+let bootstrapResolver;
+
+const bootstrapPromise = new Promise((resolve) => {
+  bootstrapResolver = resolve;
+});
+export function getBootstrapPromise() {
+  return bootstrapPromise;
+}
+export function bootstrapAria() {
+  bootstrapResolver();
+}

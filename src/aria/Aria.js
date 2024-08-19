@@ -1489,7 +1489,7 @@ var Aria = module.exports = global.Aria;
      * sub-templates.
      */
     Aria.loadTemplate = function (cfg, cb) {
-        require("./core/TplClassLoader").loadTemplate(cfg, cb);
+        require("./core/TplClassLoader.js").loadTemplate(cfg, cb);
     };
 
     /**
@@ -1497,7 +1497,7 @@ var Aria = module.exports = global.Aria;
      * @param {aria.templates.CfgBeans:Div} div The div given to Aria.loadTemplate.
      */
     Aria.disposeTemplate = function (div) {
-        return require("./core/TplClassLoader").disposeTemplate(div);
+        return require("./core/TplClassLoader.js").disposeTemplate(div);
     };
 
     /**

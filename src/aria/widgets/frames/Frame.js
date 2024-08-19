@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
+import { classDefinition } from '../../core/class-definition.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
 
 
 /**
  * The Frame class is a base class used by widgets which need a border.
  * @class aria.widgets.container.Frame
  */
-module.exports = Aria.classDefinition({
+export const Frame = classDefinition({
     $classpath : 'aria.widgets.frames.Frame',
     /**
      * @param {aria.widgets.frames.CfgBeans:FrameCfg} cfg Frame configuration.
@@ -86,12 +86,14 @@ module.exports = Aria.classDefinition({
          * Generate the begining of the markup for this frame.
          * @param {aria.templates.MarkupWriter} out
          */
+        // eslint-disable-next-line no-unused-vars
         writeMarkupBegin : function (out) {},
 
         /**
          * Generate the end of the markup for this frame.
          * @param {aria.templates.MarkupWriter} out
          */
+        // eslint-disable-next-line no-unused-vars
         writeMarkupEnd : function (out) {},
 
         /**

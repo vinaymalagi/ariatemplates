@@ -12,30 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaUtilsType = require("../../utils/Type");
-var ariaWidgetsFramesFrame = require("./Frame");
+import { classDefinition } from '../../core/class-definition.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { isNumber } from '../../utils/Type.js';
+import { Frame as ariaWidgetsFramesFrame } from './Frame.js';
 
-
-(function () {
-
-    var domUtils;
 
     /**
      * A fixed height frame is a frame whose height is defined by the skin class. The height can depend on the state.
      * The width can either be defined by the frame configuration, or left undefined so that it is adapted to the
      * content. The expansion in width is done by repeating an image horizontally.
      */
-    module.exports = Aria.classDefinition({
+    export const FixedHeightFrame = classDefinition({
         $classpath : "aria.widgets.frames.FixedHeightFrame",
         $extends : ariaWidgetsFramesFrame,
-        $onload : function () {
-            domUtils = ariaUtilsDom;
-        },
-        $onunload : function () {
-            domUtils = null;
-        },
         $constructor : function (cfg) {
             this.$Frame.constructor.call(this, cfg);
             this._mainContentIndex = 1;
@@ -64,7 +54,7 @@ var ariaWidgetsFramesFrame = require("./Frame");
                 }
 
                 if (state.verticalAlign && state.innerHeight) {
-                    this.innerHeight = ariaUtilsType.isNumber(state.innerHeight) ? state.innerHeight : -1;
+                    this.innerHeight = isNumber(state.innerHeight) ? state.innerHeight : -1;
                 } else {
                     this.innerHeight = state.sprHeight - state.marginTop - state.marginBottom;
                 }
@@ -76,6 +66,7 @@ var ariaWidgetsFramesFrame = require("./Frame");
              * @protected
              * @param {aria.templates.MarkupWriter} out
              */
+            // eslint-disable-next-line no-unused-vars
             _writeExtraMarkupBegin : function (out) {},
 
             /**
@@ -84,6 +75,7 @@ var ariaWidgetsFramesFrame = require("./Frame");
              * @protected
              * @param {aria.templates.MarkupWriter} out
              */
+            // eslint-disable-next-line no-unused-vars
             _writeExtraMarkupEnd : function (out) {},
 
             /**
@@ -131,7 +123,7 @@ var ariaWidgetsFramesFrame = require("./Frame");
              */
             linkToDom : function (domElt) {
                 this.$Frame.linkToDom.call(this, domElt);
-                this._childRootElt = domUtils.getDomElementChild(domUtils.getDomElementChild(domElt, this._mainContentIndex), 0);
+                this._childRootElt = ariaUtilsDom.getDomElementChild(ariaUtilsDom.getDomElementChild(domElt, this._mainContentIndex), 0);
             },
 
             /**
@@ -145,11 +137,11 @@ var ariaWidgetsFramesFrame = require("./Frame");
                 var parentSpan = this._domElt;
                 parentSpan.className = ['xFixedHeightFrame_w ', cssPrefix, 'w'].join("");
                 var curSpan;
-                curSpan = domUtils.getDomElementChild(parentSpan, 0);
+                curSpan = ariaUtilsDom.getDomElementChild(parentSpan, 0);
                 curSpan.className = ['xFixedHeightFrame_bme ', cssPrefix, 'b ', cssPrefix, 'bkgA'].join("");
-                curSpan = domUtils.getDomElementChild(parentSpan, this._mainContentIndex);
+                curSpan = ariaUtilsDom.getDomElementChild(parentSpan, this._mainContentIndex);
                 curSpan.className = ['xFixedHeightFrame_bme ', cssPrefix, 'm ', cssPrefix, 'bkgB'].join("");
-                curSpan = domUtils.getDomElementChild(curSpan, 0);
+                curSpan = ariaUtilsDom.getDomElementChild(curSpan, 0);
                 var sizeInfo = {
                     className : ['xFrameContent ', cssPrefix, 'c ', cfg.cssClass].join("")
                 };
@@ -157,7 +149,7 @@ var ariaWidgetsFramesFrame = require("./Frame");
                 curSpan.style.width = sizeInfo.width;
                 curSpan.style.height = sizeInfo.height;
                 curSpan.className = sizeInfo.className;
-                curSpan = domUtils.getDomElementChildReverse(parentSpan, 0);
+                curSpan = ariaUtilsDom.getDomElementChildReverse(parentSpan, 0);
                 curSpan.className = ['xFixedHeightFrame_bme ', cssPrefix, 'e ', cssPrefix, 'bkgA'].join("");
             },
 
@@ -186,4 +178,3 @@ var ariaWidgetsFramesFrame = require("./Frame");
             }
         }
     });
-})();

@@ -15,8 +15,8 @@
 import { emptyFn } from "../common/fixed-return-value-functions.js";
 import { classDefinition } from "../core/class-definition.js";
 import { getClassInstance } from "../core/class-registry.js";
-import { Json as ariaUtilsJson } from "../utils/Json";
-import { isString, isFunction } from "../utils/Type";
+import { Json as ariaUtilsJson } from "../utils/Json.js";
+import { isString, isFunction } from "../utils/Type.js";
 import { BaseWidget as ariaWidgetLibsBaseWidget } from "./BaseWidget.js";
 
 

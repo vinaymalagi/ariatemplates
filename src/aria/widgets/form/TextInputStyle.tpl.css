@@ -15,14 +15,14 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.form.TextInputStyle",
-    $extends : "aria.widgets.form.InputStyle"
+    $extends : {importType: 'Default', modulePath: './InputStyle.tpl.css.js', name: 'ariaWidgetsFormInputStyle', classpath: 'aria.widgets.form.InputStyle'}
 }}
     {var skinnableClassName="TextInput"/}
     {var useFrame=true/}
 
     {macro main()}
-        .xWidget.xFullWidth .xFrameContent .x${skinnableClassName}Input,
-        .xWidget.xFullWidth .xSimpleFrame .x${skinnableClassName}Input {
+        .xWidget.xFullWidth .xFrameContent .x${this.skinnableClassName}Input,
+        .xWidget.xFullWidth .xSimpleFrame .x${this.skinnableClassName}Input {
             width: 100% !important;
             box-sizing: border-box;
         }
@@ -34,7 +34,7 @@
         {var skinClassName=info.skinClassName/}
         {var skinObj=info.skinClass/}
 
-        input.x${skinnableClassName}_${skinClassName}_input, textarea.x${skinnableClassName}_${skinClassName}_input {
+        input.x${this.skinnableClassName}_${skinClassName}_input, textarea.x${this.skinnableClassName}_${skinClassName}_input {
             padding: ${skinObj.innerPaddingTop}px ${skinObj.innerPaddingRight}px ${skinObj.innerPaddingBottom}px ${skinObj.innerPaddingLeft}px;
             position:relative;
             margin:0;
@@ -46,7 +46,7 @@
         }
 
         {var helpText = skinObj.helpText || {} /}
-        input.x${skinnableClassName}_${skinClassName}_helpText, textarea.x${skinnableClassName}_${skinClassName}_helpText {
+        input.x${this.skinnableClassName}_${skinClassName}_helpText, textarea.x${this.skinnableClassName}_${skinClassName}_helpText {
             {if helpText.innerPaddingTop != null}
                 padding-top: ${helpText.innerPaddingTop}px;
             {/if}
@@ -69,7 +69,7 @@
     {/macro}
 
     {macro writeState(info)}
-        .${cssPrefix(info)}label {
+        .${this.cssPrefix(info)}label {
             font-weight: ${info.skinClass.label.fontWeight}
         }
         {call $InputStyle.writeState(info) /}

@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaWidgetsFramesFrame = require("./Frame");
-var ariaCoreBrowser = require("../../core/Browser");
+import { classDefinition } from '../../core/class-definition.js';
+import { FRAMEWORK_GLOBALS } from '../../core/framework-bootstrap.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { Frame as ariaWidgetsFramesFrame } from './Frame.js';
+import { Browser as ariaCoreBrowser } from '../../core/Browser.js';
 
 
 /**
@@ -23,7 +24,7 @@ var ariaCoreBrowser = require("../../core/Browser");
  * the frame configuration, or left undefined so that they are adapted to the content. The expansion in width and height
  * are done by repeating images horizontally and vertically.
  */
-module.exports = Aria.classDefinition({
+export const TableFrame = classDefinition({
     $classpath : "aria.widgets.frames.TableFrame",
     $extends : ariaWidgetsFramesFrame,
     $constructor : function (cfg) {
@@ -119,7 +120,7 @@ module.exports = Aria.classDefinition({
                     'bkgB">' + this.__addFrameIcon(cfg, cssPrefix, 'top') + '</td>', '<td class="', cssPrefix, 'trc ',
                     cssPrefix, 'bkgA"></td>', '</tr>', '<tr>', '<td class="', cssPrefix, 'ls ', cssPrefix,
                     'bkgC"></td>', '<td class="', cssPrefix, 'm">', '<span ',
-                    Aria.testMode && this._baseId ? ' id="' + this._baseId + '"' : '',
+                    FRAMEWORK_GLOBALS.testMode && this._baseId ? ' id="' + this._baseId + '"' : '',
                     (sizeInfo.style ? 'style="' + sizeInfo.style + '"' : ''), ' class="', sizeInfo.className, '">'].join(''));
         },
 

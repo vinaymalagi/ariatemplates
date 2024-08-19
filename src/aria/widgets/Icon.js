@@ -17,7 +17,7 @@ import { getClassRef } from '../core/class-registry.js';
 import { substitute, escapeForHTML } from '../utils/String.js';
 import ariaWidgetsIconStyle from './IconStyle.tpl.css.js';
 import { Widget as ariaWidgetsWidget } from './Widget.js';
-import { TplClassLoader as ariaCoreTplClassLoader } from '../core/TplClassLoader.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../templates/TplClassLoader.js';
 import { NavigationManager as ariaTemplatesNavigationManager } from '../templates/NavigationManager.js';
 
 

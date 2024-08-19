@@ -18,7 +18,7 @@ import { getClassRef } from '../core/class-registry.js';
 import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 import './AriaSkinBeans.js';
 import { AriaSkinNormalization as ariaWidgetsAriaSkinNormalization } from './AriaSkinNormalization.js';
-import { resolveUrl, FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { resolveUrl, FRAMEWORK_GLOBALS, getBootstrapPromise } from '../core/framework-bootstrap.js';
 import { CSSLoader as ariaUtilsCSSLoader } from '../utils/CSSLoader.js';
 import { endsWith } from '../utils/String.js';
 
@@ -31,16 +31,18 @@ export const AriaSkinInterface = classDefinition({
     $singleton : true,
     $onload : function () {
         // check for skin existency
+      getBootstrapPromise().then(() => {
         const ariaWidgetsSkin = getClassRef('aria.widgets.AriaSkin');
         if (ariaWidgetsSkin) {
-            var general = getClassRef('aria.widgets.AriaSkinInterface').getGeneral();
-            if (general.externalCSS.length > 0) {
-                for (var i = 0; i < general.externalCSS.length; i++) {
-                    general.externalCSS[i] = general.imagesRoot + general.externalCSS[i];
-                }
-                ariaUtilsCSSLoader.add(general.externalCSS);
+          var general = getClassRef('aria.widgets.AriaSkinInterface').getGeneral();
+          if (general.externalCSS.length > 0) {
+            for (var i = 0; i < general.externalCSS.length; i++) {
+              general.externalCSS[i] = general.imagesRoot + general.externalCSS[i];
             }
+            ariaUtilsCSSLoader.add(general.externalCSS);
+          }
         }
+      });
     },
     $statics : {
         // ERROR MESSAGES:
@@ -292,7 +294,7 @@ export const AriaSkinInterface = classDefinition({
          */
         getSkinImageFullUrl : function (imageUrl) {
             // MUST_CHECK: ModernAria: DownloadMgr: is resolveURL of DownloadMgr with urlMap and rootMap setup is needed. How to handle this?
-            console.error(`About to call Unhandled DownloadManager.resolveURL with URL/Path: ${imageUrl}. Currently implemented Framework ResolveUrl, just prepends rootFolderPath to the source path. How to handle this, Do we need to use download manager?`);
+            // console.error(`About to call Unhandled DownloadManager.resolveURL with URL/Path: ${imageUrl}. Currently implemented Framework ResolveUrl, just prepends rootFolderPath to the source path. How to handle this, Do we need to use download manager?`);
             // return ariaCoreDownloadMgr.resolveURL(this.getGeneral().imagesRoot + imageUrl, true);
             return resolveUrl(this.getGeneral().imagesRoot + imageUrl);
         },

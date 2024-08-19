@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import { beanDefinitions } from '../core/bean-definitions.js';
-import ariaCoreJsonTypes from '../core/JsonTypes.js';
+import {JsonTypesBeans as ariaCoreJsonTypes } from '../core/JsonTypes.js';
 
 
 /**

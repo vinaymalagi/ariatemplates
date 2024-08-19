@@ -30,7 +30,7 @@ import { ViewportNavigationInterceptor } from '../utils/DomNavigationManager.js'
  * Singleton dedicated to popup management
  * @singleton
  */
-export const PoupManager = classDefinition({
+export const PopupManager = classDefinition({
   $classpath: "aria.popups.PopupManager",
   $events: {
     "modalPopupPresent": {

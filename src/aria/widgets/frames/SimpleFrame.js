@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaUtilsType = require("../../utils/Type");
-var ariaWidgetsFramesFrame = require("./Frame");
+import { classDefinition } from '../../core/class-definition.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { isNumber } from '../../utils/Type.js';
+import { Frame as ariaWidgetsFramesFrame } from './Frame.js';
 
 
 /**
  * A simple frame is a span with a configurable border width and color.
  * @class aria.widgets.frames.SimpleFrame
  */
-module.exports = Aria.classDefinition({
+export const SimpleFrame = classDefinition({
     $classpath : 'aria.widgets.frames.SimpleFrame',
     $extends : ariaWidgetsFramesFrame,
     $constructor : function (cfg) {
@@ -101,7 +101,7 @@ module.exports = Aria.classDefinition({
                     + sizeInfo.className + '">');
             if (verticalAlignApplied) {
                 var innerHeight = state.innerHeight;
-                if (ariaUtilsType.isNumber(innerHeight)) {
+                if (isNumber(innerHeight)) {
                     innerHeight += "px";
                 }
 

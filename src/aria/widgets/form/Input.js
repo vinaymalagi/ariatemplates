@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaUtilsData = require("../../utils/Data");
-var ariaUtilsString = require("../../utils/String");
-var ariaWidgetsEnvironmentWidgetSettings = require("../environment/WidgetSettings");
-var ariaCoreBrowser = require("../../core/Browser");
-var ariaWidgetsWidgetTrait = require("../WidgetTrait");
-var ariaWidgetsWidget = require("../Widget");
-var ariaUtilsJson = require("../../utils/Json");
+import { classDefinition } from '../../core/class-definition.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { Data as ariaUtilsData } from '../../utils/Data.js';
+import { encodeForQuotedHTMLAttribute, escapeHTML } from '../../utils/String.js';
+import { WidgetSettings as ariaWidgetsEnvironmentWidgetSettings } from '../environment/WidgetSettings.js';
+import { Browser as ariaCoreBrowser } from '../../core/Browser.js';
+import { WidgetTrait as ariaWidgetsWidgetTrait } from '../WidgetTrait.js';
+import { Widget as ariaWidgetsWidget } from '../Widget.js';
+import { Json as ariaUtilsJson } from '../../utils/Json.js';
 
 /**
  * Base class for all input widgets. Manage input data structure and properties, as well as the label support
  */
-module.exports = Aria.classDefinition({
+export const Input = classDefinition({
     $classpath : "aria.widgets.form.Input",
     $extends : ariaWidgetsWidget,
     /**
@@ -33,6 +33,7 @@ module.exports = Aria.classDefinition({
      * @param {aria.widgets.CfgBeans:InputCfg} cfg the widget configuration
      * @param {aria.templates.TemplateCtxt} ctxt template context
      */
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
         this._setAutomaticBindings(cfg);
         this.$Widget.constructor.apply(this, arguments);
@@ -125,10 +126,11 @@ module.exports = Aria.classDefinition({
          * @param {Object} def the class definition
          * @param {Object} sdef the superclass class definition
          */
+        // eslint-disable-next-line no-unused-vars
         $init : function (p, def, sdef) {
             var src = ariaWidgetsWidgetTrait.prototype;
             for (var key in src) {
-                if (src.hasOwnProperty(key) && !p.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(src, key) && !Object.prototype.hasOwnProperty.call(p, key)) {
                     // copy methods which are not already on this object (this avoids copying $classpath and
                     // $destructor)
                     p[key] = src[key];
@@ -169,15 +171,15 @@ module.exports = Aria.classDefinition({
             if (this._cfg.waiAria) {
                 var labelledBy = this._cfg.waiLabelledBy;
                 if (this._cfg.waiLabel) {
-                    markup.push(' aria-label="' + ariaUtilsString.encodeForQuotedHTMLAttribute(this._cfg.waiLabel) + '" ');}
+                    markup.push(' aria-label="' + encodeForQuotedHTMLAttribute(this._cfg.waiLabel) + '" ');}
                 else if (!labelledBy) {
                     labelledBy = this._labelId;
                 }
                 if (labelledBy) {
-                    markup.push(' aria-labelledby="' + ariaUtilsString.encodeForQuotedHTMLAttribute(labelledBy) + '" ');
+                    markup.push(' aria-labelledby="' + encodeForQuotedHTMLAttribute(labelledBy) + '" ');
                 }
                 if (this._cfg.waiDescribedBy) {
-                    markup.push(' aria-describedby="' + ariaUtilsString.encodeForQuotedHTMLAttribute(this._cfg.waiDescribedBy) + '" ');
+                    markup.push(' aria-describedby="' + encodeForQuotedHTMLAttribute(this._cfg.waiDescribedBy) + '" ');
                 }
             }
             return markup.join('');
@@ -199,6 +201,7 @@ module.exports = Aria.classDefinition({
          * @param {HTMLElement} elt the Input markup DOM elt - never null
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _initInputMarkup : function (elt) {},
 
         /**
@@ -313,6 +316,7 @@ module.exports = Aria.classDefinition({
          * @param {aria.templates.MarkupWriter} out the writer Object to use to output markup
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _inputMarkup : function (out) {},
 
         /**
@@ -353,7 +357,7 @@ module.exports = Aria.classDefinition({
             out.write(';text-align:' + cfg.labelAlign + ';"');
             out.write(this._getAriaLabelHiddenMarkup());
             out.write('>');
-            out.write(ariaUtilsString.escapeHTML(cfg.label));
+            out.write(escapeHTML(cfg.label));
 
             out.write('</label>');
         },
@@ -468,6 +472,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} oldValue the old property value
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _onBoundPropertyChange : function (propertyName, newValue, oldValue) {
             if (propertyName === "requireFocus") {
                 if (!newValue || !this.focus || this._cfg.disabled) {
@@ -497,7 +502,7 @@ module.exports = Aria.classDefinition({
                 this._cfg[propertyName] = newValue;
                 var label = this.getLabel();
                 if (label) {
-                    label.innerHTML = ariaUtilsString.escapeHTML(newValue);
+                    label.innerHTML = escapeHTML(newValue);
                 }
             }
             return this.$Widget._onBoundPropertyChange.apply(this, arguments);

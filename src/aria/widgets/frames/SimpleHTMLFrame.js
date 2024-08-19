@@ -12,14 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsFramesFrame = require("./Frame");
+import { classDefinition } from '../../core/class-definition.js';
+import { Frame as ariaWidgetsFramesFrame } from './Frame.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
 
 
 /**
  * Frame that does nothing, for the simple HTML skinning mode
  */
-module.exports = Aria.classDefinition({
+export const SimpleHTMLFrame = classDefinition({
     $classpath : "aria.widgets.frames.SimpleHTMLFrame",
     $extends : ariaWidgetsFramesFrame,
     $constructor : function (cfg) {
@@ -62,7 +63,7 @@ module.exports = Aria.classDefinition({
             if (idx === 0) {
                 return this._childRootElt;
             } else {
-                return aria.utils.Dom.getDomElementChild(this._childRootElt, idx - 1);
+                return ariaUtilsDom.getDomElementChild(this._childRootElt, idx - 1);
             }
         },
 

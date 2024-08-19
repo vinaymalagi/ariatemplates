@@ -12,23 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsData = require("../../utils/Data");
-var ariaUtilsString = require("../../utils/String");
-var ariaWidgetsEnvironmentWidgetSettings = require("../environment/WidgetSettings");
-var ariaUtilsCaret = require("../../utils/Caret");
-var ariaWidgetsFormTextInputStyle = require("./TextInputStyle.tpl.css");
-var ariaWidgetsFormInputWithFrame = require("./InputWithFrame");
-var ariaUtilsType = require("../../utils/Type");
-var ariaUtilsArray = require("../../utils/Array");
-var ariaCoreBrowser = require("../../core/Browser");
-var ariaCoreTimer = require("../../core/Timer");
-var ariaTemplatesDomEventWrapper = require("../../templates/DomEventWrapper");
+import { classDefinition } from '../../core/class-definition.js';
+import { Data as ariaUtilsData } from '../../utils/Data.js';
+import { escapeHTML, encodeForQuotedHTMLAttribute } from '../../utils/String.js';
+import { WidgetSettings as ariaWidgetsEnvironmentWidgetSettings } from '../environment/WidgetSettings.js';
+import { select, getPosition, setPosition } from '../../utils/Caret.js';
+import ariaWidgetsFormTextInputStyle from './TextInputStyle.tpl.css.js';
+import { InputWithFrame as ariaWidgetsFormInputWithFrame } from './InputWithFrame.js';
+import { isArray } from '../../utils/Type.js';
+import { isEmpty, remove } from '../../utils/Array.js';
+import { emptyFn } from '../../common/fixed-return-value-functions.js';
+import { FRAMEWORK_GLOBALS } from '../../core/framework-bootstrap.js';
+import { Browser as ariaCoreBrowser } from '../../core/Browser.js';
+import { Timer as ariaCoreTimer } from '../../core/Timer.js';
+import { DomEventWrapper as ariaTemplatesDomEventWrapper } from '../../templates/DomEventWrapper.js';
 
 /**
  * Specialize the input classes for Text input and manage the HTML input element
  */
-module.exports = Aria.classDefinition({
+export const TextInput = classDefinition({
     $classpath : "aria.widgets.form.TextInput",
     $extends : ariaWidgetsFormInputWithFrame,
     $css : [ariaWidgetsFormTextInputStyle],
@@ -157,7 +159,7 @@ module.exports = Aria.classDefinition({
     $destructor : function () {
         if (this._hasFocus) {
             // In IE, blurring is important in order to release properly the focus before destroying the element
-            this._dom_onblur = Aria.empty;
+            this._dom_onblur = emptyFn;
             this._textInputField.blur();
         }
         this._textInputField = null;
@@ -192,6 +194,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} def the class definition
          * @param {Object} sdef the superclass class definition
          */
+        // eslint-disable-next-line no-unused-vars
         $init : function (p, def, sdef) {
             p.automaticallyBindedProperties = p.automaticallyBindedProperties.concat("prefillError");
         },
@@ -220,7 +223,7 @@ module.exports = Aria.classDefinition({
          */
         _onLabelClick : function (evt) {
             this.$InputWithFrame._onLabelClick.call(this, evt);
-            ariaUtilsCaret.select(this.getTextInputField());
+            select(this.getTextInputField());
         },
 
         /**
@@ -312,7 +315,6 @@ module.exports = Aria.classDefinition({
          */
         _inputWithFrameMarkup : function (out) {
             var cfg = this._cfg, hts = this._helpTextSet, htc = this._skinObj.helpText, color = this._getTextFieldColor();
-            var stringUtils = ariaUtilsString;
 
             // check value to set appropriate state and text
             var text = this._getText();
@@ -341,32 +343,32 @@ module.exports = Aria.classDefinition({
             }
             var autocomplete = "";
             if (cfg.autocomplete) {
-                autocomplete = ' autocomplete="' + stringUtils.escapeHTML(cfg.autocomplete) + '"';
+                autocomplete = ' autocomplete="' + escapeHTML(cfg.autocomplete) + '"';
             }
             var name = "";
             if (cfg.name) {
-                name = ' name="' + stringUtils.escapeHTML(cfg.name) + '"';
+                name = ' name="' + escapeHTML(cfg.name) + '"';
             }
 
             var ariaRequired = (cfg.waiAria && cfg.mandatory) ? ' aria-required="true"' : '';
 
             if (this._isTextarea) {
-                out.write(['<textarea class="', className, '"', Aria.testMode ? ' id="' + this._domId + '_textarea"' : '',
+                out.write(['<textarea class="', className, '"', FRAMEWORK_GLOBALS.testMode ? ' id="' + this._domId + '_textarea"' : '',
                         cfg.disabled ? ' disabled="disabled"' : this.isTextInputReadOnly() ? ' readonly="readonly"' : '',
                         ariaRequired, ' type="', type, '" style="color:', color,
                         ';overflow:auto;resize:none;height: ' + this._frame.innerHeight + 'px; width:', inputWidth,
                         'px;"', 'value=""', (cfg.maxlength > -1 ? 'maxlength="' + cfg.maxlength + '" ' : ' '),
                         (cfg.tabIndex != null ? 'tabindex="' + this._calculateTabIndex() + '" ' : ' '), spellCheck,
                         autocomplete, name, this._getAriaLabelMarkup(), this._extraInputAttributes, '>',
-                        stringUtils.escapeHTML(((this._helpTextSet) ? cfg.helptext : text) || ""), '</textarea>'
+                        escapeHTML(((this._helpTextSet) ? cfg.helptext : text) || ""), '</textarea>'
 
                 ].join(''));
             } else {
-                out.write(['<input class="', className, '"', Aria.testMode ? ' id="' + this._domId + '_input"' : '',
+                out.write(['<input class="', className, '"', FRAMEWORK_GLOBALS.testMode ? ' id="' + this._domId + '_input"' : '',
                         cfg.disabled ? ' disabled="disabled"' : this.isTextInputReadOnly() ? ' readonly="readonly"' : '',
                         ariaRequired, ' type="', type, '" style="color:', color, ';width:',
                         inputWidth, 'px;"', 'value="',
-                        stringUtils.encodeForQuotedHTMLAttribute((this._helpTextSet) ? cfg.helptext : text), '" ',
+                        encodeForQuotedHTMLAttribute((this._helpTextSet) ? cfg.helptext : text), '" ',
                         (cfg.maxlength > -1 ? 'maxlength="' + cfg.maxlength + '" ' : ' '),
                         (cfg.tabIndex != null ? 'tabindex="' + this._calculateTabIndex() + '" ' : ' '), spellCheck,
                         autocomplete, name, this._getAriaLabelMarkup(), this._extraInputAttributes, ' _ariaInput="1"/>'
@@ -489,7 +491,7 @@ module.exports = Aria.classDefinition({
                     this.changeProperty("value", null);
                     this.changeProperty("invalidText", text);
                 }
-            } else if (this._cfg.formatError === false && ariaUtilsType.isArray(this._cfg.formatErrorMessages)
+            } else if (this._cfg.formatError === false && isArray(this._cfg.formatErrorMessages)
                     && this._cfg.formatErrorMessages.length) {
                 this.changeProperty("invalidText", null);
                 this.changeProperty("formatErrorMessages", []);
@@ -638,7 +640,7 @@ module.exports = Aria.classDefinition({
                 return null;
             }
             var ctrl = this.getTextInputField();
-            return ariaUtilsCaret.getPosition(ctrl);
+            return getPosition(ctrl);
         },
 
         /**
@@ -652,7 +654,7 @@ module.exports = Aria.classDefinition({
             }
 
             var ctrl = this.getTextInputField();
-            ariaUtilsCaret.setPosition(ctrl, start, end);
+            setPosition(ctrl, start, end);
         },
 
         /**
@@ -683,10 +685,10 @@ module.exports = Aria.classDefinition({
                 this.setHelpText(false);
                 this.setPrefillText(false, null, true);
 
-                var cfg = this._cfg;
+                const cfg = this._cfg;
                 var displayText = "";
 
-                var res = this.checkValue({
+                const res = this.checkValue({
                     performCheckOnly : true,
                     value : newValue,
                     text : newValue == null ? "" : null
@@ -718,7 +720,7 @@ module.exports = Aria.classDefinition({
 
                 // in case things have changed the field, try to set an helptext
                 this.setHelpText(true);
-                if (((ariaUtilsType.isArray(cfg.value) && ariaUtilsArray.isEmpty(cfg.value)) || !cfg.value)
+                if (((isArray(cfg.value) && isEmpty(cfg.value)) || !cfg.value)
                         && cfg.prefill && cfg.prefill + "") {
                     this.setPrefillText(true, cfg.prefill, true);
                 }
@@ -729,7 +731,7 @@ module.exports = Aria.classDefinition({
                 if (newValue == oldValue) {
                     return;
                 }
-                var res;
+                let res;
                 // first check the old value to see if it is valid
                 if (this._cfg.value) {
                     res = this.checkValue({
@@ -771,7 +773,7 @@ module.exports = Aria.classDefinition({
                     || propertyName === 'errorMessages') {
                 this._cfg[propertyName] = newValue;
                 this._reactToChange();
-                var cfg = this._cfg;
+                const cfg = this._cfg;
                 if (cfg && cfg.validationEvent === 'onError' && (this._keepFocus || this._hasFocus)) {
                     if ((cfg.formatError && cfg.formatErrorMessages.length) || (cfg.error && cfg.errorMessages.length)) {
                         this._validationPopupShow();
@@ -918,6 +920,7 @@ module.exports = Aria.classDefinition({
          * through the setProperty method that also handles all other widgets bound to this value.
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _dom_onkeyup : function (event) {
             if (this._cfg.validationDelay) {
                 if (this._valTimer) {
@@ -941,7 +944,7 @@ module.exports = Aria.classDefinition({
          * @protected
          */
         _dom_onclick : function (domEvent) {
-            if (!!this._cfg.onclick) {
+            if (this._cfg.onclick) {
                 var domEvtWrapper;
                 if (domEvent) {
                     domEvtWrapper = new ariaTemplatesDomEventWrapper(domEvent);
@@ -1173,7 +1176,7 @@ module.exports = Aria.classDefinition({
                 // if the value is not set (namely it is null, undefined, an
                 // empty string or an empty array) and the
                 // prefill is defined
-                if ((ariaUtilsType.isArray(value) && ariaUtilsArray.isEmpty(value)) || (!value && value !== 0)) {
+                if ((isArray(value) && isEmpty(value)) || (!value && value !== 0)) {
                     if (cfg.prefill && cfg.prefill + "") {
                         this._isPrefilled = true;
                     } else {
@@ -1223,7 +1226,7 @@ module.exports = Aria.classDefinition({
 
             var helpTextClass = "x" + this._skinnableClass + "_" + cfg.sclass + "_helpText";
             var classNames = field.className.split(/\s+/);
-            ariaUtilsArray.remove(classNames, helpTextClass);
+            remove(classNames, helpTextClass);
             if (enable) {
                 classNames.push(helpTextClass);
             }
@@ -1294,6 +1297,7 @@ module.exports = Aria.classDefinition({
          * @return {Boolean} true if focus was possible
          * @override
          */
+        // eslint-disable-next-line no-unused-vars
         focus : function (idArray, fromSelf) {
             if (this._cfg.disabled) {
                 return false;
@@ -1303,6 +1307,8 @@ module.exports = Aria.classDefinition({
             // IE FIX: requires the value to be reset for the cursor to be positioned
             // and focused at the end of the textinput.value string
             if (ariaCoreBrowser.isIE) {
+              // MUST_CHECK: ModernAria: Refactor: LegacyBrowserHandling: Do we still need this re-assingment for legacy IE?
+              // eslint-disable-next-line no-self-assign
               textInputField.value = textInputField.value;
             }
 

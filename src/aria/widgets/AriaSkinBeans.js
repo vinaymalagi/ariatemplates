@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import { beanDefinitions } from '../core/bean-definitions.js';
-import { JsonTypesBeans as ariaCoreJsonTypes } from '../core/JsonTypes.js.js';
+import { JsonTypesBeans as ariaCoreJsonTypes } from '../core/JsonTypes.js';
 
 /**
  * The beans contained in this file describe the structure of a skin configuration in the aria.widgets.AriaSkin class.

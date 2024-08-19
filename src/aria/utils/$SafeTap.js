@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { isTouch } from './Device.js';
 
-var asyncRequire = require("noder-js/asyncRequire").create(module);
-var touchDevice = require("./Device").isTouch();
-var ariaTouchClickBuster = null;
+const touchDevice = isTouch();
+let ariaTouchClickBuster = null;
 
 var registerSafeTap = function (event) {
     if (ariaTouchClickBuster) {
@@ -26,14 +26,30 @@ var registerSafeTap = function (event) {
     }
 };
 
-var getRegisterSafeTap = exports.getRegisterSafeTap = function () {
-    return registerSafeTap;
+
+
+async function loadGetRegisterSafeTapDependencies() {
+    if (touchDevice) {
+        const [clickBuster] = await Promise.all([
+            import("../touch/ClickBuster.js"),
+            import("../touch/SafeTap.js"),
+        ]);
+        ariaTouchClickBuster = clickBuster;
+    }
+}
+
+if (touchDevice) {
+    await loadGetRegisterSafeTapDependencies();
+}
+// getRegisterSafeTap.$preload = function () {
+//     if (touchDevice) {
+//         return asyncRequire("../touch/ClickBuster", "../touch/SafeTap").spreadSync(function (clickBuster) {
+//             ariaTouchClickBuster = clickBuster;
+//         });
+//     }
+// };
+
+export function getRegisterSafeTap() {
+  return registerSafeTap;
 };
 
-getRegisterSafeTap.$preload = function () {
-    if (touchDevice) {
-        return asyncRequire("../touch/ClickBuster", "../touch/SafeTap").spreadSync(function (clickBuster) {
-            ariaTouchClickBuster = clickBuster;
-        });
-    }
-};

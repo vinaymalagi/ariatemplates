@@ -24,9 +24,9 @@ import { AriaSkinInterface as ariaWidgetsAriaSkinInterface } from './AriaSkinInt
 import { RefreshManager as ariaTemplatesRefreshManager } from '../templates/RefreshManager.js';
 import { escapeHTMLAttr } from '../utils/String.js';
 import ariaWidgetsGlobalStyle from './GlobalStyle.tpl.css.js';
-import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
+import { FRAMEWORK_GLOBALS, getBootstrapPromise } from '../core/framework-bootstrap.js';
 import { BindableWidget as ariaWidgetLibsBindableWidget } from '../widgetLibs/BindableWidget.js';
-import { TplClassLoader as ariaCoreTplClassLoader } from '../core/TplClassLoader.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../templates/TplClassLoader.js';
 import { JsonValidator as ariaCoreJsonValidator } from '../core/JsonValidator.js';
 import { Environment as environment } from '../core/environment/Environment.js';
 import { WidgetSettings as ariaWidgetsEnvironmentWidgetSettings } from './environment/WidgetSettings.js';
@@ -40,9 +40,11 @@ export const Widget = classDefinition({
     $css : [ariaWidgetsGlobalStyle],
     $onload : function () {
         // check for skin existence
-        if (!getClassRef('aria.widgets.AriaSkin')) {
+        getBootstrapPromise().then(() => {
+          if (!getClassRef('aria.widgets.AriaSkin')) {
             this.$JsObject.$logError.call(this, this.SKIN_NOT_READY);
-        }
+          }
+        });
     },
 
     /**

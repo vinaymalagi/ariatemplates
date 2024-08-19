@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaWidgetsFramesFrameFactory = require("../frames/FrameFactory");
-var ariaWidgetsContainerDivStyle = require("./DivStyle.tpl.css");
-var ariaWidgetsContainerContainer = require("./Container");
+import { classDefinition } from '../../core/class-definition.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { FrameFactory as ariaWidgetsFramesFrameFactory } from '../frames/FrameFactory.js';
+import ariaWidgetsContainerDivStyle from './DivStyle.tpl.css.js';
+import { Container as ariaWidgetsContainerContainer } from './Container.js';
 
 
 /**
  * @class aria.widgets.container.Div Class definition for the div widget.
  * @extends aria.widgets.container.Container
  */
-module.exports = Aria.classDefinition({
+export const Div = classDefinition({
     $classpath : "aria.widgets.container.Div",
     $extends : ariaWidgetsContainerContainer,
     $css : [ariaWidgetsContainerDivStyle],
@@ -32,6 +32,7 @@ module.exports = Aria.classDefinition({
      * @param {aria.widgets.CfgBeans:DivCfg} cfg the widget configuration
      * @param {aria.templates.TemplateCtxt} ctxt template context
      */
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
         this.$Container.constructor.apply(this, arguments);
         // make a call to the AriaSkinInterface to get access to the skin object applicable here
@@ -78,7 +79,7 @@ module.exports = Aria.classDefinition({
             var content = ariaUtilsDom.getDomElementChild(this.getDom(), 0);
             this._frame.linkToDom(content);
 
-            aria.widgets.container.Div.superclass._init.call(this);
+            Div.superclass._init.call(this);
         },
 
         /**

@@ -59,7 +59,7 @@ if (tplFiles.length > 0) {
 }
 
 // ---- Process *.tpl.css Files ----
-const tplCssFiles = await glob('**/*.tpl.css', {cwd: './src', ignore: ['**/tools/**', '**/tester/**', '**/widgets/**'], posix: true});
+const tplCssFiles = await glob('**/*.tpl.css', {cwd: './src', ignore: ['**/tools/**', '**/tester/**'], posix: true});
 console.log(`### Processing ${tplCssFiles.length} CSS FILES ###`, tplCssFiles);
 
 if (tplCssFiles.length > 0) {
@@ -77,7 +77,7 @@ if (tplCssFiles.length > 0) {
       errorContext: {
           "file_classpath" : sourceFile
       },
-      sourceFilePath: sourceFileAbsolutePath,
+      sourceFilePath: sourceFile,
     };
     try {
       const outputContent = await processTemplateContent(content, ClassGenerator, classGeneratorOptions);
@@ -92,7 +92,7 @@ if (tplCssFiles.length > 0) {
 
 // ---- Process *.cml Files ----
 const cmlFiles = await glob('**/*.cml', {cwd: './src', ignore: ['**/tools/**', '**/tester/**'], posix: true});
-console.log(`### Processing ${cmlFiles.length} CSS FILES ###`, cmlFiles);
+console.log(`### Processing ${cmlFiles.length} CML FILES ###`, cmlFiles);
 
 if (cmlFiles.length > 0) {
   const ClassGenerator = await import('../src/aria/templates/CmlClassGenerator.js').then(({CmlClassGenerator}) => CmlClassGenerator);
@@ -109,7 +109,7 @@ if (cmlFiles.length > 0) {
       errorContext: {
           "file_classpath" : sourceFile
       },
-      sourceFilePath: sourceFileAbsolutePath,
+      sourceFilePath: sourceFile,
     };
     try {
       const outputContent = await processTemplateContent(content, ClassGenerator, classGeneratorOptions);

@@ -15,7 +15,7 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.container.DivStyle",
-    $extends: "aria.widgets.WidgetStyle"
+    $extends : {importType: 'Default', modulePath: '../WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'}
 }}
 
 {var skinnableClassName="Div"/}

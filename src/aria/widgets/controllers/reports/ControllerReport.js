@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../../Aria");
+import { classDefinition } from '../../../core/class-definition.js';
 
 
 /**
@@ -20,7 +20,7 @@ var Aria = require("../../../Aria");
  * @class aria.widgets.controllers.reports.ControllerReport
  * @extends aria.core.JsObject
  */
-module.exports = Aria.classDefinition({
+export const ControllerReport = classDefinition({
     $classpath : 'aria.widgets.controllers.reports.ControllerReport',
     $constructor : function () {
         /**

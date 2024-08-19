@@ -15,13 +15,13 @@
 
 {CSSTemplate {
     $classpath : "aria.widgets.form.InputStyle",
-    $extends : "aria.widgets.WidgetStyle"
+    $extends : {importType: 'Default', modulePath: '../WidgetStyle.tpl.css.js', name: 'ariaWidgetsWidgetStyle', classpath: 'aria.widgets.WidgetStyle'}
 }}
 
     {macro writeState(info)}
         {var label = info.state.label || {} /}
 
-        .${cssPrefix(info)}label {
+        .${this.cssPrefix(info)}label {
             {if label.color}
                 color: ${label.color};
             {/if}

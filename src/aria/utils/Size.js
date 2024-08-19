@@ -15,7 +15,7 @@
 import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
 import { normalize } from "./Math.js";
 import { isHTMLElement } from './html-helpers.js';
-import { Layout as ariaTemplatesLayout } from "../templates/Layout";
+import { Layout as ariaTemplatesLayout } from "../templates/Layout.js";
 
 
 /**

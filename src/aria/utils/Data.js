@@ -12,31 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsType = require("./Type");
-var ariaUtilsPath = require("./Path");
-var ariaUtilsJson = require("./Json");
-var ariaCoreJsObject = require("../core/JsObject");
-var ariaUtilsArray = require("./Array");
-var ariaUtilsStackHashMap = require("./StackHashMap");
+import { classDefinition, JsObject as ariaCoreJsObject } from '../core/class-definition.js';
+import { isArray, isString, isObject } from './Type.js';
+import { parse, resolve } from './Path.js';
+import { Json as ariaUtilsJson } from './Json.js';
+import { contains } from './Array.js';
+import { FRAMEWORK_PREFIX } from '../core/framework-bootstrap.js';
+import { isContainer } from '../core/core-utils/Type.js';
+import { StackHashMap as ariaUtilsStackHashMap } from './StackHashMap.js';
 
 /**
  * Handles the link between the validators and the data model.
  * @class aria.utils.Data
  * @extends aria.core.JsObject
  */
-module.exports = Aria.classDefinition({
+export const Data = classDefinition({
     $classpath : 'aria.utils.Data',
     $extends : ariaCoreJsObject,
     $singleton : true,
     $constructor : function () {
-        this.utilsType = ariaUtilsType;
-        this.utilsArray = ariaUtilsArray;
         this.errorNbrKey = this.NBROF_PREFIX + this.TYPE_ERROR;
     },
     $statics : {
         NBROF_PREFIX : "nbrOf",
-        META_PREFIX : Aria.FRAMEWORK_PREFIX + "meta::",
+        META_PREFIX : FRAMEWORK_PREFIX + "meta::",
 
         // Message types
         TYPE_FATAL : "F",
@@ -98,7 +97,7 @@ module.exports = Aria.classDefinition({
          */
         getFrameworkMessage : function (dataHolder, dataName) {
             var meta = this._getMeta(dataHolder, dataName);
-            if (this.utilsType.isArray(meta.formatErrorMessages)) {
+            if (isArray(meta.formatErrorMessages)) {
                 return meta.formatErrorMessages;
             }
             return null;
@@ -115,11 +114,12 @@ module.exports = Aria.classDefinition({
             if (event) {
                 validator.eventToValidate = event;
             }
-            if (this.utilsType.isArray(groups) && groups.length) {
-                for (var i = 0, item; item = groups[i]; i++) {
+            if (isArray(groups) && groups.length) {
+                for (var i = 0; groups[i]; i++) {
+                    const item = groups[i];
                     validator.groups.push(item);
                 }
-            } else if (this.utilsType.isString(groups) && groups != null) {
+            } else if (isString(groups) && groups != null) {
                 this.$logError(this.INVALID_VALIDATOR_GROUP_PARAMETER);
             }
         },
@@ -137,7 +137,7 @@ module.exports = Aria.classDefinition({
 
             var meta;
             this.setValidatorProperties(validator, groups, event);
-            if ((this.utilsType.isObject(dataHolder) || this.utilsType.isArray(dataHolder)) && dataName in dataHolder) {
+            if ((isObject(dataHolder) || isArray(dataHolder)) && dataName in dataHolder) {
                 meta = this._getMeta(dataHolder, dataName);
                 ariaUtilsJson.setValue(meta, "validator", validator);
             } else {
@@ -192,12 +192,12 @@ module.exports = Aria.classDefinition({
             addToList = addToList !== false;
 
             // update message list if needed
-            if (this.utilsType.isObject(messagesList)) {
+            if (isObject(messagesList)) {
                 this._updateCounters(message, messagesList);
                 if (!messagesList.listOfMessages) {
                     messagesList.listOfMessages = [];
                 } else {
-                    if (!this.utilsType.isArray(messagesList.listOfMessages)) {
+                    if (!isArray(messagesList.listOfMessages)) {
                         this.$logError(this.DATA_UTIL_ERROR_MESSAGE_WRONG_TYPE);
                     }
                 }
@@ -205,7 +205,8 @@ module.exports = Aria.classDefinition({
                     messagesList.listOfMessages.push(message);
                 }
                 if (message.subMessages) {
-                    for (var i = 0, subMessage; subMessage = message.subMessages[i]; i++) {
+                    for (var i = 0; message.subMessages[i]; i++) {
+                        const subMessage = message.subMessages[i];
                         this.addMessage(subMessage, messagesList, null, null, false);
                     }
                 }
@@ -273,11 +274,12 @@ module.exports = Aria.classDefinition({
         checkGroup : function (validatorGroup, groups) {
             if (!groups) {
                 return true;
-            } else if (this.utilsType.isString(groups) && groups != null) {
+            } else if (isString(groups) && groups != null) {
                 this.$logError(this.INVALID_VALIDATOR_GROUP_PARAMETER);
-            } else if (this.utilsType.isArray(groups) && groups.length) {
-                for (var i = 0, item; item = groups[i]; i++) {
-                    if (this.utilsArray.contains(validatorGroup, item)) {
+            } else if (isArray(groups) && groups.length) {
+                for (var i = 0; groups[i]; i++) {
+                    const item = groups[i];
+                    if (contains(validatorGroup, item)) {
                         return true;
                     }
                 }
@@ -388,16 +390,16 @@ module.exports = Aria.classDefinition({
         _validateModel : function (dataHolder, messages, groups, stopOnError, map) {
             if (!map.isKey(dataHolder)) {
                 map.push(dataHolder, true);
-                if (this.utilsType.isObject(dataHolder)) {
+                if (isObject(dataHolder)) {
                     for (var key in dataHolder) {
-                        if (dataHolder.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(dataHolder, key)) {
                             this.__subValidateModel(dataHolder, key, messages, groups, stopOnError, map);
                             if (stopOnError && messages && messages[this.errorNbrKey] > 0) {
                                 return;
                             }
                         }
                     }
-                } else if (this.utilsType.isArray(dataHolder)) {
+                } else if (isArray(dataHolder)) {
                     for (var index = 0, l = dataHolder.length; index < l; index++) {
                         this.__subValidateModel(dataHolder, index, messages, groups, stopOnError, map);
                         if (stopOnError && messages && messages[this.errorNbrKey] > 0) {
@@ -446,7 +448,7 @@ module.exports = Aria.classDefinition({
          */
         processMessages : function (newMessages, rootData, messages, addToListOfMessages) {
 
-            var pathUtils = ariaUtilsPath, jsonUtils = ariaUtilsJson, pathParts, lastPath, container;
+            var jsonUtils = ariaUtilsJson, pathParts, lastPath, container;
 
             if (messages == null) {
                 messages = {};
@@ -464,17 +466,17 @@ module.exports = Aria.classDefinition({
                         // fieldRef is a path in rootData.
                         // param1.param2 will match rootData.param1.param2
                         try {
-                            pathParts = pathUtils.parse(msg.fieldRef);
+                            pathParts = parse(msg.fieldRef);
                             lastPath = pathParts.pop();
                             // resolve path of container and get the meta data for the appropriate param name
-                            container = pathUtils.resolve(pathParts, rootData);
-                            if (this.utilsType.isContainer(container)) {
+                            container = resolve(pathParts, rootData);
+                            if (isContainer(container)) {
                                 msg.metaDataRef = this._getMeta(container, lastPath);
                             } else {
                                 // resolve can return something not being a container -> raise an error as well
                                 throw null;
                             }
-                        } catch (e) {
+                        } catch {
                             this.$logError(this.RESOLVE_FAIL, [msg.fieldRef], rootData);
                         }
                     }

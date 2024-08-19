@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import { classDefinition } from '../core/class-definition.js';
-import { getBean } from '../core/JsonValidator.js';
+import { JsonValidator } from '../core/JsonValidator.js';
 
 
 /**
@@ -55,7 +55,7 @@ export const InheritanceNormalization = classDefinition({
             var out = writer.out;
             var varToNormalize = args.varToNormalize;
             var parentVars = args.parentVars;
-            var beanDef = args.beanDef || getBean(args.beanName);
+            var beanDef = args.beanDef || JsonValidator.getBean(args.beanName);
             var typeName = beanDef['aria:baseType'].typeName;
             var isObject = (typeName == "Object");
 

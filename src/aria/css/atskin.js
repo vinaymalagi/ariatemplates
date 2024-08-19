@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-Aria.classDefinition({
+import { classDefinition } from "../core/class-definition.js";
+
+export default classDefinition({
     $classpath : "aria.widgets.AriaSkin",
     $singleton : true,
     $prototype : {

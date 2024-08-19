@@ -12,20 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsFramesFrameWithIcons = require("../frames/FrameWithIcons");
-var ariaUtilsEvent = require("../../utils/Event");
-var ariaWidgetsIconStyle = require("../IconStyle.tpl.css");
-var ariaWidgetsFormInput = require("./Input");
+import { classDefinition } from '../../core/class-definition.js';
+import { FrameWithIcons as ariaWidgetsFramesFrameWithIcons } from '../frames/FrameWithIcons.js';
+import { UtilsEvent as ariaUtilsEvent } from '../../utils/Event.js';
+import ariaWidgetsIconStyle from '../IconStyle.tpl.css.js';
+import { Input as ariaWidgetsFormInput } from './Input.js';
+import { AriaSkinInterface } from '../AriaSkinInterface.js';
 
 
 /**
  * Base class for the input widgets which use a frame.
  */
-module.exports = Aria.classDefinition({
+export const InputWithFrame = classDefinition({
     $classpath : "aria.widgets.form.InputWithFrame",
     $extends : ariaWidgetsFormInput,
     $css : [ariaWidgetsIconStyle],
+    // eslint-disable-next-line no-unused-vars
     $constructor : function (cfg, ctxt) {
         this.$Input.constructor.apply(this, arguments);
 
@@ -34,7 +36,7 @@ module.exports = Aria.classDefinition({
          * @type Object
          * @protected
          */
-        this._skinObj = aria.widgets.AriaSkinInterface.getSkinObject(this._skinnableClass, cfg.sclass);
+        this._skinObj = AriaSkinInterface.getSkinObject(this._skinnableClass, cfg.sclass);
 
         /**
          * Frame border for the input
@@ -91,6 +93,7 @@ module.exports = Aria.classDefinition({
          * @param {aria.DomEvent} evt Event fired
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _frame_events : function (evt) {},
         /**
          * Override the Input _init method
@@ -111,6 +114,7 @@ module.exports = Aria.classDefinition({
          * @param {Object} evt the original event
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _onLabelClick : function (evt) {
             this.getTextInputField().focus();
         },
@@ -183,6 +187,7 @@ module.exports = Aria.classDefinition({
          * @param {aria.templates.MarkupWriter} out the writer Object to use to output markup
          * @protected
          */
+        // eslint-disable-next-line no-unused-vars
         _inputWithFrameMarkup : function (out) {},
 
         /**

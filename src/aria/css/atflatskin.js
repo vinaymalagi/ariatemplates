@@ -12,8 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { classDefinition } from "../core/class-definition.js";
+
 // Skin configuration: flatskin
-Aria.classDefinition({
+export default classDefinition({
     $classpath : 'aria.widgets.AriaSkin',
     $singleton : true,
     $prototype : {

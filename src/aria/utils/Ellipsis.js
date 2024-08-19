@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../Aria");
-var ariaUtilsFunction = require("./Function");
-var ariaUtilsFireDomEvent = require("./FireDomEvent");
-var ariaUtilsDom = require("./Dom");
-var ariaPopupsPopup = require("../popups/Popup");
-var ariaUtilsString = require("./String");
-var ariaCoreTimer = require("../core/Timer");
+import { classDefinition } from '../core/class-definition.js';
+import { bind } from './Function.js';
+import { FireDomEvent as ariaUtilsFireDomEvent } from './FireDomEvent.js';
+import { UtilsDom as ariaUtilsDom } from './Dom.js';
+import { Popup as ariaPopupsPopup } from '../popups/Popup.js';
+import { escapeForHTML } from './String.js';
+import { Timer as ariaCoreTimer } from '../core/Timer.js';
+import { FRAMEWORK_GLOBALS } from '../core/framework-bootstrap.js';
 
 
 /**
@@ -26,7 +27,7 @@ var ariaCoreTimer = require("../core/Timer");
  * elements containing nothing but text). It will force the text to display on a single line only and cut it if it is
  * longer than the specified width.
  */
-module.exports = Aria.classDefinition({
+export const Ellipsis = classDefinition({
     $classpath : 'aria.utils.Ellipsis',
 
     /**
@@ -42,7 +43,7 @@ module.exports = Aria.classDefinition({
      * displayed at all. (defaults to "clipped")
      */
     $constructor : function (el, width, position, ellipsisStr, context, ellipsisEndStyle) {
-        var document = Aria.$window.document;
+        var document = FRAMEWORK_GLOBALS.$window.document;
         this.textContent = el.innerHTML;
         this.context = context;
         this.ellipsisElement = el;
@@ -125,7 +126,7 @@ module.exports = Aria.classDefinition({
                             numberOfCharToBeDisplayed++;
                         }
 
-                        tmpContainerElement.innerHTML = ariaUtilsString.escapeForHTML(this._getCharacters(numberOfCharToBeDisplayed));
+                        tmpContainerElement.innerHTML = escapeForHTML(this._getCharacters(numberOfCharToBeDisplayed));
 
                         width = tmpContainerElement.offsetWidth;
 
@@ -148,7 +149,7 @@ module.exports = Aria.classDefinition({
                     tmpContainerElement.parentNode.removeChild(tmpContainerElement);
                     tmpContainerElement = null;
 
-                    textSpan.innerHTML = ariaUtilsString.escapeForHTML(this.truncatedText);
+                    textSpan.innerHTML = escapeForHTML(this.truncatedText);
                 } else {
                     if (width < 0) {
                         // this check is important, otherwise IE can raise an
@@ -230,7 +231,7 @@ module.exports = Aria.classDefinition({
          */
         _createSizerEl : function (el) {
 
-            var document = Aria.$window.document;
+            var document = FRAMEWORK_GLOBALS.$window.document;
             // Need to make sure the new element has the same exact styling applied as the original element so we use
             // the same tag, class, style and append it to the same parent
             var tempSizerEl = document.createElement(el.tagName);
@@ -311,7 +312,7 @@ module.exports = Aria.classDefinition({
                 }
             });
 
-            popup.domElement.firstChild.onclick = ariaUtilsFunction.bind(this._popup_onmouseclick, this);
+            popup.domElement.firstChild.onclick = bind(this._popup_onmouseclick, this);
 
             this.callbackID = null;
         },

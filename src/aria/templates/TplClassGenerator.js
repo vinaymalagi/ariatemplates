@@ -96,7 +96,7 @@ export const TplClassGenerator = classDefinition({
           // }
           const wlibImportSpec = wlibs[libName];
           const normalizedWlibImportPath = out.isInternalAriatemplatesBuild ? convertInternalImportToRelativePath(wlibImportSpec.modulePath, out.sourceFilePath, out.sourcesRootDirectory) : wlibImportSpec.modulePath;
-          const resolvedPath = resolve(dirname(out.sourceFilePath), normalizedWlibImportPath);
+          const resolvedPath = resolve(dirname(out.sourcesRootDirectory + '/' + out.sourceFilePath), normalizedWlibImportPath);
           const resolvedWlibPath = 'file:///' + resolvedPath.split(sep).join('/');
 
           const importPromise = import(resolvedWlibPath).then((wlib) => {

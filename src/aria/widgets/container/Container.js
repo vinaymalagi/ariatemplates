@@ -18,7 +18,7 @@ import { normalize } from '../../utils/Math.js';
 import { getClassRef } from '../../core/class-registry.js';
 import { emptyFn } from '../../common/fixed-return-value-functions.js';
 import { Widget as ariaWidgetsWidget } from '../Widget.js';
-import { TplClassLoader as ariaCoreTplClassLoader } from '../../core/TplClassLoader.js';
+import { TplClassLoader as ariaCoreTplClassLoader } from '../../templates/TplClassLoader.js';
 
 
 /**

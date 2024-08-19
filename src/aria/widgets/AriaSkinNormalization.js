@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import { classDefinition } from '../core/class-definition.js';
-import { getBean, check, normalize } from '../core/JsonValidator.js';
+import { JsonValidator } from '../core/JsonValidator.js';
 import './AriaSkinBeans.js';
 import { InheritanceNormalization as ariaUtilsInheritanceNormalization } from '../utils/InheritanceNormalization.js';
 import { FunctionWriter as ariaUtilsFunctionWriter } from '../utils/FunctionWriter.js';
@@ -181,7 +181,7 @@ export const AriaSkinNormalization = classDefinition({
         _getFrameNormalizers : function (widgetName, skinClassName, frameType) {
             var res = this._frameNormalizers[frameType];
             if (res == null) {
-                var frameBeanDef = getBean('aria.widgets.AriaSkinBeans.' + frameType
+                var frameBeanDef = JsonValidator.getBean('aria.widgets.AriaSkinBeans.' + frameType
                         + 'FrameCfg');
                 if (frameBeanDef == null) {
                     this.$logError(this.INVALID_FRAME_TYPE, [widgetName, skinClassName, frameType]);
@@ -313,7 +313,7 @@ export const AriaSkinNormalization = classDefinition({
          * @return {Function}
          */
         _createFrameStateNormalizer : function (frameType, beanName) {
-            var beanDef = getBean(beanName);
+            var beanDef = JsonValidator.getBean(beanName);
             var writer = new ariaUtilsFunctionWriter(["skinClassName", "stateName", "state", "stdState", "normal",
                     "stdNormal"]);
             writer.writeEnsureObjectExists("state.frame");
@@ -382,7 +382,7 @@ export const AriaSkinNormalization = classDefinition({
         _getWidgetNormalizer : function (widgetName) {
             var res = this._widgetNormalizers[widgetName];
             if (!res) {
-                var beanDef = getBean('aria.widgets.AriaSkinBeans.' + widgetName + 'Cfg');
+                var beanDef = JsonValidator.getBean('aria.widgets.AriaSkinBeans.' + widgetName + 'Cfg');
                 res = new this._createNormalizerObject();
                 res.widgetName = widgetName;
                 res.normSkinClass = this._createSkinClassNormalizer(widgetName, beanDef);
@@ -487,7 +487,7 @@ export const AriaSkinNormalization = classDefinition({
         _check : function (object, beanName) {
             try {
                 return {
-                    result : check(object, beanName, true),
+                    result : JsonValidator.check(object, beanName, true),
                     message : null
                 };
             } catch (e) {
@@ -505,7 +505,7 @@ export const AriaSkinNormalization = classDefinition({
         _normalize : function (param) {
             try {
                 return {
-                    result : normalize(param, true),
+                    result : JsonValidator.normalize(param, true),
                     message : null
                 };
             } catch (e) {

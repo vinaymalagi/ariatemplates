@@ -12,21 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsAriaSkinInterface = require("../AriaSkinInterface");
-var ariaWidgetsFramesFrameFactory = require("./FrameFactory");
-var ariaUtilsDom = require("../../utils/Dom");
-var ariaUtilsType = require("../../utils/Type");
-var ariaUtilsArray = require("../../utils/Array");
-var ariaUtilsDelegate = require("../../utils/Delegate");
-var ariaUtilsString = require("../../utils/String");
-var registerSafeTap = require("../../utils/$SafeTap").getRegisterSafeTap();
+import { classDefinition } from '../../core/class-definition.js';
+import { AriaSkinInterface as ariaWidgetsAriaSkinInterface } from '../AriaSkinInterface.js';
+import { FrameFactory as ariaWidgetsFramesFrameFactory } from './FrameFactory.js';
+import { UtilsDom as ariaUtilsDom } from '../../utils/Dom.js';
+import { isString } from '../../utils/Type.js';
+// TODO: ModernAria: Refactor: Check all foreach and contains calls and if all calls always have a Array object as first argument, then we can directly call forEach on the array and not use the import.
+import { forEach, contains } from '../../utils/Array.js';
+import { Delegate as ariaUtilsDelegate } from '../../utils/Delegate.js';
+import { escapeForHTML } from '../../utils/String.js';
+import { FRAMEWORK_GLOBALS } from '../../core/framework-bootstrap.js';
+// MUST_IMPLEMENT: ModernAria: getRegisterSafeTap with dynamic imports if browser is on a Touch device. For now directly definining a function that returns false.
+// MUST_CHECK: ModernAria: Do we really need SafeTap?? In modern devices a tap automatically triggers a click, so is safe tap really needed??
+// var registerSafeTap = require('../../utils/$SafeTap.js').getRegisterSafeTap();
+function registerSafeTap() {
+  return false;
+}
 
 /**
  * A frame with icons on the left and right. To create an object of this class, use the createFrame static method (not
  * the constructor).
  */
-module.exports = Aria.classDefinition({
+export const FrameWithIcons = classDefinition({
     $classpath : 'aria.widgets.frames.FrameWithIcons',
     /**
      * FrameWithIcons constructor. Do not use directly, use the createFrame static method instead, so that the
@@ -56,8 +63,8 @@ module.exports = Aria.classDefinition({
         this._iconsAttributes = cfg.iconsAttributes;
         this._iconsWaiLabel = cfg.iconsWaiLabel;
 
-        ariaUtilsArray.forEach(this._iconsLeft, this._initIcon, this);
-        ariaUtilsArray.forEach(this._iconsRight, this._initIcon, this);
+        forEach(this._iconsLeft, this._initIcon, this);
+        forEach(this._iconsRight, this._initIcon, this);
 
         this._outerWidth = cfg.width;
         this._outerHeight = cfg.height;
@@ -77,8 +84,8 @@ module.exports = Aria.classDefinition({
             this._frame = null;
         }
         if (this._icons) {
-            ariaUtilsArray.forEach(this._iconsLeft, this._destroyIcon, this);
-            ariaUtilsArray.forEach(this._iconsRight, this._destroyIcon, this);
+            forEach(this._iconsLeft, this._destroyIcon, this);
+            forEach(this._iconsRight, this._destroyIcon, this);
             this._iconsLeft = null;
             this._iconsRight = null;
             this._icons = null;
@@ -149,7 +156,7 @@ module.exports = Aria.classDefinition({
             cfg.iconsLeft = icons.iconsLeft;
             cfg.iconsRight = icons.iconsRight;
             if (icons.hasIcons) {
-                return new aria.widgets.frames.FrameWithIcons(cfg);
+                return new FrameWithIcons(cfg);
             } else {
                 // do not use the icon frame if there is no icon (useless overhead)
                 return ariaWidgetsFramesFrameFactory.createFrame(cfg);
@@ -165,12 +172,12 @@ module.exports = Aria.classDefinition({
             // normalize the skin:
             if (skinObject.iconsLeft == null || skinObject.iconsLeft === "") {
                 skinObject.iconsLeft = [];
-            } else if (ariaUtilsType.isString(skinObject.iconsLeft)) {
+            } else if (isString(skinObject.iconsLeft)) {
                 skinObject.iconsLeft = skinObject.iconsLeft.split(',');
             }
             if (skinObject.iconsRight == null || skinObject.iconsRight === "") {
                 skinObject.iconsRight = [];
-            } else if (ariaUtilsType.isString(skinObject.iconsRight)) {
+            } else if (isString(skinObject.iconsRight)) {
                 skinObject.iconsRight = skinObject.iconsRight.split(',');
             }
 
@@ -192,8 +199,8 @@ module.exports = Aria.classDefinition({
         _filterIcons : function (iconsList, iconNames) {
             if (iconNames && iconNames.length > 0) {
                 var icons = [];
-                ariaUtilsArray.forEach(iconsList, function (item, i) {
-                    if (!ariaUtilsArray.contains(iconNames, iconsList[i])) {
+                forEach(iconsList, function (item, i) {
+                    if (!contains(iconNames, iconsList[i])) {
                         icons.push(iconsList[i]);
                     }
                 });
@@ -227,7 +234,7 @@ module.exports = Aria.classDefinition({
          */
         writeMarkupBegin : function (out) {
             var oSelf = this;
-            ariaUtilsArray.forEach(this._iconsLeft, function (value) {
+            forEach(this._iconsLeft, function (value) {
                 oSelf._writeIcon(value, out);
             });
             this._frame.writeMarkupBegin(out);
@@ -240,7 +247,7 @@ module.exports = Aria.classDefinition({
         writeMarkupEnd : function (out) {
             this._frame.writeMarkupEnd(out);
             var oSelf = this;
-            ariaUtilsArray.forEach(this._iconsRight, function (value) {
+            forEach(this._iconsRight, function (value) {
                 oSelf._writeIcon(value, out);
             });
         },
@@ -317,10 +324,10 @@ module.exports = Aria.classDefinition({
                 width : 0,
                 activeIconIndex : 0
             }, oSelf = this;
-            ariaUtilsArray.forEach(this._iconsLeft, function (value) {
+            forEach(this._iconsLeft, function (value) {
                 oSelf._computeIconSize(value, param);
             });
-            ariaUtilsArray.forEach(this._iconsRight, function (value) {
+            forEach(this._iconsRight, function (value) {
                 oSelf._computeIconSize(value, param);
             });
             this._iconsWidth = param.width;
@@ -380,12 +387,12 @@ module.exports = Aria.classDefinition({
                 domElt : domElt
                 // this property changes in the _linkIconToDom method
             }, oSelf = this;
-            ariaUtilsArray.forEach(this._iconsLeft, function (value) {
+            forEach(this._iconsLeft, function (value) {
                 oSelf._linkIconToDom(value, param);
             });
             this._frame.linkToDom(param.domElt);
             param.domElt = ariaUtilsDom.getNextSiblingElement(param.domElt, this._frame.domElementNbr);
-            ariaUtilsArray.forEach(this._iconsRight, function (value) {
+            forEach(this._iconsRight, function (value) {
                 oSelf._linkIconToDom(value, param);
             });
         },
@@ -400,9 +407,9 @@ module.exports = Aria.classDefinition({
             if (this._updateFrameWidth()) {
                 this._frame.resize(this._frameWidth, this._outerHeight);
             }
-            ariaUtilsArray.forEach(this._iconsLeft, this._changeIconState, this);
+            forEach(this._iconsLeft, this._changeIconState, this);
             this._frame.changeState(stateName);
-            ariaUtilsArray.forEach(this._iconsRight, this._changeIconState, this);
+            forEach(this._iconsRight, this._changeIconState, this);
             this.innerWidth = this._frame.innerWidth;
             this.innerHeight = this._frame.innerHeight;
         },
@@ -454,14 +461,14 @@ module.exports = Aria.classDefinition({
             // register for disposal
             this._icons[iconName].iconDelegateId = delegateId;
 
-            var title = icon.tooltip ? ' title="' + ariaUtilsString.escapeForHTML(icon.tooltip) + '"' : '';
+            var title = icon.tooltip ? ' title="' + escapeForHTML(icon.tooltip) + '"' : '';
             var attributes = this._iconsAttributes[iconName] || 'tabIndex="-1"';
             var waiLabel = this._iconsWaiLabel[iconName] || "";
             if (waiLabel) {
-                waiLabel = '<span class="xSROnly">' + ariaUtilsString.escapeForHTML(waiLabel) + '</span>';
+                waiLabel = '<span class="xSROnly">' + escapeForHTML(waiLabel) + '</span>';
             }
 
-            out.write(['<span', Aria.testMode && this._baseId ? ' id="' + this._baseId + '_' + iconName + '"' : '',
+            out.write(['<span', FRAMEWORK_GLOBALS.testMode && this._baseId ? ' id="' + this._baseId + '_' + iconName + '"' : '',
                     ' class="', iconInfo.cssClass, '" style="', iconStyle,
                     '" ', utilDelegate.getMarkup(delegateId), title, ' ', attributes, '>', waiLabel, '&nbsp;</span>'].join(''));
         },

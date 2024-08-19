@@ -12,21 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Aria = require("../../Aria");
-var ariaWidgetsAriaSkinInterface = require("../AriaSkinInterface");
-require("./CfgBeans");
-var ariaWidgetsFramesSimpleFrame = require("./SimpleFrame");
-var ariaWidgetsFramesTableFrame = require("./TableFrame");
-var ariaWidgetsFramesFixedHeightFrame = require("./FixedHeightFrame");
-var ariaWidgetsFramesSimpleHTMLFrame = require("./SimpleHTMLFrame");
-var ariaCoreJsonValidator = require("../../core/JsonValidator");
+import { classDefinition } from '../../core/class-definition.js';
+import { AriaSkinInterface as ariaWidgetsAriaSkinInterface } from '../AriaSkinInterface.js';
+import './CfgBeans.js';
+import { SimpleFrame as ariaWidgetsFramesSimpleFrame } from './SimpleFrame.js';
+import { TableFrame as ariaWidgetsFramesTableFrame } from './TableFrame.js';
+import { FixedHeightFrame as ariaWidgetsFramesFixedHeightFrame } from './FixedHeightFrame.js';
+import { SimpleHTMLFrame as ariaWidgetsFramesSimpleHTMLFrame } from './SimpleHTMLFrame.js';
+import { JsonValidator as ariaCoreJsonValidator } from '../../core/JsonValidator.js';
 
 
 /**
  * Frame factory, which provides a method to create a frame.
  * @class aria.widgets.frames.FrameFactory
  */
-module.exports = Aria.classDefinition({
+export const FrameFactory = classDefinition({
     $classpath : 'aria.widgets.frames.FrameFactory',
     $singleton : true,
     $constructor : function () {
